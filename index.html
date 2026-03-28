@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>Bunco Scorer</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      background: #1a1a1a;
+      overflow: hidden;
+      font-family: Arial, sans-serif;
+    }
+
+    /* Show a rotate prompt when in portrait */
+    #rotate-msg {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: #1a1a1a;
+      color: #fff;
+      font-size: 1.5rem;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      z-index: 999;
+    }
+
+    @media (orientation: portrait) {
+      #rotate-msg {
+        display: flex;
+      }
+    }
+
+    #app {
+      display: flex;
+      width: 100%;
+      height: 100%;
+      position: relative;
+    }
+
+    .half {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      position: relative;
+    }
+
+    #us-half {
+      background-color: rgba(30, 60, 120, 0.35);
+    }
+
+    #them-half {
+      background-color: rgba(140, 70, 0, 0.35);
+    }
+
+    #us-half.winner {
+      background-color: rgba(30, 100, 220, 0.7);
+    }
+
+    #them-half.winner {
+      background-color: rgba(220, 110, 0, 0.7);
+    }
+
+    .winner .score {
+      color: #ffffff;
+      text-shadow: 0 0 30px rgba(255, 255, 255, 0.8);
+    }
+
+    .half:active {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .label {
+      color: #888;
+      font-size: 1.4rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+
+    .score {
+      color: #ffffff;
+      font-size: clamp(120px, 22vw, 240px);
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    .divider {
+      width: 2px;
+      background: #444;
+      align-self: stretch;
+    }
+
+    .decrement {
+      position: absolute;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      border: 2px solid #555;
+      background: transparent;
+      color: #aaa;
+      font-size: 2rem;
+      line-height: 1;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .decrement:active {
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+    }
+
+    #reset-btn {
+      position: absolute;
+      bottom: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: transparent;
+      border: 1px solid #555;
+      color: #666;
+      font-size: 0.85rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 6px 18px;
+      border-radius: 4px;
+      cursor: pointer;
+      z-index: 10;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    #reset-btn:active {
+      border-color: #aaa;
+      color: #aaa;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="rotate-msg">Please rotate your device to landscape.</div>
+
+  <div id="app">
+    <div class="half" id="us-half">
+      <div class="label">Us</div>
+      <div class="score" id="us-score">0</div>
+      <button class="decrement" id="us-dec" aria-label="Decrease Us score">−</button>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="half" id="them-half">
+      <div class="label">Them</div>
+      <div class="score" id="them-score">0</div>
+      <button class="decrement" id="them-dec" aria-label="Decrease Them score">−</button>
+    </div>
+
+    <button id="reset-btn" aria-label="Reset scores">Reset</button>
+  </div>
+
+  <script>
+    // Lock orientation if the API is supported
+    if (screen.orientation && screen.orientation.lock) {
+      screen.orientation.lock('landscape').catch(() => {
+        // Silently ignore — browser may not allow it (e.g. desktop)
+      });
+    }
+
+    let usScore = 0;
+    let themScore = 0;
+
+    function render() {
+      document.getElementById('us-score').textContent = usScore;
+      document.getElementById('them-score').textContent = themScore;
+
+      const usHalf = document.getElementById('us-half');
+      const themHalf = document.getElementById('them-half');
+
+      if (usScore >= 21) {
+        usHalf.classList.add('winner');
+      } else {
+        usHalf.classList.remove('winner');
+      }
+
+      if (themScore >= 21) {
+        themHalf.classList.add('winner');
+      } else {
+        themHalf.classList.remove('winner');
+      }
+    }
+
+    document.getElementById('us-half').addEventListener('click', function(e) {
+      // Ignore clicks that originated from the decrement button
+      if (e.target.closest('.decrement')) return;
+      usScore += 1;
+      render();
+    });
+
+    document.getElementById('them-half').addEventListener('click', function(e) {
+      if (e.target.closest('.decrement')) return;
+      themScore += 1;
+      render();
+    });
+
+    document.getElementById('us-dec').addEventListener('click', function(e) {
+      e.stopPropagation();
+      if (usScore > 0) usScore -= 1;
+      render();
+    });
+
+    document.getElementById('them-dec').addEventListener('click', function(e) {
+      e.stopPropagation();
+      if (themScore > 0) themScore -= 1;
+      render();
+    });
+
+    document.getElementById('reset-btn').addEventListener('click', function(e) {
+      e.stopPropagation();
+      if (confirm('Reset scores?')) {
+        usScore = 0;
+        themScore = 0;
+        render();
+      }
+    });
+  </script>
+</body>
+</html>
