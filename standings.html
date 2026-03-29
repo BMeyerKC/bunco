@@ -65,8 +65,11 @@
         if (!data) return;
 
         const round = data.meta?.currentRound || 0;
+        const completedRounds = Math.max(0, round - 1);
         document.getElementById('round-indicator').textContent =
-          isFinal ? 'Game complete!' : `After round ${round - 1} of 6`;
+          isFinal ? 'Game complete!'
+          : completedRounds === 0 ? 'No rounds completed yet'
+          : `After round ${completedRounds} of 6`;
 
         const players   = data.players || {};
         const standings = data.standings || {};

@@ -21,10 +21,10 @@ if (isHost && !urlCode) {
   document.getElementById('create-game-btn').addEventListener('click', handleCreateGame);
 } else if (urlCode) {
   gameCode = urlCode.toUpperCase();
-  // Check if this device is the host returning to waiting room
   const storedHostCode = localStorage.getItem('bunco_host_code');
-  if (storedHostCode === gameCode) {
-    // Host returning — go straight to waiting room
+  // Treat as host if: localStorage has this code, OR ?host=true is in URL
+  if (storedHostCode === gameCode || isHost) {
+    localStorage.setItem('bunco_host_code', gameCode);
     showWaitingRoom(true);
     subscribeToGame();
   } else {
@@ -159,7 +159,7 @@ export function onGameUpdate(data) {
   const currentView = [...document.querySelectorAll('[data-view]')]
     .find(el => el.style.display !== 'none')?.id;
 
-  if (data.meta.currentRound >= 1 && currentView === 'view-waiting') {
+  if (data.meta.currentRound >= 1 && (currentView === 'view-waiting' || currentView === 'view-submitted')) {
     navigateToScoring(data);
   }
 
@@ -170,18 +170,25 @@ export function onGameUpdate(data) {
 
   // Check if all tables submitted (host only — implemented in Task 9)
   if (data.meta.currentRound >= 1 && data.meta.currentRound <= 6) {
-    if (typeof checkAndAdvanceRound === 'function') {
-      checkAndAdvanceRound(data, data.meta.currentRound);
-    }
+    checkAndAdvanceRound(data, data.meta.currentRound)
+      .catch(() => showToast('Error advancing round — please refresh.', 'warning'));
   }
 }
 
 // ─── Seat assignment ──────────────────────────────────────────
 
 async function handleRandomSeat() {
-  const players   = gameData.players || {};
-  const playerIds = Object.keys(players);
-  const numTables = gameData.meta.tables;
+  const players      = gameData.players || {};
+  const humanPlayers = Object.values(players).filter(p => !p.isGhost);
+  const totalSeats   = gameData.meta.tables * 4 - gameData.meta.ghostSlots;
+
+  if (humanPlayers.length < totalSeats) {
+    showToast(`Waiting for players — ${humanPlayers.length}/${totalSeats} joined.`, 'warning');
+    return;
+  }
+
+  const playerIds   = Object.keys(players);
+  const numTables   = gameData.meta.tables;
   const assignments = assignRandomSeats(playerIds, numTables);
   await saveRoundAssignments(gameCode, 1, assignments);
   showToast('Seats assigned randomly!', 'success');
@@ -205,6 +212,14 @@ let scoringAbortController = null;
 
 function navigateToScoring(data) {
   myPlayerId = localStorage.getItem(`bunco_player_${gameCode}`);
+  const storedHostCode = localStorage.getItem('bunco_host_code');
+
+  // Host-only device (not also a player) — send to standings dashboard instead
+  if (!myPlayerId && storedHostCode === gameCode) {
+    window.location.href = `standings.html?code=${gameCode}`;
+    return;
+  }
+
   const assignments = data.rounds?.[data.meta.currentRound]?.assignments || {};
   const myAssignment = myPlayerId ? assignments[myPlayerId] : null;
 
