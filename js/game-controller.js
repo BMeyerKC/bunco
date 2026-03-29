@@ -281,6 +281,7 @@ async function handleSubmitScores(roundNumber) {
 
 async function checkAndAdvanceRound(data, roundNumber) {
   if (data.meta.hostDeviceId !== deviceId) return; // only host runs this
+  if (data.meta.currentRound !== roundNumber) return; // already advanced
 
   const tables    = data.rounds?.[roundNumber]?.tables || {};
   const numTables = data.meta.tables;
