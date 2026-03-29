@@ -1,5 +1,6 @@
 // js/game-controller.js
-import { createGame, addPlayer, watchGame, getGame, saveRoundAssignments, startRound } from './firebase.js';
+import { createGame, addPlayer, watchGame, getGame, saveRoundAssignments, startRound,
+         recordBunco, callGame, submitTableScore } from './firebase.js';
 import { generateGameCode, assignRandomSeats } from './game-logic.js';
 import { showView, showToast, getParam, getDeviceId } from './ui.js';
 
@@ -192,10 +193,90 @@ async function handleStartRound() {
   await startRound(gameCode, 1);
 }
 
-// ─── Stubs for Tasks 8 and 9 ─────────────────────────────────
+// ─── Scoring view ─────────────────────────────────────────────
 
-// navigateToScoring is implemented in Task 8
-function navigateToScoring(data) {}
+let usScore   = 0;
+let themScore = 0;
+let myTableId = null;
+let myPlayerId = null;
+let scoringListenersAttached = false;
+
+function navigateToScoring(data) {
+  myPlayerId = localStorage.getItem(`bunco_player_${gameCode}`);
+  const assignments = data.rounds?.[data.meta.currentRound]?.assignments || {};
+  const myAssignment = myPlayerId ? assignments[myPlayerId] : null;
+
+  myTableId = myAssignment?.tableId || 1;
+  usScore   = 0;
+  themScore = 0;
+  scoringListenersAttached = false;
+
+  showView('view-scoring');
+
+  if (screen.orientation && screen.orientation.lock) {
+    screen.orientation.lock('landscape').catch(() => {});
+  }
+
+  document.getElementById('round-label').textContent =
+    `Round ${data.meta.currentRound} of 6`;
+
+  renderScores();
+  attachScoringListeners(data.meta.currentRound);
+}
+
+function renderScores() {
+  document.getElementById('sc-us-score').textContent   = usScore;
+  document.getElementById('sc-them-score').textContent = themScore;
+  document.getElementById('sc-us').style.backgroundColor =
+    usScore >= 21 ? 'rgba(30,100,220,0.7)' : 'rgba(30,60,120,0.35)';
+  document.getElementById('sc-them').style.backgroundColor =
+    themScore >= 21 ? 'rgba(220,110,0,0.7)' : 'rgba(140,70,0,0.35)';
+}
+
+function attachScoringListeners(roundNumber) {
+  if (scoringListenersAttached) return;
+  scoringListenersAttached = true;
+
+  document.getElementById('sc-us').addEventListener('click', e => {
+    if (e.target.closest('#sc-us-dec')) return;
+    usScore++; renderScores();
+  });
+  document.getElementById('sc-them').addEventListener('click', e => {
+    if (e.target.closest('#sc-them-dec')) return;
+    themScore++; renderScores();
+  });
+  document.getElementById('sc-us-dec').addEventListener('click', e => {
+    e.stopPropagation();
+    if (usScore > 0) { usScore--; renderScores(); }
+  });
+  document.getElementById('sc-them-dec').addEventListener('click', e => {
+    e.stopPropagation();
+    if (themScore > 0) { themScore--; renderScores(); }
+  });
+  document.getElementById('bunco-btn').addEventListener('click', () => handleBunco(roundNumber));
+  document.getElementById('call-game-btn').addEventListener('click', () => handleCallGame());
+  document.getElementById('submit-scores-btn').addEventListener('click', () => handleSubmitScores(roundNumber));
+}
+
+async function handleBunco(roundNumber) {
+  if (!myPlayerId) return;
+  await recordBunco(gameCode, roundNumber, myPlayerId);
+  showToast('Bunco recorded!', 'success');
+}
+
+async function handleCallGame() {
+  await callGame(gameCode, myTableId);
+  showToast('Game called! Other tables are finishing their rolls.', 'info');
+}
+
+async function handleSubmitScores(roundNumber) {
+  await submitTableScore(gameCode, roundNumber, myTableId, usScore, themScore);
+  document.getElementById('view-standings-link').href = `standings.html?code=${gameCode}`;
+  showView('view-submitted');
+}
+
+// checkAndAdvanceRound is implemented in Task 9
+// (referenced via typeof check in onGameUpdate)
 
 // checkAndAdvanceRound is implemented in Task 9
 // (referenced via typeof check above)

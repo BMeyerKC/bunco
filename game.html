@@ -63,8 +63,54 @@
     </div>
   </div>
 
-  <!-- VIEW: Scoring (populated in Task 8) -->
-  <div id="view-scoring" data-view style="display:none;"></div>
+  <!-- VIEW: Scoring -->
+  <div id="view-scoring" data-view style="display:none; width:100%; height:100vh; position:relative; overflow:hidden;">
+
+    <!-- Round indicator + game-called banner -->
+    <div style="position:absolute; top:0; left:0; right:0; display:flex; align-items:center; justify-content:center; padding:10px; z-index:20; gap:16px;">
+      <span id="round-label" style="color:#888; font-size:0.95rem; text-transform:uppercase; letter-spacing:0.08em;"></span>
+      <span id="game-called-banner" style="display:none; background:#ffc107; color:#000; padding:4px 12px; border-radius:4px; font-size:0.85rem; font-weight:600;">
+        GAME CALLED — finish your roll
+      </span>
+    </div>
+
+    <!-- Scorer halves -->
+    <div style="display:flex; width:100%; height:100%;">
+
+      <div id="sc-us" style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer; user-select:none; -webkit-tap-highlight-color:transparent; position:relative; background-color:rgba(30,60,120,0.35);">
+        <div style="color:#888; font-size:1.2rem; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; margin-bottom:10px;">Us</div>
+        <div id="sc-us-score" style="color:#fff; font-size:clamp(100px,18vw,200px); font-weight:700; line-height:1;">0</div>
+        <button id="sc-us-dec" style="position:absolute; bottom:70px; left:50%; transform:translateX(-50%); width:56px; height:56px; border-radius:50%; border:2px solid #555; background:transparent; color:#aaa; font-size:1.8rem; cursor:pointer; display:flex; align-items:center; justify-content:center;">−</button>
+      </div>
+
+      <div style="width:2px; background:#444; align-self:stretch;"></div>
+
+      <div id="sc-them" style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer; user-select:none; -webkit-tap-highlight-color:transparent; position:relative; background-color:rgba(140,70,0,0.35);">
+        <div style="color:#888; font-size:1.2rem; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; margin-bottom:10px;">Them</div>
+        <div id="sc-them-score" style="color:#fff; font-size:clamp(100px,18vw,200px); font-weight:700; line-height:1;">0</div>
+        <button id="sc-them-dec" style="position:absolute; bottom:70px; left:50%; transform:translateX(-50%); width:56px; height:56px; border-radius:50%; border:2px solid #555; background:transparent; color:#aaa; font-size:1.8rem; cursor:pointer; display:flex; align-items:center; justify-content:center;">−</button>
+      </div>
+
+    </div>
+
+    <!-- Footer: BUNCO + Call Game + Submit -->
+    <div style="position:absolute; bottom:0; left:0; right:0; display:flex; align-items:center; justify-content:center; gap:16px; padding:16px; z-index:20; background:rgba(26,26,26,0.85);">
+
+      <button id="bunco-btn" style="background:#ffc107; color:#000; border:none; font-size:1.1rem; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; padding:12px 28px; border-radius:8px; cursor:pointer; min-width:120px;">
+        🎲 BUNCO!
+      </button>
+
+      <button id="call-game-btn" style="background:transparent; border:2px solid #555; color:#aaa; font-size:0.85rem; letter-spacing:0.08em; text-transform:uppercase; padding:10px 20px; border-radius:6px; cursor:pointer;">
+        Call Game
+      </button>
+
+      <button id="submit-scores-btn" style="background:transparent; border:2px solid #555; color:#aaa; font-size:0.85rem; letter-spacing:0.08em; text-transform:uppercase; padding:10px 20px; border-radius:6px; cursor:pointer;">
+        Submit
+      </button>
+
+    </div>
+
+  </div>
 
   <!-- VIEW: Round submitted / waiting for others -->
   <div id="view-submitted" data-view style="display:none;"
