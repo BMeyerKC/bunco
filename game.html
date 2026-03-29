@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bunco Game</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="css/base.css" />
+</head>
+<body>
+
+  <a href="index.html" class="btn btn-sm btn-outline-secondary m-3 position-fixed top-0 start-0" style="z-index:100;">← Home</a>
+
+  <!-- VIEW: Host Setup -->
+  <div id="view-setup" data-view class="min-vh-100 d-flex align-items-center justify-content-center px-3">
+    <div class="w-100" style="max-width: 440px;">
+      <h2 class="text-center mb-4">Host a Game</h2>
+      <div class="mb-3">
+        <label class="form-label">Number of tables</label>
+        <select id="setup-tables" class="form-select">
+          <option value="2">2 tables (8 players)</option>
+          <option value="3" selected>3 tables (12 players)</option>
+          <option value="4">4 tables (16 players)</option>
+          <option value="5">5 tables (20 players)</option>
+          <option value="6">6 tables (24 players)</option>
+        </select>
+      </div>
+      <div class="mb-4">
+        <label class="form-label">Ghost player slots</label>
+        <select id="setup-ghosts" class="form-select">
+          <option value="0" selected>0 (no ghosts)</option>
+          <option value="1">1 ghost</option>
+          <option value="2">2 ghosts</option>
+          <option value="3">3 ghosts</option>
+        </select>
+      </div>
+      <button id="create-game-btn" class="btn btn-light w-100">Create Game</button>
+    </div>
+  </div>
+
+  <!-- VIEW: Waiting Room -->
+  <div id="view-waiting" data-view style="display:none;" class="min-vh-100 d-flex align-items-center justify-content-center px-3">
+    <div class="w-100 text-center" style="max-width: 500px;">
+      <p class="text-muted mb-1">Game code</p>
+      <h1 class="display-2 fw-bold mb-4" id="waiting-code">----</h1>
+      <p class="text-muted mb-3">Players joined: <span id="waiting-count">0</span> / <span id="waiting-total">0</span></p>
+      <div id="waiting-player-list" class="d-flex flex-wrap gap-2 justify-content-center mb-4"></div>
+      <div id="host-controls" style="display:none;">
+        <button id="random-seat-btn" class="btn btn-outline-light me-2">Random Seat</button>
+        <button id="start-round-btn" class="btn btn-light" disabled>Start Round 1</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- VIEW: Join (player enters name) -->
+  <div id="view-join" data-view style="display:none;" class="min-vh-100 d-flex align-items-center justify-content-center px-3">
+    <div class="w-100 text-center" style="max-width: 360px;">
+      <h2 class="mb-1">Join Game</h2>
+      <p class="text-muted mb-4">Code: <strong id="join-display-code"></strong></p>
+      <input id="join-name" type="text" class="form-control form-control-lg text-center mb-3"
+             placeholder="Your name" maxlength="20" autocomplete="off" />
+      <button id="join-btn" class="btn btn-light w-100">Join</button>
+    </div>
+  </div>
+
+  <!-- VIEW: Scoring -->
+  <div id="view-scoring" data-view style="display:none; width:100%; height:100vh; position:relative; overflow:hidden;">
+
+    <!-- Round indicator + game-called banner -->
+    <div style="position:absolute; top:0; left:0; right:0; display:flex; align-items:center; justify-content:center; padding:10px; z-index:20; gap:16px;">
+      <span id="round-label" style="color:#888; font-size:0.95rem; text-transform:uppercase; letter-spacing:0.08em;"></span>
+      <span id="game-called-banner" style="display:none; background:#ffc107; color:#000; padding:4px 12px; border-radius:4px; font-size:0.85rem; font-weight:600;">
+        GAME CALLED — finish your roll
+      </span>
+    </div>
+
+    <!-- Scorer halves -->
+    <div style="display:flex; width:100%; height:100%;">
+
+      <div id="sc-us" style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer; user-select:none; -webkit-tap-highlight-color:transparent; position:relative; background-color:rgba(30,60,120,0.35);">
+        <div style="color:#888; font-size:1.2rem; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; margin-bottom:10px;">Us</div>
+        <div id="sc-us-score" style="color:#fff; font-size:clamp(100px,18vw,200px); font-weight:700; line-height:1;">0</div>
+        <button id="sc-us-dec" style="position:absolute; bottom:70px; left:50%; transform:translateX(-50%); width:56px; height:56px; border-radius:50%; border:2px solid #555; background:transparent; color:#aaa; font-size:1.8rem; cursor:pointer; display:flex; align-items:center; justify-content:center;">−</button>
+      </div>
+
+      <div style="width:2px; background:#444; align-self:stretch;"></div>
+
+      <div id="sc-them" style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer; user-select:none; -webkit-tap-highlight-color:transparent; position:relative; background-color:rgba(140,70,0,0.35);">
+        <div style="color:#888; font-size:1.2rem; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; margin-bottom:10px;">Them</div>
+        <div id="sc-them-score" style="color:#fff; font-size:clamp(100px,18vw,200px); font-weight:700; line-height:1;">0</div>
+        <button id="sc-them-dec" style="position:absolute; bottom:70px; left:50%; transform:translateX(-50%); width:56px; height:56px; border-radius:50%; border:2px solid #555; background:transparent; color:#aaa; font-size:1.8rem; cursor:pointer; display:flex; align-items:center; justify-content:center;">−</button>
+      </div>
+
+    </div>
+
+    <!-- Footer: BUNCO + Call Game + Submit -->
+    <div style="position:absolute; bottom:0; left:0; right:0; display:flex; align-items:center; justify-content:center; gap:16px; padding:16px; z-index:20; background:rgba(26,26,26,0.85);">
+
+      <button id="bunco-btn" style="background:#ffc107; color:#000; border:none; font-size:1.1rem; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; padding:12px 28px; border-radius:8px; cursor:pointer; min-width:120px;">
+        🎲 BUNCO!
+      </button>
+
+      <button id="call-game-btn" style="background:transparent; border:2px solid #555; color:#aaa; font-size:0.85rem; letter-spacing:0.08em; text-transform:uppercase; padding:10px 20px; border-radius:6px; cursor:pointer;">
+        Call Game
+      </button>
+
+      <button id="submit-scores-btn" style="background:transparent; border:2px solid #555; color:#aaa; font-size:0.85rem; letter-spacing:0.08em; text-transform:uppercase; padding:10px 20px; border-radius:6px; cursor:pointer;">
+        Submit
+      </button>
+
+    </div>
+
+  </div>
+
+  <!-- VIEW: Round submitted / waiting for others -->
+  <div id="view-submitted" data-view style="display:none;"
+       class="min-vh-100 d-flex align-items-center justify-content-center text-center px-3">
+    <div>
+      <h3 class="mb-2">Scores submitted!</h3>
+      <p class="text-muted">Waiting for other tables…</p>
+      <a id="view-standings-link" href="standings.html" class="btn btn-outline-light mt-3">View Standings</a>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script type="module" src="js/game-controller.js"></script>
+
+</body>
+</html>

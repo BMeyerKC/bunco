@@ -1,0 +1,41 @@
+/* css/base.css */
+:root {
+  --bg: #1a1a1a;
+  --surface: #242424;
+  --border: #444;
+  --muted: #888;
+  --text: #ffffff;
+}
+
+body {
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: Arial, sans-serif;
+}
+
+.card {
+  background-color: var(--surface);
+  border-color: var(--border);
+}
+
+.card-title {
+  color: var(--text);
+}
+
+.card-text {
+  color: var(--muted);
+}
+
+.btn-outline-light {
+  border-color: var(--border);
+  color: var(--muted);
+}
+
+.btn-outline-light:hover {
+  background-color: rgba(255,255,255,0.08);
+  color: var(--text);
+}
+
+.text-muted {
+  color: var(--muted) !important;
+}
