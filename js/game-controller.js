@@ -199,7 +199,7 @@ let usScore   = 0;
 let themScore = 0;
 let myTableId = null;
 let myPlayerId = null;
-let scoringListenersAttached = false;
+let scoringAbortController = null;
 
 function navigateToScoring(data) {
   myPlayerId = localStorage.getItem(`bunco_player_${gameCode}`);
@@ -209,7 +209,8 @@ function navigateToScoring(data) {
   myTableId = myAssignment?.tableId || 1;
   usScore   = 0;
   themScore = 0;
-  scoringListenersAttached = false;
+  if (scoringAbortController) scoringAbortController.abort();
+  scoringAbortController = new AbortController();
 
   showView('view-scoring');
 
@@ -234,28 +235,27 @@ function renderScores() {
 }
 
 function attachScoringListeners(roundNumber) {
-  if (scoringListenersAttached) return;
-  scoringListenersAttached = true;
+  const signal = scoringAbortController.signal;
 
   document.getElementById('sc-us').addEventListener('click', e => {
     if (e.target.closest('#sc-us-dec')) return;
     usScore++; renderScores();
-  });
+  }, { signal });
   document.getElementById('sc-them').addEventListener('click', e => {
     if (e.target.closest('#sc-them-dec')) return;
     themScore++; renderScores();
-  });
+  }, { signal });
   document.getElementById('sc-us-dec').addEventListener('click', e => {
     e.stopPropagation();
     if (usScore > 0) { usScore--; renderScores(); }
-  });
+  }, { signal });
   document.getElementById('sc-them-dec').addEventListener('click', e => {
     e.stopPropagation();
     if (themScore > 0) { themScore--; renderScores(); }
-  });
-  document.getElementById('bunco-btn').addEventListener('click', () => handleBunco(roundNumber));
-  document.getElementById('call-game-btn').addEventListener('click', () => handleCallGame());
-  document.getElementById('submit-scores-btn').addEventListener('click', () => handleSubmitScores(roundNumber));
+  }, { signal });
+  document.getElementById('bunco-btn').addEventListener('click', () => handleBunco(roundNumber), { signal });
+  document.getElementById('call-game-btn').addEventListener('click', () => handleCallGame(), { signal });
+  document.getElementById('submit-scores-btn').addEventListener('click', () => handleSubmitScores(roundNumber), { signal });
 }
 
 async function handleBunco(roundNumber) {
