@@ -45,6 +45,8 @@
     import { watchGame } from './js/firebase.js';
     import { getParam } from './js/ui.js';
 
+    const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
     const code    = getParam('code');
     const isFinal = getParam('final') === 'true';
 
@@ -83,7 +85,7 @@
         const tbody = document.getElementById('standings-body');
         tbody.innerHTML = rows.map((r, i) => `
           <tr ${i === 0 && isFinal ? 'class="table-warning"' : ''}>
-            <td>${r.name}${i === 0 && isFinal ? ' 🏆' : ''}</td>
+            <td>${esc(r.name)}${i === 0 && isFinal ? ' 🏆' : ''}</td>
             <td class="text-center">${r.wins}</td>
             <td class="text-center">${r.losses}</td>
             <td class="text-center">${r.buncos}</td>
