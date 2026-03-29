@@ -1,7 +1,9 @@
 // js/game-controller.js
 import { createGame, addPlayer, watchGame, getGame, saveRoundAssignments, startRound,
-         recordBunco, callGame, submitTableScore } from './firebase.js';
-import { generateGameCode, assignRandomSeats } from './game-logic.js';
+         recordBunco, callGame, submitTableScore,
+         getRoundAssignments, saveStandings } from './firebase.js';
+import { generateGameCode, assignRandomSeats,
+         calculateNextRoundSeating, determineWinner, updateStandings } from './game-logic.js';
 import { showView, showToast, getParam, getDeviceId } from './ui.js';
 
 const deviceId = getDeviceId();
@@ -275,8 +277,40 @@ async function handleSubmitScores(roundNumber) {
   showView('view-submitted');
 }
 
-// checkAndAdvanceRound is implemented in Task 9
-// (referenced via typeof check in onGameUpdate)
+// ─── Round end ────────────────────────────────────────────────
 
-// checkAndAdvanceRound is implemented in Task 9
-// (referenced via typeof check above)
+async function checkAndAdvanceRound(data, roundNumber) {
+  if (data.meta.hostDeviceId !== deviceId) return; // only host runs this
+
+  const tables    = data.rounds?.[roundNumber]?.tables || {};
+  const numTables = data.meta.tables;
+
+  // Wait until all tables have submitted
+  for (let t = 1; t <= numTables; t++) {
+    if (!tables[t]?.submitted) return;
+  }
+
+  // Calculate winner per table
+  const roundResults = {};
+  for (let t = 1; t <= numTables; t++) {
+    const { usScore, themScore } = tables[t];
+    roundResults[t] = { winner: determineWinner(usScore, themScore) };
+  }
+
+  // Update cumulative standings
+  const assignments = await getRoundAssignments(gameCode, roundNumber);
+  const buncos      = data.rounds?.[roundNumber]?.buncos || {};
+  const current     = data.standings || {};
+  const next        = updateStandings(current, tables, roundResults, assignments, buncos);
+  await saveStandings(gameCode, next);
+
+  if (roundNumber >= 6) {
+    await startRound(gameCode, 7); // 7 = game complete sentinel
+    return;
+  }
+
+  // Calculate next round seating and advance
+  const nextAssignments = calculateNextRoundSeating(assignments, roundResults, numTables);
+  await saveRoundAssignments(gameCode, roundNumber + 1, nextAssignments);
+  await startRound(gameCode, roundNumber + 1);
+}
