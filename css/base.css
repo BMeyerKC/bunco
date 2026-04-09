@@ -1,4 +1,9 @@
 /* css/base.css */
+
+/* Hide all views by default. This must override Bootstrap's d-flex !important. */
+[data-view]:not(.view-active) {
+  display: none !important;
+}
 :root {
   --bg: #1a1a1a;
   --surface: #242424;

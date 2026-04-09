@@ -42,8 +42,10 @@ Player identity is tracked via `localStorage` (device ID for host, player ID per
 No build step needed. Serve the root directory with any static file server, e.g.:
 
 ```bash
-npx serve .
+npx serve
 ```
+
+A `serve.json` file is included with `cleanUrls: false`. This is required — without it, `npx serve` redirects `game.html?host=true` → `/game` and drops the query params, breaking the host flow.
 
 Firebase config is hard-coded in `js/firebase.js` (public web config — this is normal for Firebase client apps).
 

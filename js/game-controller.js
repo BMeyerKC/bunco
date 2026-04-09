@@ -47,20 +47,30 @@ async function handleCreateGame() {
   const numTables  = parseInt(document.getElementById('setup-tables').value);
   const ghostSlots = parseInt(document.getElementById('setup-ghosts').value);
 
-  gameCode = generateGameCode();
+  try {
+    gameCode = generateGameCode();
 
-  await createGame(gameCode, deviceId, numTables, ghostSlots);
+    await createGame(gameCode, deviceId, numTables, ghostSlots);
 
-  // Add ghost players
-  for (let i = 0; i < ghostSlots; i++) {
-    await addPlayer(gameCode, `Ghost ${i + 1}`, true);
+    // Add ghost players
+    for (let i = 0; i < ghostSlots; i++) {
+      await addPlayer(gameCode, `Ghost ${i + 1}`, true);
+    }
+
+    // Remember this device is the host for this code
+    localStorage.setItem('bunco_host_code', gameCode);
+
+    // Update URL so the code is visible/shareable, then show waiting room without a full reload.
+    // A full redirect causes bfcache to restore the old setup-form DOM on some browsers.
+    history.pushState(null, '', `game.html?code=${gameCode}&host=true`);
+    showWaitingRoom(true);
+    subscribeToGame();
+  } catch (err) {
+    console.error('Failed to create game:', err);
+    showToast('Failed to create game — check console for details.', 'warning');
+    btn.disabled = false;
+    btn.textContent = 'Create Game';
   }
-
-  // Remember this device is the host for this code
-  localStorage.setItem('bunco_host_code', gameCode);
-
-  // Redirect host to waiting room with code in URL
-  window.location.href = `game.html?code=${gameCode}&host=true`;
 }
 
 // ─── Player joins ─────────────────────────────────────────────
