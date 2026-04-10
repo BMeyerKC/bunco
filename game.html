@@ -27,12 +27,7 @@
       </div>
       <div class="mb-4">
         <label class="form-label">Ghost player slots</label>
-        <select id="setup-ghosts" class="form-select">
-          <option value="0" selected>0 (no ghosts)</option>
-          <option value="1">1 ghost</option>
-          <option value="2">2 ghosts</option>
-          <option value="3">3 ghosts</option>
-        </select>
+        <select id="setup-ghosts" class="form-select"></select>
       </div>
       <button id="create-game-btn" class="btn btn-light w-100">Create Game</button>
     </div>
@@ -124,6 +119,29 @@
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script type="module" src="js/game-controller.js"></script>
+
+  <script>
+    (function () {
+      const tablesEl = document.getElementById('setup-tables');
+      const ghostsEl = document.getElementById('setup-ghosts');
+
+      function rebuildGhosts() {
+        const max = parseInt(tablesEl.value) * 4 - 1;
+        const current = parseInt(ghostsEl.value) || 0;
+        ghostsEl.innerHTML = '';
+        for (let i = 0; i <= max; i++) {
+          const opt = document.createElement('option');
+          opt.value = i;
+          opt.textContent = i === 0 ? '0 (no ghosts)' : i;
+          if (i === Math.min(current, max)) opt.selected = true;
+          ghostsEl.appendChild(opt);
+        }
+      }
+
+      tablesEl.addEventListener('change', rebuildGhosts);
+      rebuildGhosts(); // initialise on load
+    })();
+  </script>
 
 </body>
 </html>
