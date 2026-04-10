@@ -31,6 +31,7 @@ const isHost   = getParam('host') === 'true';
 let gameCode    = null;
 let gameData    = null;
 let unsubscribe = null;
+let myPlayerId  = null;
 
 // ─── Entry point ──────────────────────────────────────────────
 
@@ -245,7 +246,7 @@ async function handleStartRound() {
 let usScore   = 0;
 let themScore = 0;
 let myTableId = null;
-let myPlayerId = null;
+myPlayerId = null;
 let scoringAbortController = null;
 
 function navigateToScoring(data) {
