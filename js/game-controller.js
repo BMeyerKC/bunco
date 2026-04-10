@@ -40,15 +40,24 @@ if (isHost && !urlCode) {
 } else if (urlCode) {
   gameCode = urlCode.toUpperCase();
   const storedHostCode = localStorage.getItem('bunco_host_code');
-  // Treat as host if: localStorage has this code, OR ?host=true is in URL
+  const storedPlayerId = localStorage.getItem(`bunco_player_${gameCode}`);
+
   if (storedHostCode === gameCode || isHost) {
+    // Host returning or first load
     localStorage.setItem('bunco_host_code', gameCode);
     showWaitingRoom(true);
     subscribeToGame();
+  } else if (storedPlayerId) {
+    // Returning player — skip join form, go straight to waiting room.
+    // onGameUpdate will auto-navigate to scoring if round is already active.
+    showWaitingRoom(false);
+    subscribeToGame();
   } else {
+    // Fresh player — show join form and subscribe immediately for live status.
     showView('view-join');
     document.getElementById('join-display-code').textContent = gameCode;
     document.getElementById('join-btn').addEventListener('click', handleJoin);
+    subscribeToGame();
   }
 } else {
   // No code, not host — redirect home
