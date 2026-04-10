@@ -132,6 +132,7 @@ async function handleJoin() {
 
   const playerId = await addPlayer(gameCode, name, false);
   localStorage.setItem(`bunco_player_${gameCode}`, playerId);
+  myPlayerId = playerId;
 
   const amHost = game.meta.hostDeviceId === deviceId;
   showWaitingRoom(amHost);
