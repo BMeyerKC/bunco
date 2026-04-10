@@ -37,6 +37,17 @@ tests/
 
 Player identity is tracked via `localStorage` (device ID for host, player ID per game code for players).
 
+### Ghost players
+
+Ghost slots fill empty seats so games can run with fewer real players (useful for testing). The host sets the number of ghost slots when creating the game — up to `(tables × 4) − 1`. Ghosts get random names drawn from a pool so demo games look realistic.
+
+### Joining mid-game
+
+The join screen subscribes to Firebase immediately on load, giving players live status. If the round is already in progress when a player arrives, they can:
+
+- **Spectate** — redirected to the live standings page
+- **Take a ghost seat** — pick an available ghost slot, enter a name; the ghost record is updated in-place so no seat reassignment is needed
+
 ## Running locally
 
 No build step needed. Serve the root directory with any static file server, e.g.:
