@@ -126,13 +126,13 @@
       const ghostsEl = document.getElementById('setup-ghosts');
 
       function rebuildGhosts() {
-        const max = parseInt(tablesEl.value) * 4 - 1;
-        const current = parseInt(ghostsEl.value) || 0;
+        const max = parseInt(tablesEl.value, 10) * 4 - 1;
+        const current = parseInt(ghostsEl.value, 10) || 0;
         ghostsEl.innerHTML = '';
         for (let i = 0; i <= max; i++) {
           const opt = document.createElement('option');
           opt.value = i;
-          opt.textContent = i === 0 ? '0 (no ghosts)' : i;
+          opt.textContent = i === 0 ? '0 (no ghosts)' : i === 1 ? '1 ghost' : `${i} ghosts`;
           if (i === Math.min(current, max)) opt.selected = true;
           ghostsEl.appendChild(opt);
         }
