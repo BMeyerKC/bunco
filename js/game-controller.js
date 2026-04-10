@@ -192,6 +192,8 @@ export function onGameUpdate(data) {
     if (startBtn) startBtn.disabled = humanPlayers.length < totalSeats;
   }
 
+  updateWaitingRoomSeat(data);
+
   // Show game-called banner on scoring view
   const banner = document.getElementById('game-called-banner');
   if (banner) {
@@ -352,6 +354,41 @@ function getAvailableGhostSeats(data) {
       return { ghostId, tableId: a.tableId, teammateName };
     })
     .filter(Boolean);
+}
+
+function updateWaitingRoomSeat(data) {
+  const seatInfo = document.getElementById('waiting-seat-info');
+  const playerList = document.getElementById('waiting-player-list');
+  if (!seatInfo || !playerList) return;
+
+  const assignments = data.rounds?.[1]?.assignments;
+  if (!myPlayerId || !assignments || !assignments[myPlayerId]) {
+    // No assignment yet — show player list, hide seat card
+    seatInfo.style.display = 'none';
+    playerList.style.display = '';
+    return;
+  }
+
+  const players = data.players || {};
+  const mine = assignments[myPlayerId];
+
+  const teammate = Object.entries(assignments).find(([id, a]) =>
+    id !== myPlayerId && a.tableId === mine.tableId && a.side === mine.side
+  );
+  const opponents = Object.entries(assignments).filter(([, a]) =>
+    a.tableId === mine.tableId && a.side !== mine.side
+  );
+
+  const teammateName  = teammate  ? players[teammate[0]]?.name  : '—';
+  const opponentNames = opponents.map(([id]) => players[id]?.name).filter(Boolean).join(' & ') || '—';
+
+  document.getElementById('waiting-seat-table').textContent    = `📍 Table ${mine.tableId}`;
+  document.getElementById('waiting-seat-teammate').textContent  = teammateName;
+  document.getElementById('waiting-seat-opponents').textContent = opponentNames;
+
+  // Swap: hide player list, show seat card
+  playerList.style.display = 'none';
+  seatInfo.style.display   = '';
 }
 
 function updateJoinView(data) {
