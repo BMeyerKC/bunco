@@ -391,16 +391,20 @@ function updateJoinView(data) {
         ghostSection.style.display = 'none';
       } else {
         ghostSection.style.display = '';
-        ghostList.innerHTML = '';
-        ghosts.forEach(({ ghostId, tableId, teammateName }) => {
-          const btn = document.createElement('button');
-          btn.className = 'btn btn-outline-secondary w-100';
-          btn.textContent = teammateName
-            ? `Table ${tableId} — with ${teammateName}`
-            : `Table ${tableId}`;
-          btn.addEventListener('click', () => handleClaimGhost(ghostId));
-          ghostList.appendChild(btn);
-        });
+        const claimEl = document.getElementById('join-ghost-claim');
+        const claimVisible = claimEl && claimEl.style.display !== 'none';
+        if (!claimVisible) {
+          ghostList.innerHTML = '';
+          ghosts.forEach(({ ghostId, tableId, teammateName }) => {
+            const btn = document.createElement('button');
+            btn.className = 'btn btn-outline-secondary w-100';
+            btn.textContent = teammateName
+              ? `Table ${tableId} — with ${teammateName}`
+              : `Table ${tableId}`;
+            btn.addEventListener('click', () => handleClaimGhost(ghostId));
+            ghostList.appendChild(btn);
+          });
+        }
       }
     }
   }
@@ -419,12 +423,20 @@ function handleClaimGhost(ghostId) {
   const cancelBtn  = document.getElementById('join-ghost-cancel');
   const nameInput  = document.getElementById('join-ghost-name');
 
+  if (!confirmBtn || !cancelBtn) {
+    if (claimEl) claimEl.style.display = 'none';
+    if (listEl)  listEl.style.display  = '';
+    pendingGhostId = null;
+    return;
+  }
+
   confirmBtn.onclick = async () => {
     const name = nameInput.value.trim();
     if (!name) { showToast('Please enter your name.', 'warning'); return; }
     confirmBtn.disabled = true;
     confirmBtn.textContent = 'Joining…';
     try {
+      if (!gameData) throw new Error('Game data unavailable');
       await claimGhostSeat(gameCode, pendingGhostId, name);
       localStorage.setItem(`bunco_player_${gameCode}`, pendingGhostId);
       navigateToScoring(gameData);
