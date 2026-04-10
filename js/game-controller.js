@@ -50,6 +50,7 @@ if (isHost && !urlCode) {
   } else if (storedPlayerId) {
     // Returning player — skip join form, go straight to waiting room.
     // onGameUpdate will auto-navigate to scoring if round is already active.
+    myPlayerId = storedPlayerId;
     showWaitingRoom(false);
     subscribeToGame();
   } else {
@@ -133,7 +134,6 @@ async function handleJoin() {
 
   const amHost = game.meta.hostDeviceId === deviceId;
   showWaitingRoom(amHost);
-  subscribeToGame();
 }
 
 // ─── Waiting room ─────────────────────────────────────────────
