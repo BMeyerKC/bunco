@@ -52,9 +52,31 @@
     <div class="w-100 text-center" style="max-width: 360px;">
       <h2 class="mb-1">Join Game</h2>
       <p class="text-muted mb-4">Code: <strong id="join-display-code"></strong></p>
-      <input id="join-name" type="text" class="form-control form-control-lg text-center mb-3"
-             placeholder="Your name" maxlength="20" autocomplete="off" />
-      <button id="join-btn" class="btn btn-light w-100">Join</button>
+
+      <!-- Pre-game: name entry form -->
+      <div id="join-pregame">
+        <p id="join-live-count" class="text-muted mb-3" style="display:none;"></p>
+        <input id="join-name" type="text" class="form-control form-control-lg text-center mb-3"
+               placeholder="Your name" maxlength="20" autocomplete="off" />
+        <button id="join-btn" class="btn btn-light w-100">Join</button>
+      </div>
+
+      <!-- In-progress: spectate or take a ghost seat -->
+      <div id="join-inprogress" style="display:none;">
+        <p class="text-muted mb-4">Round is in progress.</p>
+        <a id="join-spectate-btn" href="#" class="btn btn-outline-light w-100 mb-3">Watch as Spectator</a>
+        <div id="join-ghost-section" style="display:none;">
+          <p class="text-muted mb-2">Or take an open seat:</p>
+          <div id="join-ghost-list" class="d-flex flex-column gap-2 mb-3"></div>
+          <div id="join-ghost-claim" style="display:none;">
+            <input id="join-ghost-name" type="text" class="form-control form-control-lg text-center mb-3"
+                   placeholder="Your name" maxlength="20" autocomplete="off" />
+            <button id="join-ghost-confirm" class="btn btn-light w-100">Take this seat</button>
+            <button id="join-ghost-cancel" class="btn btn-link w-100 mt-1 text-muted">Cancel</button>
+          </div>
+        </div>
+      </div>
+
     </div>
   </div>
 
