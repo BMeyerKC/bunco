@@ -157,7 +157,7 @@ function subscribeToGame() {
 }
 
 export function onGameUpdate(data) {
-  if (!data) return;
+  if (!data || !data.meta) return;
   gameData = data;
 
   const players      = data.players || {};
