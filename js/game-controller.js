@@ -406,6 +406,46 @@ function updateJoinView(data) {
   }
 }
 
+let pendingGhostId = null;
+
+function handleClaimGhost(ghostId) {
+  pendingGhostId = ghostId;
+  const claimEl = document.getElementById('join-ghost-claim');
+  const listEl  = document.getElementById('join-ghost-list');
+  if (claimEl) claimEl.style.display = '';
+  if (listEl)  listEl.style.display  = 'none';
+
+  const confirmBtn = document.getElementById('join-ghost-confirm');
+  const cancelBtn  = document.getElementById('join-ghost-cancel');
+  const nameInput  = document.getElementById('join-ghost-name');
+
+  confirmBtn.onclick = async () => {
+    const name = nameInput.value.trim();
+    if (!name) { showToast('Please enter your name.', 'warning'); return; }
+    confirmBtn.disabled = true;
+    confirmBtn.textContent = 'Joining…';
+    try {
+      await claimGhostSeat(gameCode, pendingGhostId, name);
+      localStorage.setItem(`bunco_player_${gameCode}`, pendingGhostId);
+      navigateToScoring(gameData);
+    } catch (err) {
+      console.error('Failed to claim ghost seat:', err);
+      showToast('Failed to join — please try again.', 'warning');
+      confirmBtn.disabled = false;
+      confirmBtn.textContent = 'Take this seat';
+    }
+  };
+
+  cancelBtn.onclick = () => {
+    pendingGhostId = null;
+    if (claimEl) claimEl.style.display = 'none';
+    if (listEl)  listEl.style.display  = '';
+    if (nameInput) nameInput.value = '';
+    confirmBtn.disabled = false;
+    confirmBtn.textContent = 'Take this seat';
+  };
+}
+
 async function checkAndAdvanceRound(data, roundNumber) {
   if (data.meta.hostDeviceId !== deviceId) return; // only host runs this
   if (data.meta.currentRound !== roundNumber) return; // already advanced
