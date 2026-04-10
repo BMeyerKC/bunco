@@ -15,8 +15,9 @@ const GHOST_NAMES = [
 
 function pickGhostNames(count) {
   const pool = [...GHOST_NAMES];
+  const safeCount = Math.min(count, pool.length);
   const picked = [];
-  for (let i = 0; i < count; i++) {
+  for (let i = 0; i < safeCount; i++) {
     const idx = Math.floor(Math.random() * pool.length);
     picked.push(pool.splice(idx, 1)[0]);
   }
