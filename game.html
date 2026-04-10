@@ -40,6 +40,18 @@
       <h1 class="display-2 fw-bold mb-4" id="waiting-code">----</h1>
       <p class="text-muted mb-3">Players joined: <span id="waiting-count">0</span> / <span id="waiting-total">0</span></p>
       <div id="waiting-player-list" class="d-flex flex-wrap gap-2 justify-content-center mb-4"></div>
+
+      <!-- Shown to players once seats are assigned -->
+      <div id="waiting-seat-info" style="display:none;" class="mb-4">
+        <p class="text-muted mb-1" style="font-size:0.85rem; text-transform:uppercase; letter-spacing:0.08em;">Your seat</p>
+        <h3 id="waiting-seat-table" class="fw-bold mb-3"></h3>
+        <div class="d-flex flex-column gap-1 mb-3">
+          <div><span class="text-muted me-2">With</span><span id="waiting-seat-teammate" class="fw-semibold"></span></div>
+          <div><span class="text-muted me-2">vs.</span><span id="waiting-seat-opponents" class="fw-semibold"></span></div>
+        </div>
+        <p class="text-muted" style="font-size:0.9rem;">Waiting for the host to start Round 1…</p>
+      </div>
+
       <div id="host-controls" style="display:none;">
         <button id="random-seat-btn" class="btn btn-outline-light me-2">Random Seat</button>
         <button id="start-round-btn" class="btn btn-light" disabled>Start Round 1</button>
