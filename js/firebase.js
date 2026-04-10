@@ -64,6 +64,10 @@ export async function addPlayer(code, name, isGhost = false) {
   return playerRef.key;
 }
 
+export async function claimGhostSeat(code, playerId, name) {
+  await update(ref(db, `games/${code}/players/${playerId}`), { name, isGhost: false });
+}
+
 // ─── Seating assignments ─────────────────────────────────────
 
 export async function saveRoundAssignments(code, roundNumber, assignments) {

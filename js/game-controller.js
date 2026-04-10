@@ -1,5 +1,5 @@
 // js/game-controller.js
-import { createGame, addPlayer, watchGame, getGame, saveRoundAssignments, startRound,
+import { createGame, addPlayer, claimGhostSeat, watchGame, getGame, saveRoundAssignments, startRound,
          recordBunco, callGame, submitTableScore,
          getRoundAssignments, saveStandings } from './firebase.js';
 import { generateGameCode, assignRandomSeats,
