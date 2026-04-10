@@ -164,6 +164,10 @@ export function onGameUpdate(data) {
   const humanPlayers = Object.values(players).filter(p => !p.isGhost);
   const totalSeats   = data.meta.tables * 4 - data.meta.ghostSlots;
 
+  // Update join view if visible
+  const joinPregame = document.getElementById('join-pregame');
+  if (joinPregame) updateJoinView(data);
+
   // Update waiting room counts if visible
   const waitingCode = document.getElementById('waiting-code');
   if (waitingCode) {
@@ -332,6 +336,75 @@ async function handleSubmitScores(roundNumber) {
 }
 
 // ─── Round end ────────────────────────────────────────────────
+
+function getAvailableGhostSeats(data) {
+  const players = data.players || {};
+  const assignments = data.rounds?.[data.meta.currentRound]?.assignments || {};
+
+  return Object.entries(players)
+    .filter(([, p]) => p.isGhost)
+    .map(([ghostId]) => {
+      const a = assignments[ghostId];
+      if (!a) return null;
+      const teammate = Object.entries(assignments).find(([id, b]) =>
+        id !== ghostId && b.tableId === a.tableId && b.side === a.side
+      );
+      const teammateName = teammate ? players[teammate[0]]?.name : null;
+      return { ghostId, tableId: a.tableId, teammateName };
+    })
+    .filter(Boolean);
+}
+
+function updateJoinView(data) {
+  const inProgress = data.meta.currentRound >= 1;
+  const pregameEl    = document.getElementById('join-pregame');
+  const inprogressEl = document.getElementById('join-inprogress');
+  if (!pregameEl || !inprogressEl) return;
+
+  if (!inProgress) {
+    // Show pre-game form with live player count
+    pregameEl.style.display = '';
+    inprogressEl.style.display = 'none';
+
+    const humanCount = Object.values(data.players || {}).filter(p => !p.isGhost).length;
+    const totalSeats = data.meta.tables * 4 - data.meta.ghostSlots;
+    const countEl = document.getElementById('join-live-count');
+    if (countEl) {
+      countEl.textContent = `${humanCount} / ${totalSeats} players joined`;
+      countEl.style.display = '';
+    }
+  } else {
+    // Show in-progress options
+    pregameEl.style.display = 'none';
+    inprogressEl.style.display = '';
+
+    // Wire spectate link
+    const spectateBtn = document.getElementById('join-spectate-btn');
+    if (spectateBtn) spectateBtn.href = `standings.html?code=${gameCode}`;
+
+    // Populate ghost seat list
+    const ghosts = getAvailableGhostSeats(data);
+    const ghostSection = document.getElementById('join-ghost-section');
+    const ghostList    = document.getElementById('join-ghost-list');
+    if (ghostSection && ghostList) {
+      if (ghosts.length === 0) {
+        ghostSection.style.display = 'none';
+      } else {
+        ghostSection.style.display = '';
+        ghostList.innerHTML = '';
+        ghosts.forEach(({ ghostId, tableId, teammateName }) => {
+          const btn = document.createElement('button');
+          btn.className = 'btn btn-outline-secondary w-100';
+          btn.textContent = teammateName
+            ? `Table ${tableId} — with ${teammateName}`
+            : `Table ${tableId}`;
+          btn.addEventListener('click', () => handleClaimGhost(ghostId));
+          ghostList.appendChild(btn);
+        });
+      }
+    }
+  }
+}
 
 async function checkAndAdvanceRound(data, roundNumber) {
   if (data.meta.hostDeviceId !== deviceId) return; // only host runs this
