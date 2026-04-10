@@ -6,6 +6,23 @@ import { generateGameCode, assignRandomSeats,
          calculateNextRoundSeating, determineWinner, updateStandings } from './game-logic.js';
 import { showView, showToast, getParam, getDeviceId } from './ui.js';
 
+const GHOST_NAMES = [
+  'Alice','Bob','Carol','Dave','Eve','Frank','Grace','Hank',
+  'Iris','Jack','Karen','Leo','Mia','Nate','Olivia','Pete',
+  'Quinn','Rosa','Sam','Tina','Uma','Vince','Wendy','Xander',
+  'Yara','Zoe','Amber','Brett','Chloe','Derek'
+];
+
+function pickGhostNames(count) {
+  const pool = [...GHOST_NAMES];
+  const picked = [];
+  for (let i = 0; i < count; i++) {
+    const idx = Math.floor(Math.random() * pool.length);
+    picked.push(pool.splice(idx, 1)[0]);
+  }
+  return picked;
+}
+
 const deviceId = getDeviceId();
 const urlCode  = getParam('code');
 const isHost   = getParam('host') === 'true';
@@ -52,9 +69,10 @@ async function handleCreateGame() {
 
     await createGame(gameCode, deviceId, numTables, ghostSlots);
 
-    // Add ghost players
-    for (let i = 0; i < ghostSlots; i++) {
-      await addPlayer(gameCode, `Ghost ${i + 1}`, true);
+    // Add ghost players with random names
+    const ghostNames = pickGhostNames(ghostSlots);
+    for (const name of ghostNames) {
+      await addPlayer(gameCode, name, true);
     }
 
     // Remember this device is the host for this code
