@@ -250,7 +250,6 @@ async function handleStartRound() {
 let usScore   = 0;
 let themScore = 0;
 let myTableId = null;
-myPlayerId = null;
 let scoringAbortController = null;
 
 function navigateToScoring(data) {
