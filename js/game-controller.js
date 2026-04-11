@@ -1,7 +1,8 @@
 // js/game-controller.js
 import { createGame, addPlayer, claimGhostSeat, watchGame, getGame, saveRoundAssignments, startRound,
          recordBunco, callGame, submitTableScore,
-         getRoundAssignments, saveStandings } from './firebase.js';
+         getRoundAssignments, saveStandings,
+         incrementTableScore, decrementTableScore, watchTableScore } from './firebase.js';
 import { generateGameCode, assignRandomSeats,
          calculateNextRoundSeating, determineWinner, updateStandings } from './game-logic.js';
 import { showView, showToast, getParam, getDeviceId } from './ui.js';
@@ -254,6 +255,7 @@ let usScore   = 0;
 let themScore = 0;
 let myTableId = null;
 let scoringAbortController = null;
+let tableScoreUnsubscribe = null;
 
 function navigateToScoring(data) {
   myPlayerId = localStorage.getItem(`bunco_player_${gameCode}`);
@@ -273,6 +275,12 @@ function navigateToScoring(data) {
   themScore = 0;
   if (scoringAbortController) scoringAbortController.abort();
   scoringAbortController = new AbortController();
+  if (tableScoreUnsubscribe) tableScoreUnsubscribe();
+  tableScoreUnsubscribe = watchTableScore(gameCode, data.meta.currentRound, myTableId, tableData => {
+    usScore = tableData.liveUs || 0;
+    themScore = tableData.liveThem || 0;
+    renderScores();
+  });
 
   showView('view-scoring');
 
