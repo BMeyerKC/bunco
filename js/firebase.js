@@ -9,6 +9,7 @@ import {
   push,
   onValue,
   off,
+  runTransaction,
   serverTimestamp,
 } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
 
@@ -66,6 +67,26 @@ export async function addPlayer(code, name, isGhost = false) {
 
 export async function claimGhostSeat(code, playerId, name) {
   await update(ref(db, `games/${code}/players/${playerId}`), { name, isGhost: false });
+}
+
+// ─── Live scoring ─────────────────────────────────────────────
+
+export async function incrementTableScore(code, round, tableId, side) {
+  const field = side === 'us' ? 'liveUs' : 'liveThem';
+  const r = ref(db, `games/${code}/rounds/${round}/tables/${tableId}/${field}`);
+  await runTransaction(r, current => (current || 0) + 1);
+}
+
+export async function decrementTableScore(code, round, tableId, side) {
+  const field = side === 'us' ? 'liveUs' : 'liveThem';
+  const r = ref(db, `games/${code}/rounds/${round}/tables/${tableId}/${field}`);
+  await runTransaction(r, current => Math.max(0, (current || 0) - 1));
+}
+
+export function watchTableScore(code, round, tableId, callback) {
+  const r = ref(db, `games/${code}/rounds/${round}/tables/${tableId}`);
+  onValue(r, snap => callback(snap.val() || {}));
+  return () => off(r);
 }
 
 // ─── Seating assignments ─────────────────────────────────────
