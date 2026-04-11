@@ -308,19 +308,19 @@ function attachScoringListeners(roundNumber) {
 
   document.getElementById('sc-us').addEventListener('click', e => {
     if (e.target.closest('#sc-us-dec')) return;
-    usScore++; renderScores();
+    incrementTableScore(gameCode, roundNumber, myTableId, 'us');
   }, { signal });
   document.getElementById('sc-them').addEventListener('click', e => {
     if (e.target.closest('#sc-them-dec')) return;
-    themScore++; renderScores();
+    incrementTableScore(gameCode, roundNumber, myTableId, 'them');
   }, { signal });
   document.getElementById('sc-us-dec').addEventListener('click', e => {
     e.stopPropagation();
-    if (usScore > 0) { usScore--; renderScores(); }
+    decrementTableScore(gameCode, roundNumber, myTableId, 'us');
   }, { signal });
   document.getElementById('sc-them-dec').addEventListener('click', e => {
     e.stopPropagation();
-    if (themScore > 0) { themScore--; renderScores(); }
+    decrementTableScore(gameCode, roundNumber, myTableId, 'them');
   }, { signal });
   document.getElementById('bunco-btn').addEventListener('click', () => handleBunco(roundNumber), { signal });
   document.getElementById('call-game-btn').addEventListener('click', () => handleCallGame(), { signal });
