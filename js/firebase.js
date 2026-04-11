@@ -71,20 +71,20 @@ export async function claimGhostSeat(code, playerId, name) {
 
 // ─── Live scoring ─────────────────────────────────────────────
 
-export async function incrementTableScore(code, round, tableId, side) {
+export async function incrementTableScore(code, roundNumber, tableId, side) {
   const field = side === 'us' ? 'liveUs' : 'liveThem';
-  const r = ref(db, `games/${code}/rounds/${round}/tables/${tableId}/${field}`);
+  const r = ref(db, `games/${code}/rounds/${roundNumber}/tables/${tableId}/${field}`);
   await runTransaction(r, current => (current || 0) + 1);
 }
 
-export async function decrementTableScore(code, round, tableId, side) {
+export async function decrementTableScore(code, roundNumber, tableId, side) {
   const field = side === 'us' ? 'liveUs' : 'liveThem';
-  const r = ref(db, `games/${code}/rounds/${round}/tables/${tableId}/${field}`);
+  const r = ref(db, `games/${code}/rounds/${roundNumber}/tables/${tableId}/${field}`);
   await runTransaction(r, current => Math.max(0, (current || 0) - 1));
 }
 
-export function watchTableScore(code, round, tableId, callback) {
-  const r = ref(db, `games/${code}/rounds/${round}/tables/${tableId}`);
+export function watchTableScore(code, roundNumber, tableId, callback) {
+  const r = ref(db, `games/${code}/rounds/${roundNumber}/tables/${tableId}`);
   onValue(r, snap => callback(snap.val() || {}));
   return () => off(r);
 }
