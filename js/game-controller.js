@@ -308,19 +308,23 @@ function attachScoringListeners(roundNumber) {
 
   document.getElementById('sc-us').addEventListener('click', e => {
     if (e.target.closest('#sc-us-dec')) return;
-    incrementTableScore(gameCode, roundNumber, myTableId, 'us');
+    incrementTableScore(gameCode, roundNumber, myTableId, 'us')
+      .catch(() => showToast('Tap not saved — check connection.', 'warning'));
   }, { signal });
   document.getElementById('sc-them').addEventListener('click', e => {
     if (e.target.closest('#sc-them-dec')) return;
-    incrementTableScore(gameCode, roundNumber, myTableId, 'them');
+    incrementTableScore(gameCode, roundNumber, myTableId, 'them')
+      .catch(() => showToast('Tap not saved — check connection.', 'warning'));
   }, { signal });
   document.getElementById('sc-us-dec').addEventListener('click', e => {
     e.stopPropagation();
-    decrementTableScore(gameCode, roundNumber, myTableId, 'us');
+    decrementTableScore(gameCode, roundNumber, myTableId, 'us')
+      .catch(() => showToast('Tap not saved — check connection.', 'warning'));
   }, { signal });
   document.getElementById('sc-them-dec').addEventListener('click', e => {
     e.stopPropagation();
-    decrementTableScore(gameCode, roundNumber, myTableId, 'them');
+    decrementTableScore(gameCode, roundNumber, myTableId, 'them')
+      .catch(() => showToast('Tap not saved — check connection.', 'warning'));
   }, { signal });
   document.getElementById('bunco-btn').addEventListener('click', () => handleBunco(roundNumber), { signal });
   document.getElementById('call-game-btn').addEventListener('click', () => handleCallGame(), { signal });
