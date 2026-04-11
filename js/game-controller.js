@@ -291,7 +291,6 @@ function navigateToScoring(data) {
   document.getElementById('round-label').textContent =
     `Round ${data.meta.currentRound} of 6`;
 
-  renderScores();
   attachScoringListeners(data.meta.currentRound);
 }
 
