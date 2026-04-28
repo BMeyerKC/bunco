@@ -89,8 +89,9 @@
 
       let tableScoreUnsub = null;
       let watchedRound    = 0;
+      let latestTables    = [];
 
-      watchGame(code, data => {
+      const unwatchGame = watchGame(code, data => {
         if (!data) return;
 
         const round = data.meta?.currentRound || 0;
@@ -103,16 +104,16 @@
         // Live table cards
         const tableCardsEl = document.getElementById('table-cards');
         if (data.rounds?.[1]?.assignments && tableCardsEl) {
-          const tables = buildTableLayout(data.players || {}, data.rounds[1].assignments, data.meta.tables);
+          latestTables = buildTableLayout(data.players || {}, data.rounds[1].assignments, data.meta.tables);
 
           if (round >= 1 && round !== watchedRound) {
             if (tableScoreUnsub) tableScoreUnsub();
             watchedRound    = round;
             tableScoreUnsub = watchAllTableScores(code, round, scores => {
-              renderTableCards(tableCardsEl, tables, scores);
+              renderTableCards(tableCardsEl, latestTables, scores);
             });
           } else if (round === 0) {
-            renderTableCards(tableCardsEl, tables, {});
+            renderTableCards(tableCardsEl, latestTables, {});
           }
         }
 
@@ -141,6 +142,11 @@
             <td class="text-center">${r.points}</td>
           </tr>
         `).join('');
+      });
+
+      window.addEventListener('pagehide', () => {
+        unwatchGame();
+        if (tableScoreUnsub) tableScoreUnsub();
       });
     }
   </script>
