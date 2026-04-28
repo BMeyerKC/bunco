@@ -143,6 +143,7 @@ describe('buildTableLayout', () => {
     expect(result[0].tableId).toBe(1);
     expect(result[0].us.map(p => p.name)).toEqual(expect.arrayContaining(['Alice', 'Bob']));
     expect(result[0].them.map(p => p.name)).toEqual(expect.arrayContaining(['Carol', 'Dave']));
+    expect(result[0].us.find(p => p.name === 'Alice').id).toBe('p1');
   });
 
   test('marks ghost players with isGhost: true', () => {
@@ -194,5 +195,27 @@ describe('buildTableLayout', () => {
     const result = buildTableLayout(players, assignments, 1);
     expect(result[0].us).toHaveLength(1);
     expect(result[0].us[0].name).toBe('Alice');
+  });
+
+  test('does not bleed players from one table into another', () => {
+    const players = {
+      p1: { name: 'A', isGhost: false }, p2: { name: 'B', isGhost: false },
+      p3: { name: 'C', isGhost: false }, p4: { name: 'D', isGhost: false },
+      p5: { name: 'E', isGhost: false }, p6: { name: 'F', isGhost: false },
+      p7: { name: 'G', isGhost: false }, p8: { name: 'H', isGhost: false },
+    };
+    const assignments = {
+      p1: { tableId: 1, side: 'us',   seat: 1 }, p2: { tableId: 1, side: 'us',   seat: 2 },
+      p3: { tableId: 1, side: 'them', seat: 1 }, p4: { tableId: 1, side: 'them', seat: 2 },
+      p5: { tableId: 2, side: 'us',   seat: 1 }, p6: { tableId: 2, side: 'us',   seat: 2 },
+      p7: { tableId: 2, side: 'them', seat: 1 }, p8: { tableId: 2, side: 'them', seat: 2 },
+    };
+    const result = buildTableLayout(players, assignments, 2);
+    expect(result[0].us.map(p => p.name)).toEqual(expect.arrayContaining(['A', 'B']));
+    expect(result[0].them.map(p => p.name)).toEqual(expect.arrayContaining(['C', 'D']));
+    expect(result[1].us.map(p => p.name)).toEqual(expect.arrayContaining(['E', 'F']));
+    expect(result[1].them.map(p => p.name)).toEqual(expect.arrayContaining(['G', 'H']));
+    expect(result[0].us).toHaveLength(2);
+    expect(result[1].us).toHaveLength(2);
   });
 });

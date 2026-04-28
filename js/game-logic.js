@@ -126,6 +126,7 @@ export function updateStandings(currentStandings, tableResults, roundResults, as
  * @returns {{ tableId: number, us: {id,name,isGhost}[], them: {id,name,isGhost}[] }[]}
  */
 export function buildTableLayout(players, assignments, numTables) {
+  if (!assignments) return [];
   const tables = [];
   for (let t = 1; t <= numTables; t++) {
     const us = [];
