@@ -169,17 +169,18 @@ function renderHostSeatLayout(data) {
   layout.style.display = '';
   if (badgeList) badgeList.style.display = 'none';
 
-  const tables = buildTableLayout(data.players || {}, data.assignments, data.meta.tables);
+  const assignments    = data.rounds?.[1]?.assignments || {};
+  allTableScoresTables = buildTableLayout(data.players || {}, assignments, data.meta.tables);
   const round  = data.meta.currentRound;
 
   if (round >= 1 && round !== allTableScoresRound) {
     if (allTableScoresUnsubscribe) allTableScoresUnsubscribe();
     allTableScoresRound        = round;
     allTableScoresUnsubscribe  = watchAllTableScores(gameCode, round, scores => {
-      renderTableCards(layout, tables, scores);
+      renderTableCards(layout, allTableScoresTables, scores);
     });
   } else if (round === 0) {
-    renderTableCards(layout, tables, {});
+    renderTableCards(layout, allTableScoresTables, {});
   }
 }
 
@@ -221,7 +222,7 @@ export function onGameUpdate(data) {
 
   updateWaitingRoomSeat(data);
 
-  if (isHost && data.assignments) {
+  if (isHost && data.rounds?.[1]?.assignments) {
     renderHostSeatLayout(data);
   }
 
@@ -287,6 +288,7 @@ let scoringAbortController = null;
 let tableScoreUnsubscribe = null;
 let allTableScoresUnsubscribe = null;
 let allTableScoresRound       = 0;
+let allTableScoresTables      = [];
 
 function navigateToScoring(data) {
   myPlayerId = localStorage.getItem(`bunco_player_${gameCode}`);
@@ -307,6 +309,12 @@ function navigateToScoring(data) {
   if (scoringAbortController) scoringAbortController.abort();
   scoringAbortController = new AbortController();
   if (tableScoreUnsubscribe) tableScoreUnsubscribe();
+  tableScoreUnsubscribe = null;
+  if (allTableScoresUnsubscribe) {
+    allTableScoresUnsubscribe();
+    allTableScoresUnsubscribe = null;
+    allTableScoresRound = 0;
+  }
   tableScoreUnsubscribe = watchTableScore(gameCode, data.meta.currentRound, myTableId, tableData => {
     usScore = tableData.liveUs || 0;
     themScore = tableData.liveThem || 0;
