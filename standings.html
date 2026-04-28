@@ -11,10 +11,23 @@
 
   <div class="container py-4" style="max-width: 600px;">
 
-    <div class="d-flex align-items-center mb-4">
-      <a id="back-link" href="index.html" class="btn btn-sm btn-outline-secondary me-3">← Home</a>
-      <h2 class="mb-0" id="standings-title">Standings</h2>
+    <!-- Shown only when no ?code= param in URL -->
+    <div id="no-code-section" style="display:none;" class="text-center py-5">
+      <h2 class="mb-4">Watch a Game</h2>
+      <form id="code-form" class="d-flex gap-2 justify-content-center">
+        <input id="code-input" type="text" class="form-control form-control-lg text-center"
+               placeholder="Game code" maxlength="4" autocomplete="off"
+               style="max-width:140px; text-transform:uppercase; letter-spacing:0.15em;" />
+        <button type="submit" class="btn btn-light">Watch</button>
+      </form>
     </div>
+
+    <!-- Shown when ?code= param is present -->
+    <div id="standings-section">
+      <div class="d-flex align-items-center mb-4">
+        <a id="back-link" href="index.html" class="btn btn-sm btn-outline-secondary me-3">← Home</a>
+        <h2 class="mb-0" id="standings-title">Standings</h2>
+      </div>
 
     <div id="round-indicator" class="text-muted mb-3"></div>
 
@@ -37,8 +50,9 @@
     <div id="ad-slot" style="display:none; min-height:90px; text-align:center; margin-top:24px;">
       <!-- Google AdSense ad unit goes here -->
     </div>
+    </div><!-- #standings-section -->
 
-  </div>
+  </div><!-- .container -->
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script type="module">
@@ -51,8 +65,13 @@
     const isFinal = getParam('final') === 'true';
 
     if (!code) {
-      document.getElementById('standings-body').innerHTML =
-        '<tr><td colspan="5" class="text-center text-muted">No game code found.</td></tr>';
+      document.getElementById('no-code-section').style.display = '';
+      document.getElementById('standings-section').style.display = 'none';
+      document.getElementById('code-form').addEventListener('submit', e => {
+        e.preventDefault();
+        const val = document.getElementById('code-input').value.trim().toUpperCase();
+        if (val.length === 4) window.location.href = `standings.html?code=${val}`;
+      });
     } else {
       document.getElementById('back-link').href = `game.html?code=${code}`;
 
