@@ -5,6 +5,7 @@ import {
   calculateNextRoundSeating,
   determineWinner,
   updateStandings,
+  buildTableLayout,
 } from '../js/game-logic.js';
 
 describe('generateGameCode', () => {
@@ -120,5 +121,78 @@ describe('updateStandings', () => {
     const buncos = { p1: 1 };
     const next = updateStandings(standings, tableResults, roundResults, assignments, buncos);
     expect(next['p1'].buncos).toBe(1);
+  });
+});
+
+describe('buildTableLayout', () => {
+  test('groups players into us/them by table', () => {
+    const players = {
+      p1: { name: 'Alice', isGhost: false },
+      p2: { name: 'Bob',   isGhost: false },
+      p3: { name: 'Carol', isGhost: false },
+      p4: { name: 'Dave',  isGhost: false },
+    };
+    const assignments = {
+      p1: { tableId: 1, side: 'us',   seat: 1 },
+      p2: { tableId: 1, side: 'us',   seat: 2 },
+      p3: { tableId: 1, side: 'them', seat: 1 },
+      p4: { tableId: 1, side: 'them', seat: 2 },
+    };
+    const result = buildTableLayout(players, assignments, 1);
+    expect(result).toHaveLength(1);
+    expect(result[0].tableId).toBe(1);
+    expect(result[0].us.map(p => p.name)).toEqual(expect.arrayContaining(['Alice', 'Bob']));
+    expect(result[0].them.map(p => p.name)).toEqual(expect.arrayContaining(['Carol', 'Dave']));
+  });
+
+  test('marks ghost players with isGhost: true', () => {
+    const players = {
+      p1: { name: 'Ghost', isGhost: true  },
+      p2: { name: 'Alice', isGhost: false },
+      p3: { name: 'Bob',   isGhost: false },
+      p4: { name: 'Dave',  isGhost: false },
+    };
+    const assignments = {
+      p1: { tableId: 1, side: 'us',   seat: 1 },
+      p2: { tableId: 1, side: 'us',   seat: 2 },
+      p3: { tableId: 1, side: 'them', seat: 1 },
+      p4: { tableId: 1, side: 'them', seat: 2 },
+    };
+    const result = buildTableLayout(players, assignments, 1);
+    const ghost = result[0].us.find(p => p.name === 'Ghost');
+    expect(ghost.isGhost).toBe(true);
+    const real  = result[0].us.find(p => p.name === 'Alice');
+    expect(real.isGhost).toBe(false);
+  });
+
+  test('returns tables ordered by tableId ascending', () => {
+    const players = {
+      p1: { name: 'A', isGhost: false }, p2: { name: 'B', isGhost: false },
+      p3: { name: 'C', isGhost: false }, p4: { name: 'D', isGhost: false },
+      p5: { name: 'E', isGhost: false }, p6: { name: 'F', isGhost: false },
+      p7: { name: 'G', isGhost: false }, p8: { name: 'H', isGhost: false },
+    };
+    const assignments = {
+      p1: { tableId: 2, side: 'us',   seat: 1 }, p2: { tableId: 2, side: 'us',   seat: 2 },
+      p3: { tableId: 2, side: 'them', seat: 1 }, p4: { tableId: 2, side: 'them', seat: 2 },
+      p5: { tableId: 1, side: 'us',   seat: 1 }, p6: { tableId: 1, side: 'us',   seat: 2 },
+      p7: { tableId: 1, side: 'them', seat: 1 }, p8: { tableId: 1, side: 'them', seat: 2 },
+    };
+    const result = buildTableLayout(players, assignments, 2);
+    expect(result[0].tableId).toBe(1);
+    expect(result[1].tableId).toBe(2);
+  });
+
+  test('skips assignment entries with no matching player', () => {
+    const players = {
+      p1: { name: 'Alice', isGhost: false },
+    };
+    const assignments = {
+      p1:      { tableId: 1, side: 'us',   seat: 1 },
+      missing: { tableId: 1, side: 'us',   seat: 2 },
+    };
+    const result = buildTableLayout(players, assignments, 1);
+    expect(result[0].us).toHaveLength(1);
+    expect(result[0].us[0].name).toBe('Alice');
   });
 });

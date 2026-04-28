@@ -116,3 +116,28 @@ export function updateStandings(currentStandings, tableResults, roundResults, as
 
   return next;
 }
+
+/**
+ * Groups players and assignments into a per-table structure for rendering.
+ *
+ * @param {{ [id: string]: { name: string, isGhost: boolean } }} players
+ * @param {{ [id: string]: { tableId: number, side: 'us'|'them', seat: number } }} assignments
+ * @param {number} numTables
+ * @returns {{ tableId: number, us: {id,name,isGhost}[], them: {id,name,isGhost}[] }[]}
+ */
+export function buildTableLayout(players, assignments, numTables) {
+  const tables = [];
+  for (let t = 1; t <= numTables; t++) {
+    const us = [];
+    const them = [];
+    Object.entries(assignments).forEach(([id, a]) => {
+      if (a.tableId !== t) return;
+      const p = players[id];
+      if (!p) return;
+      const slot = { id, name: p.name, isGhost: !!p.isGhost };
+      (a.side === 'us' ? us : them).push(slot);
+    });
+    tables.push({ tableId: t, us, them });
+  }
+  return tables;
+}
