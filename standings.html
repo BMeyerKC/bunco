@@ -31,6 +31,9 @@
 
     <div id="round-indicator" class="text-muted mb-3"></div>
 
+    <!-- Live table cards — shown once seats are assigned -->
+    <div id="table-cards" class="mb-4"></div>
+
     <table class="table table-dark table-striped">
       <thead>
         <tr>
@@ -56,16 +59,20 @@
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script type="module">
-    import { watchGame } from './js/firebase.js';
+    import { watchGame, watchAllTableScores } from './js/firebase.js';
     import { getParam } from './js/ui.js';
+    import { buildTableLayout } from './js/game-logic.js';
+    import { renderTableCards } from './js/table-cards.js';
 
-    const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    const esc = s => String(s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
     const code    = getParam('code');
     const isFinal = getParam('final') === 'true';
 
     if (!code) {
-      document.getElementById('no-code-section').style.display = '';
+      document.getElementById('no-code-section').style.display  = '';
       document.getElementById('standings-section').style.display = 'none';
       document.getElementById('code-form').addEventListener('submit', e => {
         e.preventDefault();
@@ -80,17 +87,37 @@
         document.getElementById('ad-slot').style.display = '';
       }
 
+      let tableScoreUnsub = null;
+      let watchedRound    = 0;
+
       watchGame(code, data => {
         if (!data) return;
 
         const round = data.meta?.currentRound || 0;
-        const completedRounds = Math.max(0, round - 1);
-        document.getElementById('round-indicator').textContent =
-          isFinal ? 'Game complete!'
-          : completedRounds === 0 ? 'No rounds completed yet'
-          : `After round ${completedRounds} of 6`;
 
-        const players   = data.players || {};
+        document.getElementById('round-indicator').textContent =
+          isFinal       ? 'Game complete!'
+          : round === 0 ? 'Waiting for Round 1…'
+          :               `Round ${round} of 6 — Live`;
+
+        // Live table cards
+        const tableCardsEl = document.getElementById('table-cards');
+        if (data.rounds?.[1]?.assignments && tableCardsEl) {
+          const tables = buildTableLayout(data.players || {}, data.rounds[1].assignments, data.meta.tables);
+
+          if (round >= 1 && round !== watchedRound) {
+            if (tableScoreUnsub) tableScoreUnsub();
+            watchedRound    = round;
+            tableScoreUnsub = watchAllTableScores(code, round, scores => {
+              renderTableCards(tableCardsEl, tables, scores);
+            });
+          } else if (round === 0) {
+            renderTableCards(tableCardsEl, tables, {});
+          }
+        }
+
+        // Cumulative standings table
+        const players   = data.players   || {};
         const standings = data.standings || {};
 
         const rows = Object.entries(players)
