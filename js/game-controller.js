@@ -59,6 +59,8 @@ if (isHost && !urlCode) {
     // Fresh player — show join form and subscribe immediately for live status.
     showView('view-join');
     document.getElementById('join-display-code').textContent = gameCode;
+    const spectateLink = document.getElementById('join-spectate-link');
+    if (spectateLink) spectateLink.href = `standings.html?code=${gameCode}`;
     document.getElementById('join-btn').addEventListener('click', handleJoin);
     subscribeToGame();
   }
