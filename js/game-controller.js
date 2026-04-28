@@ -2,10 +2,11 @@
 import { createGame, addPlayer, claimGhostSeat, watchGame, getGame, saveRoundAssignments, startRound,
          recordBunco, callGame, submitTableScore,
          getRoundAssignments, saveStandings,
-         incrementTableScore, decrementTableScore, watchTableScore } from './firebase.js';
+         incrementTableScore, decrementTableScore, watchTableScore, watchAllTableScores } from './firebase.js';
 import { generateGameCode, assignRandomSeats,
-         calculateNextRoundSeating, determineWinner, updateStandings } from './game-logic.js';
+         calculateNextRoundSeating, determineWinner, updateStandings, buildTableLayout } from './game-logic.js';
 import { showView, showToast, getParam, getDeviceId } from './ui.js';
+import { renderTableCards } from './table-cards.js';
 
 const GHOST_NAMES = [
   'Alice','Bob','Carol','Dave','Eve','Frank','Grace','Hank',
@@ -160,6 +161,28 @@ function subscribeToGame() {
   });
 }
 
+function renderHostSeatLayout(data) {
+  const layout    = document.getElementById('host-seat-layout');
+  const badgeList = document.getElementById('waiting-player-list');
+  if (!layout) return;
+
+  layout.style.display = '';
+  if (badgeList) badgeList.style.display = 'none';
+
+  const tables = buildTableLayout(data.players || {}, data.assignments, data.meta.tables);
+  const round  = data.meta.currentRound;
+
+  if (round >= 1 && round !== allTableScoresRound) {
+    if (allTableScoresUnsubscribe) allTableScoresUnsubscribe();
+    allTableScoresRound        = round;
+    allTableScoresUnsubscribe  = watchAllTableScores(gameCode, round, scores => {
+      renderTableCards(layout, tables, scores);
+    });
+  } else if (round === 0) {
+    renderTableCards(layout, tables, {});
+  }
+}
+
 export function onGameUpdate(data) {
   if (!data || !data.meta) return;
   gameData = data;
@@ -197,6 +220,10 @@ export function onGameUpdate(data) {
   }
 
   updateWaitingRoomSeat(data);
+
+  if (isHost && data.assignments) {
+    renderHostSeatLayout(data);
+  }
 
   // Show game-called banner on scoring view
   const banner = document.getElementById('game-called-banner');
@@ -258,6 +285,8 @@ let themScore = 0;
 let myTableId = null;
 let scoringAbortController = null;
 let tableScoreUnsubscribe = null;
+let allTableScoresUnsubscribe = null;
+let allTableScoresRound       = 0;
 
 function navigateToScoring(data) {
   myPlayerId = localStorage.getItem(`bunco_player_${gameCode}`);
