@@ -83,3 +83,10 @@ test('escapes player names to prevent XSS', () => {
   expect(el.innerHTML).not.toContain('<script>');
   expect(el.textContent).toContain('<script>alert(1)</script>');
 });
+
+test('clears container when tables array is empty', () => {
+  const el = document.getElementById('root');
+  el.innerHTML = '<p>old content</p>';
+  renderTableCards(el, [], {});
+  expect(el.innerHTML).toBe('');
+});

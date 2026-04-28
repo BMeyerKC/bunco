@@ -23,9 +23,9 @@ function nameList(side) {
  */
 export function renderTableCards(container, tables, tableScores = {}) {
   container.innerHTML = tables.map(({ tableId, us, them }) => {
-    const scores    = tableScores[tableId] || {};
-    const usScore   = scores.liveUs    || 0;
-    const themScore = scores.liveThem  || 0;
+    const scores    = tableScores[tableId] ?? {};
+    const usScore   = scores.liveUs   ?? 0;
+    const themScore = scores.liveThem ?? 0;
     const submitted = !!scores.submitted;
     const usWin     = usScore > themScore;
     const themWin   = themScore > usScore;
@@ -33,7 +33,7 @@ export function renderTableCards(container, tables, tableScores = {}) {
     return `
       <div data-table-card class="mb-3 p-3 rounded" style="background:rgba(255,255,255,0.06);">
         <div class="d-flex justify-content-between align-items-center mb-2">
-          <span class="text-muted" style="font-size:0.8rem;text-transform:uppercase;letter-spacing:0.08em;">Table ${tableId}</span>
+          <span class="text-muted" style="font-size:0.8rem;text-transform:uppercase;letter-spacing:0.08em;">Table ${Number(tableId)}</span>
           ${submitted ? '<span class="badge bg-success" style="font-size:0.75rem;">Submitted</span>' : ''}
         </div>
         <div class="d-flex align-items-center gap-2">
