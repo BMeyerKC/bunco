@@ -89,6 +89,12 @@ export function watchTableScore(code, roundNumber, tableId, callback) {
   return () => off(r);
 }
 
+export function watchAllTableScores(code, roundNumber, callback) {
+  const r = ref(db, `games/${code}/rounds/${roundNumber}/tables`);
+  onValue(r, snap => callback(snap.val() || {}));
+  return () => off(r);
+}
+
 // ─── Seating assignments ─────────────────────────────────────
 
 export async function saveRoundAssignments(code, roundNumber, assignments) {
