@@ -28,10 +28,19 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db  = getDatabase(app);
 
+// Logging helper
+function logSend(path, data) {
+  console.log(`[FB SEND] ${path}`, data);
+}
+
+function logReceive(path, data) {
+  console.log(`[FB RECEIVE] ${path}`, data);
+}
+
 // ─── Game meta ───────────────────────────────────────────────
 
 export async function createGame(code, hostDeviceId, numTables, ghostSlots) {
-  await set(ref(db, `games/${code}`), {
+  const gameData = {
     meta: {
       tables: numTables,
       ghostSlots,
@@ -43,17 +52,25 @@ export async function createGame(code, hostDeviceId, numTables, ghostSlots) {
     players: {},
     rounds: {},
     standings: {},
-  });
+  };
+  logSend(`games/${code}`, gameData);
+  await set(ref(db, `games/${code}`), gameData);
 }
 
 export async function getGame(code) {
   const snap = await get(ref(db, `games/${code}`));
-  return snap.exists() ? snap.val() : null;
+  const result = snap.exists() ? snap.val() : null;
+  logReceive(`games/${code}`, result);
+  return result;
 }
 
 export function watchGame(code, callback) {
   const r = ref(db, `games/${code}`);
-  onValue(r, snap => callback(snap.val()));
+  onValue(r, snap => {
+    const data = snap.val();
+    logReceive(`games/${code}`, data);
+    callback(data);
+  });
   return () => off(r);
 }
 
@@ -61,12 +78,16 @@ export function watchGame(code, callback) {
 
 export async function addPlayer(code, name, isGhost = false) {
   const playerRef = push(ref(db, `games/${code}/players`));
-  await set(playerRef, { name, isGhost });
+  const playerData = { name, isGhost };
+  logSend(`games/${code}/players/${playerRef.key}`, playerData);
+  await set(playerRef, playerData);
   return playerRef.key;
 }
 
 export async function claimGhostSeat(code, playerId, name) {
-  await update(ref(db, `games/${code}/players/${playerId}`), { name, isGhost: false });
+  const updateData = { name, isGhost: false };
+  logSend(`games/${code}/players/${playerId}`, updateData);
+  await update(ref(db, `games/${code}/players/${playerId}`), updateData);
 }
 
 // ─── Live scoring ─────────────────────────────────────────────
@@ -74,75 +95,97 @@ export async function claimGhostSeat(code, playerId, name) {
 export async function incrementTableScore(code, roundNumber, tableId, side) {
   const field = side === 'us' ? 'liveUs' : 'liveThem';
   const r = ref(db, `games/${code}/rounds/${roundNumber}/tables/${tableId}/${field}`);
+  logSend(`games/${code}/rounds/${roundNumber}/tables/${tableId}/${field}`, `increment`);
   await runTransaction(r, current => (current || 0) + 1);
 }
 
 export async function decrementTableScore(code, roundNumber, tableId, side) {
   const field = side === 'us' ? 'liveUs' : 'liveThem';
   const r = ref(db, `games/${code}/rounds/${roundNumber}/tables/${tableId}/${field}`);
+  logSend(`games/${code}/rounds/${roundNumber}/tables/${tableId}/${field}`, `decrement`);
   await runTransaction(r, current => Math.max(0, (current || 0) - 1));
 }
 
 export function watchTableScore(code, roundNumber, tableId, callback) {
   const r = ref(db, `games/${code}/rounds/${roundNumber}/tables/${tableId}`);
-  onValue(r, snap => callback(snap.val() || {}));
+  onValue(r, snap => {
+    const data = snap.val() || {};
+    logReceive(`games/${code}/rounds/${roundNumber}/tables/${tableId}`, data);
+    callback(data);
+  });
   return () => off(r);
 }
 
 export function watchAllTableScores(code, roundNumber, callback) {
   const r = ref(db, `games/${code}/rounds/${roundNumber}/tables`);
-  onValue(r, snap => callback(snap.val() || {}));
+  onValue(r, snap => {
+    const data = snap.val() || {};
+    logReceive(`games/${code}/rounds/${roundNumber}/tables`, data);
+    callback(data);
+  });
   return () => off(r);
 }
 
 // ─── Seating assignments ─────────────────────────────────────
 
 export async function saveRoundAssignments(code, roundNumber, assignments) {
+  logSend(`games/${code}/rounds/${roundNumber}/assignments`, assignments);
   await set(ref(db, `games/${code}/rounds/${roundNumber}/assignments`), assignments);
 }
 
 export async function getRoundAssignments(code, roundNumber) {
   const snap = await get(ref(db, `games/${code}/rounds/${roundNumber}/assignments`));
-  return snap.exists() ? snap.val() : {};
+  const result = snap.exists() ? snap.val() : {};
+  logReceive(`games/${code}/rounds/${roundNumber}/assignments`, result);
+  return result;
 }
 
 // ─── Scoring ─────────────────────────────────────────────────
 
 export async function updateTableScore(code, roundNumber, tableId, usScore, themScore) {
-  await update(ref(db, `games/${code}/rounds/${roundNumber}/tables/${tableId}`), {
-    usScore,
-    themScore,
-    submitted: false,
-  });
+  const updateData = { usScore, themScore, submitted: false };
+  logSend(`games/${code}/rounds/${roundNumber}/tables/${tableId}`, updateData);
+  await update(ref(db, `games/${code}/rounds/${roundNumber}/tables/${tableId}`), updateData);
 }
 
 export async function submitTableScore(code, roundNumber, tableId, usScore, themScore) {
-  await update(ref(db, `games/${code}/rounds/${roundNumber}/tables/${tableId}`), {
-    usScore,
-    themScore,
-    submitted: true,
-  });
+  const updateData = { usScore, themScore, submitted: true };
+  logSend(`games/${code}/rounds/${roundNumber}/tables/${tableId}`, updateData);
+  await update(ref(db, `games/${code}/rounds/${roundNumber}/tables/${tableId}`), updateData);
 }
 
 export async function recordBunco(code, roundNumber, playerId) {
   const r = ref(db, `games/${code}/rounds/${roundNumber}/buncos/${playerId}`);
   const snap = await get(r);
-  await set(r, (snap.val() || 0) + 1);
+  const newCount = (snap.val() || 0) + 1;
+  logSend(`games/${code}/rounds/${roundNumber}/buncos/${playerId}`, newCount);
+  await set(r, newCount);
 }
 
 // ─── Game flow ───────────────────────────────────────────────
 
 export async function callGame(code, tableId) {
-  await update(ref(db, `games/${code}/meta`), { gameCalledBy: tableId });
+  const updateData = { gameCalledBy: tableId };
+  logSend(`games/${code}/meta`, updateData);
+  await update(ref(db, `games/${code}/meta`), updateData);
 }
 
 export async function startRound(code, roundNumber) {
-  await update(ref(db, `games/${code}/meta`), {
-    currentRound: roundNumber,
-    gameCalledBy: null,
-  });
+  const updateData = { currentRound: roundNumber, gameCalledBy: null };
+  logSend(`games/${code}/meta`, updateData);
+  await update(ref(db, `games/${code}/meta`), updateData);
 }
 
 export async function saveStandings(code, standings) {
+  logSend(`games/${code}/standings`, standings);
   await set(ref(db, `games/${code}/standings`), standings);
+}
+
+export async function initializeRoundTables(code, roundNumber, numTables) {
+  const tables = {};
+  for (let i = 1; i <= numTables; i++) {
+    tables[i] = { liveUs: 0, liveThem: 0, submitted: false };
+  }
+  logSend(`games/${code}/rounds/${roundNumber}/tables`, tables);
+  await set(ref(db, `games/${code}/rounds/${roundNumber}/tables`), tables);
 }

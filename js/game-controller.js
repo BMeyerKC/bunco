@@ -2,7 +2,7 @@
 import { createGame, addPlayer, claimGhostSeat, watchGame, getGame, saveRoundAssignments, startRound,
          recordBunco, callGame, submitTableScore,
          getRoundAssignments, saveStandings,
-         incrementTableScore, decrementTableScore, watchTableScore, watchAllTableScores } from './firebase.js';
+         incrementTableScore, decrementTableScore, watchTableScore, watchAllTableScores, initializeRoundTables } from './firebase.js';
 import { generateGameCode, assignRandomSeats,
          calculateNextRoundSeating, determineWinner, updateStandings, buildTableLayout } from './game-logic.js';
 import { showView, showToast, getParam, getDeviceId } from './ui.js';
@@ -276,6 +276,7 @@ async function handleStartRound() {
     showToast('Assign seats first.', 'warning');
     return;
   }
+  await initializeRoundTables(gameCode, 1, gameData.meta.tables);
   await startRound(gameCode, 1);
 }
 
@@ -329,6 +330,24 @@ function navigateToScoring(data) {
 
   document.getElementById('round-label').textContent =
     `Round ${data.meta.currentRound} of 6`;
+
+  // Display player names for each side
+  const players = data.players || {};
+  const usPlayers = Object.entries(assignments)
+    .filter(([, a]) => a.tableId === myTableId && a.side === 'us')
+    .map(([id]) => players[id]?.name)
+    .filter(Boolean)
+    .join(' & ');
+  const themPlayers = Object.entries(assignments)
+    .filter(([, a]) => a.tableId === myTableId && a.side === 'them')
+    .map(([id]) => players[id]?.name)
+    .filter(Boolean)
+    .join(' & ');
+
+  const usNameEl = document.getElementById('sc-us-names');
+  const themNameEl = document.getElementById('sc-them-names');
+  if (usNameEl) usNameEl.textContent = usPlayers;
+  if (themNameEl) themNameEl.textContent = themPlayers;
 
   attachScoringListeners(data.meta.currentRound);
 }

@@ -8,8 +8,11 @@ export function showView(viewId) {
   document.querySelectorAll('[data-view]').forEach(el => {
     const active = el.id === viewId;
     el.classList.toggle('view-active', active);
-    // Remove any inline display so Bootstrap's d-flex or browser default takes over when shown.
-    if (active) el.style.removeProperty('display');
+    if (active) {
+      el.style.removeProperty('display');
+    } else {
+      el.style.display = 'none';
+    }
   });
 }
 
