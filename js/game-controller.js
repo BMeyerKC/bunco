@@ -226,10 +226,21 @@ export function onGameUpdate(data) {
     window.location.href = `standings.html?code=${gameCode}&final=true`;
   }
 
-  // Check if all tables submitted (host only — implemented in Task 9)
-  if (data.meta.currentRound >= 1 && data.meta.currentRound <= 6) {
-    checkAndAdvanceRound(data, data.meta.currentRound)
-      .catch(() => showToast('Error advancing round — please refresh.', 'warning'));
+  // Show "Start Next Round" button when all tables have submitted
+  const nextRoundBtn = document.getElementById('start-next-round-btn');
+  const waitingMsg   = document.getElementById('submitted-waiting-msg');
+  if (nextRoundBtn) {
+    const round = data.meta.currentRound;
+    if (round >= 1 && round <= 6) {
+      const tables  = data.rounds?.[round]?.tables || {};
+      const allDone = allTablesSubmitted(tables, data.meta.tables);
+      nextRoundBtn.style.display = allDone ? '' : 'none';
+      nextRoundBtn.textContent   = round === 6 ? 'Finish Game' : 'Start Next Round';
+      if (waitingMsg) waitingMsg.style.display = allDone ? 'none' : '';
+    } else {
+      nextRoundBtn.style.display = 'none';
+      if (waitingMsg) waitingMsg.style.display = '';
+    }
   }
 }
 
@@ -258,7 +269,7 @@ async function handleStartRound() {
     return;
   }
   await initializeRoundTables(gameCode, 1, gameData.meta.tables);
-  await startRound(gameCode, 1);
+  await startRound(gameCode, 0, 1);
 }
 
 // ─── Scoring view ─────────────────────────────────────────────
@@ -528,36 +539,39 @@ function handleClaimGhost(ghostId) {
   };
 }
 
-async function checkAndAdvanceRound(data, roundNumber) {
-  if (data.meta.hostDeviceId !== deviceId) return; // only host runs this
-  if (data.meta.currentRound !== roundNumber) return; // already advanced
+async function handleAdvanceRound() {
+  const roundNumber = gameData?.meta?.currentRound;
+  if (!roundNumber || roundNumber < 1 || roundNumber > 6) return;
 
-  const tables    = data.rounds?.[roundNumber]?.tables || {};
-  const numTables = data.meta.tables;
-
+  const tables    = gameData.rounds?.[roundNumber]?.tables || {};
+  const numTables = gameData.meta.tables;
   if (!allTablesSubmitted(tables, numTables)) return;
 
-  // Calculate winner per table
   const roundResults = {};
   for (let t = 1; t <= numTables; t++) {
     const { usScore, themScore } = tables[t];
     roundResults[t] = { winner: determineWinner(usScore, themScore) };
   }
 
-  // Update cumulative standings
   const assignments = await getRoundAssignments(gameCode, roundNumber);
-  const buncos      = data.rounds?.[roundNumber]?.buncos || {};
-  const current     = data.standings || {};
+  const buncos      = gameData.rounds?.[roundNumber]?.buncos || {};
+  const current     = gameData.standings || {};
   const next        = updateStandings(current, tables, roundResults, assignments, buncos);
   await saveStandings(gameCode, next);
 
   if (roundNumber >= 6) {
-    await startRound(gameCode, 7); // 7 = game complete sentinel
+    await startRound(gameCode, roundNumber, 7);
     return;
   }
 
-  // Calculate next round seating and advance
   const nextAssignments = calculateNextRoundSeating(assignments, roundResults, numTables);
   await saveRoundAssignments(gameCode, roundNumber + 1, nextAssignments);
-  await startRound(gameCode, roundNumber + 1);
+  await startRound(gameCode, roundNumber, roundNumber + 1);
 }
+
+document.getElementById('start-next-round-btn')?.addEventListener('click', async (e) => {
+  const btn = e.currentTarget;
+  btn.disabled = true;
+  await handleAdvanceRound().catch(() => showToast('Error advancing round — please refresh.', 'warning'));
+  btn.disabled = false;
+});

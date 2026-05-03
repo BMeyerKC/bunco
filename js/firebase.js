@@ -170,10 +170,17 @@ export async function callGame(code, tableId) {
   await update(ref(db, `games/${code}/meta`), updateData);
 }
 
-export async function startRound(code, roundNumber) {
-  const updateData = { currentRound: roundNumber, gameCalledBy: null };
-  logSend(`games/${code}/meta`, updateData);
-  await update(ref(db, `games/${code}/meta`), updateData);
+export async function startRound(code, fromRound, toRound) {
+  const r = ref(db, `games/${code}/meta/currentRound`);
+  logSend(`games/${code}/meta/currentRound`, `transaction ${fromRound} → ${toRound}`);
+  const result = await runTransaction(r, (current) => {
+    if (current !== fromRound) return; // already advanced — abort
+    return toRound;
+  });
+  if (result.committed) {
+    await update(ref(db, `games/${code}/meta`), { gameCalledBy: null });
+  }
+  return result.committed;
 }
 
 export async function saveStandings(code, standings) {
