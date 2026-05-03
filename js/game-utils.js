@@ -8,7 +8,7 @@ export const GHOST_NAMES = [
 ];
 
 export function isNameTaken(players, name) {
-  const taken = Object.values(players).map(p => p.name.toLowerCase());
+  const taken = Object.values(players).map(p => (p.name ?? '').toLowerCase());
   return taken.includes(name.toLowerCase());
 }
 

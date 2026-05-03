@@ -4,6 +4,7 @@ import {
   getAvailableGhostSeats,
   allTablesSubmitted,
   pickGhostNames,
+  GHOST_NAMES,
 } from './game-utils.js';
 
 class TestRunner {
@@ -104,6 +105,32 @@ runner.test('getAvailableGhostSeats returns multiple ghosts', (t) => {
   t.assertEqual(getAvailableGhostSeats(players, assignments).length, 2);
 });
 
+runner.test('getAvailableGhostSeats handles two ghosts on the same side', (t) => {
+  const players = {
+    g1: { name: 'Ghost1', isGhost: true },
+    g2: { name: 'Ghost2', isGhost: true },
+  };
+  const assignments = {
+    g1: { tableId: 1, side: 'us', seat: 1 },
+    g2: { tableId: 1, side: 'us', seat: 2 },
+  };
+  const result = getAvailableGhostSeats(players, assignments);
+  t.assertEqual(result.length, 2);
+  t.assertEqual(result.find(s => s.ghostId === 'g1').teammateName, 'Ghost2');
+  t.assertEqual(result.find(s => s.ghostId === 'g2').teammateName, 'Ghost1');
+});
+
+runner.test('getAvailableGhostSeats returns null teammateName when teammate missing from players', (t) => {
+  const players = { g1: { name: 'Ghost', isGhost: true } };
+  const assignments = {
+    g1: { tableId: 1, side: 'us', seat: 1 },
+    p_missing: { tableId: 1, side: 'us', seat: 2 },
+  };
+  const result = getAvailableGhostSeats(players, assignments);
+  t.assertEqual(result.length, 1);
+  t.assertEqual(result[0].teammateName, null);
+});
+
 // ─── allTablesSubmitted ─────────────────────────────────────
 
 runner.test('allTablesSubmitted returns false for empty tables', (t) => {
@@ -133,6 +160,10 @@ runner.test('allTablesSubmitted works for 1 through 6 tables', (t) => {
   }
 });
 
+runner.test('allTablesSubmitted returns true for 0 tables', (t) => {
+  t.assertEqual(allTablesSubmitted({}, 0), true);
+});
+
 // ─── pickGhostNames ─────────────────────────────────────────
 
 runner.test('pickGhostNames returns empty array for count 0', (t) => {
@@ -148,8 +179,8 @@ runner.test('pickGhostNames returns no duplicates', (t) => {
   t.assertEqual(new Set(names).size, 10, 'All 10 names should be unique');
 });
 
-runner.test('pickGhostNames caps at pool size of 30', (t) => {
-  t.assertEqual(pickGhostNames(50).length, 30);
+runner.test('pickGhostNames caps at pool size', (t) => {
+  t.assertEqual(pickGhostNames(50).length, GHOST_NAMES.length);
 });
 
 runner.test('pickGhostNames produces varied results across calls', (t) => {
