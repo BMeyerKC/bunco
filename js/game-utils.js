@@ -21,7 +21,7 @@ export function getAvailableGhostSeats(players, assignments) {
       const teammate = Object.entries(assignments).find(([id, b]) =>
         id !== ghostId && b.tableId === a.tableId && b.side === a.side
       );
-      const teammateName = teammate ? players[teammate[0]]?.name : null;
+      const teammateName = teammate ? (players[teammate[0]]?.name ?? null) : null;
       return { ghostId, tableId: a.tableId, teammateName };
     })
     .filter(Boolean);
