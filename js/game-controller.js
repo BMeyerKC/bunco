@@ -7,24 +7,7 @@ import { generateGameCode, assignRandomSeats,
          calculateNextRoundSeating, determineWinner, updateStandings, buildTableLayout } from './game-logic.js';
 import { showView, showToast, getParam, getDeviceId } from './ui.js';
 import { renderTableCards } from './table-cards.js';
-
-const GHOST_NAMES = [
-  'Alice','Bob','Carol','Dave','Eve','Frank','Grace','Hank',
-  'Iris','Jack','Karen','Leo','Mia','Nate','Olivia','Pete',
-  'Quinn','Rosa','Sam','Tina','Uma','Vince','Wendy','Xander',
-  'Yara','Zoe','Amber','Brett','Chloe','Derek'
-];
-
-function pickGhostNames(count) {
-  const pool = [...GHOST_NAMES];
-  const safeCount = Math.min(count, pool.length);
-  const picked = [];
-  for (let i = 0; i < safeCount; i++) {
-    const idx = Math.floor(Math.random() * pool.length);
-    picked.push(pool.splice(idx, 1)[0]);
-  }
-  return picked;
-}
+import { isNameTaken, getAvailableGhostSeats, allTablesSubmitted, pickGhostNames } from './game-utils.js';
 
 const deviceId = getDeviceId();
 const urlCode  = getParam('code');
@@ -125,9 +108,7 @@ async function handleJoin() {
     return;
   }
 
-  // Check name uniqueness
-  const taken = Object.values(game.players || {}).map(p => p.name.toLowerCase());
-  if (taken.includes(name.toLowerCase())) {
+  if (isNameTaken(game.players || {}, name)) {
     showToast('That name is taken — try adding an initial.', 'warning');
     btn.disabled = false;
     btn.textContent = 'Join';
@@ -408,24 +389,6 @@ async function handleSubmitScores(roundNumber) {
 
 // ─── Round end ────────────────────────────────────────────────
 
-function getAvailableGhostSeats(data) {
-  const players = data.players || {};
-  const assignments = data.rounds?.[data.meta.currentRound]?.assignments || {};
-
-  return Object.entries(players)
-    .filter(([, p]) => p.isGhost)
-    .map(([ghostId]) => {
-      const a = assignments[ghostId];
-      if (!a) return null;
-      const teammate = Object.entries(assignments).find(([id, b]) =>
-        id !== ghostId && b.tableId === a.tableId && b.side === a.side
-      );
-      const teammateName = teammate ? players[teammate[0]]?.name : null;
-      return { ghostId, tableId: a.tableId, teammateName };
-    })
-    .filter(Boolean);
-}
-
 function updateWaitingRoomSeat(data) {
   const seatInfo = document.getElementById('waiting-seat-info');
   const playerList = document.getElementById('waiting-player-list');
@@ -489,7 +452,8 @@ function updateJoinView(data) {
     if (spectateBtn) spectateBtn.href = `standings.html?code=${gameCode}`;
 
     // Populate ghost seat list
-    const ghosts = getAvailableGhostSeats(data);
+    const assignments = data.rounds?.[data.meta.currentRound]?.assignments || {};
+    const ghosts = getAvailableGhostSeats(data.players || {}, assignments);
     const ghostSection = document.getElementById('join-ghost-section');
     const ghostList    = document.getElementById('join-ghost-list');
     if (ghostSection && ghostList) {
@@ -571,10 +535,7 @@ async function checkAndAdvanceRound(data, roundNumber) {
   const tables    = data.rounds?.[roundNumber]?.tables || {};
   const numTables = data.meta.tables;
 
-  // Wait until all tables have submitted
-  for (let t = 1; t <= numTables; t++) {
-    if (!tables[t]?.submitted) return;
-  }
+  if (!allTablesSubmitted(tables, numTables)) return;
 
   // Calculate winner per table
   const roundResults = {};
