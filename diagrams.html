@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Bunco Game Flow</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 800px; margin: 0 auto; padding: 2rem; background: #f0f2f5; }
+    h1 { margin-bottom: 0.25rem; }
+    .subtitle { color: #666; margin-bottom: 2rem; }
+
+    /* Table of Contents */
+    .toc { background: white; border-radius: 10px; padding: 1.5rem 2rem; box-shadow: 0 2px 10px rgba(0,0,0,0.08); margin-bottom: 1rem; }
+    .toc h3 { margin: 0 0 1rem 0; font-size: 1rem; text-transform: uppercase; letter-spacing: 0.05em; color: #888; }
+    .toc-group { margin-bottom: 1rem; }
+    .toc-group:last-child { margin-bottom: 0; }
+    .toc-group-label { font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; color: #aaa; margin-bottom: 0.35rem; }
+    .toc ol { margin: 0; padding-left: 1.4rem; }
+    .toc li { margin: 0.2rem 0; }
+    .toc a { color: #2563eb; text-decoration: none; font-size: 0.95rem; }
+    .toc a:hover { text-decoration: underline; }
+
+    /* Section groups */
+    .group { margin-top: 3rem; }
+    .group-label {
+      font-size: 0.75rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.1em; color: #888;
+      border-left: 3px solid #bbb; padding-left: 0.6rem;
+      margin-bottom: 0.5rem;
+    }
+    h2 { color: #333; margin-top: 1.5rem; margin-bottom: 0.25rem; border-bottom: 2px solid #ccc; padding-bottom: 0.4rem; }
+    .desc { color: #555; margin-bottom: 1rem; font-size: 0.95rem; }
+    .mermaid { background: white; border-radius: 10px; padding: 2rem; box-shadow: 0 2px 10px rgba(0,0,0,0.08); overflow-x: auto; }
+  </style>
+</head>
+<body>
+
+<h1>Bunco Game Flow Diagrams</h1>
+<p class="subtitle">Simple step-by-step breakdowns of each action in the game</p>
+
+<nav class="toc">
+  <h3>Table of Contents</h3>
+
+  <div class="toc-group">
+    <div class="toc-group-label">Setting Up</div>
+    <ol start="1">
+      <li><a href="#host-creates">Host Creates a Game</a></li>
+      <li><a href="#host-assigns">Host Assigns Seats</a></li>
+    </ol>
+  </div>
+
+  <div class="toc-group">
+    <div class="toc-group-label">Joining the Game</div>
+    <ol start="3">
+      <li><a href="#user-joins">User Joins a Game</a></li>
+      <li><a href="#enters-name">Player Enters Name</a></li>
+      <li><a href="#late-join">Late Join / Ghost Seat Claim</a></li>
+    </ol>
+  </div>
+
+  <div class="toc-group">
+    <div class="toc-group-label">Playing a Round</div>
+    <ol start="6">
+      <li><a href="#start-round">Host Starts a Round</a></li>
+      <li><a href="#player-scores">Player Scores</a></li>
+      <li><a href="#submit-scores">Player Submits Scores</a></li>
+    </ol>
+  </div>
+
+  <div class="toc-group">
+    <div class="toc-group-label">Advancing and Ending</div>
+    <ol start="9">
+      <li><a href="#auto-advance">Round Auto-Advances</a></li>
+      <li><a href="#game-ends">Game Ends</a></li>
+    </ol>
+  </div>
+</nav>
+
+
+<!-- ══ SETTING UP ══════════════════════════════════ -->
+<div class="group">
+  <div class="group-label">Setting Up</div>
+
+  <h2 id="host-creates">1. Host Creates a Game</h2>
+  <p class="desc">Everything that happens when the host sets up a new game.</p>
+  <div class="mermaid">
+flowchart TD
+    A([Host opens game.html]) --> B[Fill out setup form\nHow many tables?\nHow many ghost slots?]
+    B --> C[Click Create Game]
+    C --> D[Generate a random 4-character code]
+    D --> E[Save game to Firebase\nwith table count and host identity]
+    E --> F[Add ghost players with random names\nto fill any empty seats]
+    F --> G[Update URL with the new code]
+    G --> H[Show waiting room\nwith shareable code]
+    H --> I([Players can now join using the code])
+  </div>
+
+  <h2 id="host-assigns">2. Host Assigns Seats</h2>
+  <p class="desc">How the host randomly places all players at tables before Round 1 starts.</p>
+  <div class="mermaid">
+flowchart TD
+    A([Host is in waiting room]) --> B[Click Assign Seats Randomly]
+    B --> C{Are all human seats filled?}
+    C -- no --> D[Show warning: still waiting for players]
+    D --> B
+    C -- yes --> E[Shuffle all player IDs randomly\nincluding ghost players]
+    E --> F[Assign each player a table, side, and seat\nevery 4 players fill one table]
+    F --> G[Save assignments to Firebase\nunder round 1]
+    G --> H[All players see their table number\nteammate and opponents in waiting room]
+    H --> I([Host can now start Round 1])
+  </div>
+</div>
+
+
+<!-- ══ JOINING ═════════════════════════════════════ -->
+<div class="group">
+  <div class="group-label">Joining the Game</div>
+
+  <h2 id="user-joins">3. User Joins a Game</h2>
+  <p class="desc">How a player gets from a share link into the waiting room.</p>
+  <div class="mermaid">
+flowchart TD
+    A([Player receives share link with code]) --> B[Open the link]
+    B --> C{Have you joined this game before?}
+    C -- yes --> D[Player ID found on this device\nskip the form]
+    C -- no --> E[Show the join form]
+    E --> F[Player enters their name\nand clicks Join]
+    F --> G[Check name is not already taken]
+    G --> H[Add player to Firebase\nget back a player ID]
+    H --> I[Save player ID to this device\nso you can return later]
+    D --> J([Waiting room\nHost must start Round 1 to begin])
+    I --> J
+  </div>
+
+  <h2 id="enters-name">4. Player Enters Name</h2>
+  <p class="desc">What happens when a player submits the name form - including validation and error handling.</p>
+  <div class="mermaid">
+flowchart TD
+    A([Player is on the join form]) --> B[Type a display name]
+    B --> C[Click Join]
+    C --> D[Load the game from Firebase]
+    D --> E{Game found?}
+    E -- no --> F[Show error: game not found\nCheck your code]
+    F --> C
+    E -- yes --> G{Is the name already taken\nby another player?}
+    G -- yes --> H[Show error: name is taken\nTry adding an initial]
+    H --> B
+    G -- no --> I[Add player to Firebase\nreceive a unique player ID]
+    I --> J[Save player ID to localStorage\nso this device is recognized]
+    J --> K([Enter waiting room])
+  </div>
+
+  <h2 id="late-join">5. Late Join - Ghost Seat Claim</h2>
+  <p class="desc">How a player joins a game that has already started by taking over a ghost seat.</p>
+  <div class="mermaid">
+flowchart TD
+    A([Player opens join link while game is in progress]) --> B[Show in-progress options\nspectate link and ghost seat list]
+    B --> C{Any ghost seats available?}
+    C -- no --> D([Spectate only - go to live standings])
+    C -- yes --> E[Show list of open ghost seats\neach showing table number and teammate name]
+    E --> F[Player clicks a seat to claim it]
+    F --> G[Show confirmation form\nenter your name]
+    G --> H[Click Take this seat]
+    H --> I[Update the ghost player record in Firebase\nreplace ghost name with real name\nmark as not a ghost]
+    I --> J[Save this player ID to the device\nusing the ghost ID as their own]
+    J --> K([Go directly to the scoring view for that table])
+  </div>
+</div>
+
+
+<!-- ══ PLAYING ══════════════════════════════════════ -->
+<div class="group">
+  <div class="group-label">Playing a Round</div>
+
+  <h2 id="start-round">6. Host Starts a Round</h2>
+  <p class="desc">What happens when the host clicks Start Round - triggering all players into the scoring view.</p>
+  <div class="mermaid">
+flowchart TD
+    A([Host clicks Start Round 1]) --> B{Seats assigned for this round?}
+    B -- no --> C[Show warning: assign seats first]
+    B -- yes --> D[Create a score record in Firebase\nfor each table - scores start at 0]
+    D --> E[Set currentRound to 1 in Firebase\nclear any previous game-called flag]
+    E --> F[Firebase notifies all connected devices]
+    F --> G[Each device sees currentRound is active\nand they are in the waiting room]
+    G --> H[Every player navigates to the scoring view\nshowing their table and teammate names]
+    H --> I([Round is live - players can start scoring])
+  </div>
+
+  <h2 id="player-scores">7. Player Scores</h2>
+  <p class="desc">What happens every time a player taps the scoring panel during a round.</p>
+  <div class="mermaid">
+flowchart TD
+    A([Player is on the scoring view]) --> B[Tap the Us panel to add a point\nor tap the minus button to remove one]
+    B --> C[Send increment or decrement to Firebase\nusing an atomic transaction so two taps never collide]
+    C --> D[Firebase updates the live score]
+    D --> E[watchTableScore fires on both devices at this table]
+    E --> F[Both players see the updated score instantly]
+    F --> G{Score reached 21 or more?}
+    G -- yes --> H[Score panel turns bright blue or orange\nvisual indicator the round may be over]
+    G -- no --> I[Continue tapping]
+    H --> I
+    I --> A
+  </div>
+
+  <h2 id="submit-scores">8. Player Submits Scores</h2>
+  <p class="desc">How a table locks in their final score and signals they are done with the round.</p>
+  <div class="mermaid">
+flowchart TD
+    A([Player decides the round is over at their table]) --> B[Optional: click Call Game\nlets other tables know to finish up]
+    B --> C[Click Submit Scores]
+    C --> D[Write final Us and Them scores to Firebase\nmark this table as submitted]
+    D --> E[Show the submitted view\nwith a link to live standings]
+    E --> F[Wait while other tables finish]
+    F --> G{All tables submitted?}
+    G -- no --> F
+    G -- yes --> H([Host auto-advances to the next round])
+  </div>
+</div>
+
+
+<!-- ══ ADVANCING AND ENDING ═════════════════════════ -->
+<div class="group">
+  <div class="group-label">Advancing and Ending</div>
+
+  <h2 id="auto-advance">9. Round Auto-Advances</h2>
+  <p class="desc">What the host device does automatically once every table has submitted their scores.</p>
+  <div class="mermaid">
+flowchart TD
+    A([Host device gets a Firebase update]) --> B[Check if all tables have submitted\nfor the current round]
+    B -- not all submitted --> C([Wait for the next update])
+    B -- all submitted --> D[Calculate who won at each table\nties go to the Us side]
+    D --> E[Update each players cumulative record\nwins, losses, points, and buncos]
+    E --> F[Save updated standings to Firebase]
+    F --> G{Was that Round 6?}
+    G -- no --> H[Calculate new seating\nwinners stay and split sides\nlosers rotate toward table 1\ntable 1 losers wrap to the last table]
+    H --> I[Save new seat assignments to Firebase]
+    I --> J[Advance currentRound by 1 in Firebase]
+    J --> K([All players navigate to scoring for the new round])
+    G -- yes --> L([Game over - trigger final standings redirect])
+  </div>
+
+  <h2 id="game-ends">10. Game Ends</h2>
+  <p class="desc">What happens after all tables submit their Round 6 scores.</p>
+  <div class="mermaid">
+flowchart TD
+    A([All tables submit Round 6 scores]) --> B[Host calculates final standings\nwins, losses, points, buncos for every player]
+    B --> C[Save final standings to Firebase]
+    C --> D[Set currentRound to 7 in Firebase\n7 is the game-complete signal]
+    D --> E[Firebase notifies all connected devices]
+    E --> F[Every device detects currentRound is 7]
+    F --> G([All players redirect to standings.html\nwith the final flag set])
+  </div>
+</div>
+
+<script>
+  mermaid.initialize({ startOnLoad: false, theme: 'default' });
+  mermaid.run();
+</script>
+</body>
+</html>

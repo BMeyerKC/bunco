@@ -34,6 +34,18 @@
     <!-- Live table cards — shown once seats are assigned -->
     <div id="table-cards" class="mb-4"></div>
 
+    <!-- Ghost table scoring (host only) -->
+    <div id="ghost-scoring-section" style="display:none; margin-bottom:24px;">
+      <h4 class="mb-3">Ghost Tables</h4>
+      <div id="ghost-tables-list"></div>
+    </div>
+
+    <!-- Start next round button (host only) -->
+    <div id="advance-round-section" style="display:none; margin-bottom:24px; padding:16px; background:#2a2a2a; border-radius:4px; text-align:center;">
+      <p style="color:#aaa; margin-bottom:12px;">All scores submitted!</p>
+      <button id="advance-round-btn" class="btn btn-light" style="min-width:200px;">Start Round <span id="next-round-num">2</span></button>
+    </div>
+
     <table class="table table-dark table-striped">
       <thead>
         <tr>
@@ -59,9 +71,9 @@
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script type="module">
-    import { watchGame, watchAllTableScores } from './js/firebase.js';
-    import { getParam } from './js/ui.js';
-    import { buildTableLayout } from './js/game-logic.js';
+    import { watchGame, watchAllTableScores, submitTableScore, startRound, getRoundAssignments, saveStandings, saveRoundAssignments } from './js/firebase.js';
+    import { getParam, getDeviceId } from './js/ui.js';
+    import { buildTableLayout, calculateNextRoundSeating, determineWinner, updateStandings } from './js/game-logic.js';
     import { renderTableCards } from './js/table-cards.js';
 
     const esc = s => String(s)
@@ -70,6 +82,8 @@
 
     const code    = getParam('code');
     const isFinal = getParam('final') === 'true';
+    const deviceId = getDeviceId();
+    let isHost = false;
 
     if (!code) {
       document.getElementById('no-code-section').style.display  = '';
@@ -90,9 +104,13 @@
       let tableScoreUnsub = null;
       let watchedRound    = 0;
       let latestTables    = [];
+      let isAdvancing     = false;
 
       const unwatchGame = watchGame(code, data => {
         if (!data) return;
+
+        // Detect if this device is the host
+        isHost = data.meta?.hostDeviceId === deviceId;
 
         const round = data.meta?.currentRound || 0;
 
@@ -120,6 +138,7 @@
         // Cumulative standings table
         const players   = data.players   || {};
         const standings = data.standings || {};
+        const roundBuncos = round >= 1 && round <= 6 ? (data.rounds?.[round]?.buncos || {}) : {};
 
         const rows = Object.entries(players)
           .filter(([, p]) => !p.isGhost)
@@ -127,7 +146,7 @@
             name:   p.name,
             wins:   standings[id]?.wins        || 0,
             losses: standings[id]?.losses      || 0,
-            buncos: standings[id]?.buncos      || 0,
+            buncos: (standings[id]?.buncos || 0) + (roundBuncos[id] || 0),
             points: standings[id]?.totalPoints || 0,
           }))
           .sort((a, b) => b.wins - a.wins || b.buncos - a.buncos || b.points - a.points);
@@ -142,7 +161,170 @@
             <td class="text-center">${r.points}</td>
           </tr>
         `).join('');
+
+        // Show ghost table scoring for host during active rounds
+        if (isHost && data.meta.currentRound >= 1 && data.meta.currentRound <= 6) {
+          renderGhostTableScoring(data);
+          checkAndShowAdvanceButton(data);
+        } else {
+          document.getElementById('ghost-scoring-section').style.display = 'none';
+          document.getElementById('advance-round-section').style.display = 'none';
+        }
       });
+
+      function checkAndShowAdvanceButton(data) {
+        const round = data.meta.currentRound;
+        const tables = data.rounds?.[round]?.tables || {};
+        const numTables = data.meta.tables;
+
+        // Check if all tables submitted
+        let allSubmitted = true;
+        for (let t = 1; t <= numTables; t++) {
+          if (!tables[t]?.submitted) {
+            allSubmitted = false;
+            break;
+          }
+        }
+
+        const section = document.getElementById('advance-round-section');
+        if (allSubmitted) {
+          section.style.display = '';
+          document.getElementById('next-round-num').textContent = round + 1;
+          const btn = document.getElementById('advance-round-btn');
+          if (!btn.dataset.listenerAdded) {
+            btn.addEventListener('click', () => {
+              btn.disabled = true;
+              btn.textContent = 'Starting…';
+              checkAndAdvanceRound(code, data, round).catch(err => {
+                console.error('Error advancing round:', err);
+                btn.disabled = false;
+                btn.textContent = 'Start Round ' + (round + 1);
+              });
+            });
+            btn.dataset.listenerAdded = 'true';
+          }
+        } else {
+          section.style.display = 'none';
+        }
+      }
+
+      async function checkAndAdvanceRound(code, data, roundNumber) {
+        const tables = data.rounds?.[roundNumber]?.tables || {};
+        const numTables = data.meta.tables;
+
+        // Wait until all tables have submitted
+        for (let t = 1; t <= numTables; t++) {
+          if (!tables[t]?.submitted) return;
+        }
+
+        // Prevent concurrent advancement
+        if (isAdvancing) return;
+        isAdvancing = true;
+
+        // All tables submitted — advance round
+        try {
+          const roundResults = {};
+          for (let t = 1; t <= numTables; t++) {
+            const { usScore, themScore } = tables[t];
+            roundResults[t] = { winner: determineWinner(usScore, themScore) };
+          }
+
+          // Update standings
+          const assignments = await getRoundAssignments(code, roundNumber);
+          const buncos = data.rounds?.[roundNumber]?.buncos || {};
+          const current = data.standings || {};
+          const next = updateStandings(current, tables, roundResults, assignments, buncos);
+          await saveStandings(code, next);
+
+          if (roundNumber >= 6) {
+            await startRound(code, 7);
+            return;
+          }
+
+          // Calculate next round seating and advance
+          const nextAssignments = calculateNextRoundSeating(assignments, roundResults, numTables);
+          await saveRoundAssignments(code, roundNumber + 1, nextAssignments);
+          await startRound(code, roundNumber + 1);
+        } finally {
+          isAdvancing = false;
+        }
+      }
+
+      function renderGhostTableScoring(data) {
+        const round = data.meta.currentRound;
+        const assignments = data.rounds?.[round]?.assignments || {};
+        const players = data.players || {};
+        const numTables = data.meta.tables;
+
+        const ghostTables = [];
+        for (let t = 1; t <= numTables; t++) {
+          const tableAssignments = Object.entries(assignments).filter(([, a]) => a.tableId === t);
+          const allGhosts = tableAssignments.every(([id]) => players[id]?.isGhost);
+          if (allGhosts && tableAssignments.length > 0) {
+            ghostTables.push({
+              tableId: t,
+              players: tableAssignments.map(([, a]) => a).reduce((acc, a) => {
+                if (!acc[a.side]) acc[a.side] = [];
+                acc[a.side].push(a);
+                return acc;
+              }, {})
+            });
+          }
+        }
+
+        const section = document.getElementById('ghost-scoring-section');
+        const list = document.getElementById('ghost-tables-list');
+
+        if (ghostTables.length === 0) {
+          section.style.display = 'none';
+          return;
+        }
+
+        section.style.display = '';
+        list.innerHTML = ghostTables.map(table => `
+          <div class="card mb-3" style="border:1px solid #444;">
+            <div class="card-body p-3">
+              <h5 class="card-title mb-3">Table ${table.tableId}</h5>
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+                <div style="text-align:center;">
+                  <div style="color:#888; font-size:0.9rem; margin-bottom:8px;">US</div>
+                  <div style="display:flex; gap:8px; margin-bottom:8px;">
+                    <input type="number" class="form-control" style="text-align:center;"
+                           data-table="${table.tableId}" data-side="us" value="0" min="0" max="99" />
+                  </div>
+                </div>
+                <div style="text-align:center;">
+                  <div style="color:#888; font-size:0.9rem; margin-bottom:8px;">THEM</div>
+                  <div style="display:flex; gap:8px; margin-bottom:8px;">
+                    <input type="number" class="form-control" style="text-align:center;"
+                           data-table="${table.tableId}" data-side="them" value="0" min="0" max="99" />
+                  </div>
+                </div>
+              </div>
+              <button class="btn btn-sm btn-light w-100 mt-3" data-table="${table.tableId}">Submit</button>
+            </div>
+          </div>
+        `).join('');
+
+        // Attach submit handlers
+        document.querySelectorAll('[data-table]').forEach(input => {
+          if (input.tagName !== 'BUTTON') return;
+          input.addEventListener('click', async () => {
+            const tableId = parseInt(input.dataset.table);
+            const usScore = parseInt(document.querySelector(`input[data-table="${tableId}"][data-side="us"]`).value) || 0;
+            const themScore = parseInt(document.querySelector(`input[data-table="${tableId}"][data-side="them"]`).value) || 0;
+            input.textContent = 'Submitting…';
+            input.disabled = true;
+            try {
+              await submitTableScore(code, round, tableId, usScore, themScore);
+            } catch (err) {
+              console.error('Failed to submit ghost table score:', err);
+              input.textContent = 'Submit';
+              input.disabled = false;
+            }
+          });
+        });
+      }
 
       window.addEventListener('pagehide', () => {
         unwatchGame();
