@@ -127,6 +127,7 @@ async function handleJoin() {
 
 function renderQrCode(code) {
   const el = document.getElementById('waiting-qr');
+  if (!el || !code) return;
   el.innerHTML = '';
   const url = `${window.location.origin}/game.html?code=${code}`;
   new QRCode(el, { text: url, width: 160, height: 160, colorDark: '#000000', colorLight: '#ffffff' });
