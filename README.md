@@ -66,6 +66,20 @@ Firebase config is hard-coded in `js/firebase.js` (public web config — this is
 npm test
 ```
 
+## E2E tests (Playwright)
+
+Playwright runs against a local static server and uses the real Firebase backend.
+
+```bash
+npm run e2e
+```
+
+Optional UI runner:
+
+```bash
+npm run e2e:ui
+```
+
 Jest unit tests cover `game-logic.js` (seat assignment, rotation, standings calculation).
 
 ## Tech stack
