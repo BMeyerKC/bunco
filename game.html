@@ -37,7 +37,11 @@
   <div id="view-waiting" data-view style="display:none;" class="min-vh-100 d-flex align-items-center justify-content-center px-3">
     <div class="w-100 text-center" style="max-width: 500px;">
       <p class="text-muted mb-1">Game code</p>
-      <h1 class="display-2 fw-bold mb-4" id="waiting-code">----</h1>
+      <h1 class="display-2 fw-bold mb-3" id="waiting-code">----</h1>
+
+      <div id="waiting-qr" class="mb-2 mx-auto" style="display:inline-block; background:#fff; padding:10px; border-radius:10px;"></div>
+      <p class="text-muted mb-4" style="font-size:0.8rem;">Scan to join</p>
+
       <p class="text-muted mb-3">Players joined: <span id="waiting-count">0</span> / <span id="waiting-total">0</span></p>
       <div id="waiting-player-list" class="d-flex flex-wrap gap-2 justify-content-center mb-4"></div>
 
@@ -159,6 +163,7 @@
     </div>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script type="module" src="js/game-controller.js"></script>
 
