@@ -125,9 +125,17 @@ async function handleJoin() {
 
 // ─── Waiting room ─────────────────────────────────────────────
 
+function renderQrCode(code) {
+  const el = document.getElementById('waiting-qr');
+  el.innerHTML = '';
+  const url = `${window.location.origin}/game.html?code=${code}`;
+  new QRCode(el, { text: url, width: 160, height: 160, colorDark: '#000000', colorLight: '#ffffff' });
+}
+
 function showWaitingRoom(isHostView) {
   showView('view-waiting');
   document.getElementById('waiting-code').textContent = gameCode;
+  renderQrCode(gameCode);
   if (isHostView) {
     document.getElementById('host-controls').style.display = '';
     document.getElementById('random-seat-btn').addEventListener('click', handleRandomSeat);
