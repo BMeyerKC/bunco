@@ -197,12 +197,13 @@ export function onGameUpdate(data) {
 
     const list = document.getElementById('waiting-player-list');
     if (list) {
+      const existing = new Set([...list.querySelectorAll('.player-chip')].map(el => el.textContent));
       list.innerHTML = '';
       Object.values(players).forEach(p => {
-        const badge = document.createElement('span');
-        badge.className = `badge ${p.isGhost ? 'bg-secondary' : 'bg-primary'}`;
-        badge.textContent = p.name;
-        list.appendChild(badge);
+        const chip = document.createElement('span');
+        chip.className = 'player-chip' + (existing.has(p.name) ? '' : ' chip-new');
+        chip.textContent = p.name;
+        list.appendChild(chip);
       });
     }
 
@@ -219,7 +220,7 @@ export function onGameUpdate(data) {
   // Show game-called banner on scoring view
   const banner = document.getElementById('game-called-banner');
   if (banner) {
-    banner.style.display = data.meta.gameCalledBy ? '' : 'none';
+    banner.classList.toggle('visible', !!data.meta.gameCalledBy);
   }
 
   // Round just started — navigate to scoring
@@ -246,10 +247,30 @@ export function onGameUpdate(data) {
       nextRoundBtn.style.display = allDone ? '' : 'none';
       nextRoundBtn.textContent   = round === 6 ? 'Finish Game' : 'Start Next Round';
       if (waitingMsg) waitingMsg.style.display = allDone ? 'none' : '';
+      renderSubmittedDots(tables, data.meta.tables);
     } else {
       nextRoundBtn.style.display = 'none';
       if (waitingMsg) waitingMsg.style.display = '';
     }
+  }
+}
+
+function renderSubmittedDots(tables, numTables) {
+  const container = document.getElementById('submitted-table-dots');
+  if (!container) return;
+  container.innerHTML = '';
+  for (let t = 1; t <= numTables; t++) {
+    const done = !!tables[t]?.submitted;
+    const wrap = document.createElement('div');
+    wrap.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:4px;';
+    const dot = document.createElement('div');
+    dot.className = `table-dot ${done ? 'submitted' : 'waiting'}`;
+    const label = document.createElement('div');
+    label.style.cssText = `font-size:9px;font-weight:700;color:${done ? 'var(--purple-light)' : 'var(--very-muted)'};`;
+    label.textContent = `T${t}`;
+    wrap.appendChild(dot);
+    wrap.appendChild(label);
+    container.appendChild(wrap);
   }
 }
 
@@ -354,12 +375,32 @@ function navigateToScoring(data) {
 }
 
 function renderScores() {
-  document.getElementById('sc-us-score').textContent   = usScore;
-  document.getElementById('sc-them-score').textContent = themScore;
-  document.getElementById('sc-us').style.backgroundColor =
-    usScore >= 21 ? 'rgba(30,100,220,0.7)' : 'rgba(30,60,120,0.35)';
-  document.getElementById('sc-them').style.backgroundColor =
-    themScore >= 21 ? 'rgba(220,110,0,0.7)' : 'rgba(140,70,0,0.35)';
+  const usEl   = document.getElementById('sc-us-score');
+  const themEl = document.getElementById('sc-them-score');
+
+  if (usEl.textContent !== String(usScore)) {
+    usEl.textContent = usScore;
+    triggerScorePop(usEl);
+  }
+  if (themEl.textContent !== String(themScore)) {
+    themEl.textContent = themScore;
+    triggerScorePop(themEl);
+  }
+
+  document.getElementById('sc-us').style.background =
+    usScore >= 21
+      ? 'linear-gradient(160deg, rgba(124,58,237,0.45) 0%, rgba(124,58,237,0.2) 100%)'
+      : 'linear-gradient(160deg, rgba(124,58,237,0.12) 0%, rgba(124,58,237,0.03) 100%)';
+  document.getElementById('sc-them').style.background =
+    themScore >= 21
+      ? 'linear-gradient(200deg, rgba(245,158,11,0.4) 0%, rgba(245,158,11,0.15) 100%)'
+      : 'linear-gradient(200deg, rgba(245,158,11,0.10) 0%, rgba(245,158,11,0.02) 100%)';
+}
+
+function triggerScorePop(el) {
+  el.classList.remove('score-pop');
+  void el.offsetWidth; // force reflow to restart animation
+  el.classList.add('score-pop');
 }
 
 function attachScoringListeners(roundNumber) {
@@ -392,8 +433,8 @@ function attachScoringListeners(roundNumber) {
 
 async function handleBunco(roundNumber) {
   if (!myPlayerId) return;
+  window.playBuncoAnimation?.();
   await recordBunco(gameCode, roundNumber, myPlayerId);
-  showToast('Bunco recorded!', 'success');
 }
 
 async function handleCallGame() {
@@ -458,10 +499,9 @@ function updateJoinView(data) {
     const humanCount = Object.values(data.players || {}).filter(p => !p.isGhost).length;
     const totalSeats = data.meta.tables * 4 - data.meta.ghostSlots;
     const countEl = document.getElementById('join-live-count');
-    if (countEl) {
-      countEl.textContent = `${humanCount} / ${totalSeats} players joined`;
-      countEl.style.display = '';
-    }
+    const pillEl  = document.getElementById('join-live-count-pill');
+    if (countEl) countEl.textContent = `${humanCount} of ${totalSeats} players joined`;
+    if (pillEl)  pillEl.style.display = '';
   } else {
     // Show in-progress options
     pregameEl.style.display = 'none';

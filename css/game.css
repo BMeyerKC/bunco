@@ -1,0 +1,373 @@
+/* css/game.css — game-specific layout and animations */
+
+/* ── View fade transitions ── */
+[data-view].view-active {
+  animation: viewFadeIn 0.2s ease forwards;
+}
+@keyframes viewFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ── Scoring screen ── */
+#view-scoring {
+  width: 100%;
+  height: 100vh;
+  position: relative;
+  overflow: hidden;
+}
+
+.score-topbar {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 12px 16px;
+  z-index: 20;
+  background: rgba(19, 17, 28, 0.92);
+  border-bottom: 1px solid var(--border);
+}
+
+.score-topbar .round-label {
+  color: var(--muted);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+}
+
+.game-called-pill {
+  display: none;
+  background: rgba(251, 191, 36, 0.15);
+  color: var(--gold);
+  border: 1px solid rgba(251, 191, 36, 0.3);
+  padding: 3px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+}
+.game-called-pill.visible { display: inline-block; }
+
+.score-halves {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  padding-top: 48px;
+  padding-bottom: 70px;
+}
+
+.score-half {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  position: relative;
+}
+
+.score-half-us   { background: linear-gradient(160deg, rgba(124,58,237,0.12) 0%, rgba(124,58,237,0.03) 100%); }
+.score-half-them { background: linear-gradient(200deg, rgba(245,158,11,0.10) 0%, rgba(245,158,11,0.02) 100%); }
+
+.score-half-divider {
+  width: 1px;
+  align-self: stretch;
+  background: linear-gradient(to bottom, transparent, var(--border) 20%, var(--border) 80%, transparent);
+  margin-top: 48px;
+  margin-bottom: 70px;
+}
+
+.half-team-label {
+  color: var(--very-muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  margin-bottom: 2px;
+}
+
+.half-player-names {
+  color: var(--muted);
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-bottom: 8px;
+  text-align: center;
+  padding: 0 12px;
+}
+
+.half-score-num {
+  font-size: clamp(90px, 16vw, 180px);
+  font-weight: 900;
+  color: #fff;
+  line-height: 1;
+  transition: transform 0.15s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.half-score-num.score-pop {
+  animation: scorePop 0.18s cubic-bezier(0.22, 1, 0.36, 1);
+}
+@keyframes scorePop {
+  0%   { transform: scale(1); }
+  50%  { transform: scale(1.09); }
+  100% { transform: scale(1); }
+}
+
+.half-dec-btn {
+  position: absolute;
+  bottom: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 48px; height: 48px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border);
+  background: transparent;
+  color: var(--very-muted);
+  font-size: 1.6rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.15s, color 0.15s;
+}
+.half-dec-btn:hover {
+  border-color: var(--muted);
+  color: var(--text-secondary);
+}
+
+/* ── Scoring footer ── */
+.score-footer {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 14px 16px;
+  z-index: 20;
+  background: rgba(19, 17, 28, 0.92);
+  border-top: 1px solid var(--border);
+}
+
+#bunco-btn {
+  background: linear-gradient(135deg, var(--gold-deep), var(--gold));
+  color: var(--bg);
+  border: none;
+  font-family: 'Outfit', sans-serif;
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 11px 24px;
+  border-radius: 10px;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(251, 191, 36, 0.35);
+  transition: box-shadow 0.15s, transform 0.15s;
+}
+#bunco-btn:hover {
+  box-shadow: 0 4px 22px rgba(251, 191, 36, 0.5);
+  transform: translateY(-1px);
+}
+
+#call-game-btn, #submit-scores-btn {
+  background: rgba(255,255,255,0.04);
+  border: 1.5px solid rgba(255,255,255,0.1);
+  color: var(--muted);
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 9px 18px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+#call-game-btn:hover, #submit-scores-btn:hover {
+  background: rgba(255,255,255,0.08);
+  color: var(--text-secondary);
+}
+
+/* ── BUNCO! animation overlay ── */
+#bunco-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  pointer-events: none;
+  display: none;
+}
+#bunco-overlay.playing { display: block; }
+
+#bunco-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+#bunco-flash {
+  position: absolute;
+  inset: 0;
+  background: rgba(251, 191, 36, 0.22);
+  opacity: 0;
+}
+#bunco-flash.go { animation: flashFade 0.4s ease forwards; }
+@keyframes flashFade {
+  0%   { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+#bunco-content {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+}
+
+#bunco-text {
+  font-family: 'Outfit', sans-serif;
+  font-size: clamp(48px, 10vw, 72px);
+  font-weight: 900;
+  color: var(--gold);
+  text-shadow: 0 0 30px rgba(251,191,36,0.8), 0 0 60px rgba(251,191,36,0.4);
+  transform: scale(0);
+  opacity: 0;
+  line-height: 1;
+}
+#bunco-text.pop {
+  animation: buncoTextPop 0.5s cubic-bezier(0.17, 0.67, 0.3, 1.4) forwards;
+}
+@keyframes buncoTextPop {
+  0%   { transform: scale(0) rotate(-8deg); opacity: 0; }
+  60%  { transform: scale(1.12) rotate(2deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+
+#bunco-dice {
+  display: flex;
+  gap: 14px;
+  transform: translateY(18px);
+  opacity: 0;
+}
+#bunco-dice.slide-in {
+  animation: diceSlideUp 0.4s 0.45s ease forwards;
+}
+@keyframes diceSlideUp {
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.bunco-die {
+  width: 52px; height: 52px;
+  background: var(--purple);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  box-shadow: 0 0 16px rgba(168, 85, 247, 0.6);
+}
+.bunco-die.shake {
+  animation: dieShake 0.5s 0.65s ease both;
+}
+@keyframes dieShake {
+  0%,100% { transform: rotate(0deg); }
+  20%  { transform: rotate(-12deg) scale(1.1); }
+  40%  { transform: rotate(10deg) scale(1.15); }
+  60%  { transform: rotate(-8deg) scale(1.1); }
+  80%  { transform: rotate(6deg); }
+}
+
+#bunco-pts {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--purple-light);
+  opacity: 0;
+}
+#bunco-pts.fade-in { animation: ptsFadeIn 0.3s 0.95s ease forwards; }
+@keyframes ptsFadeIn { to { opacity: 1; } }
+
+/* ── Waiting room ── */
+.waiting-code-display {
+  font-size: clamp(40px, 12vw, 64px);
+  font-weight: 900;
+  letter-spacing: 0.18em;
+  color: #fff;
+  text-shadow: 0 0 28px rgba(192, 132, 252, 0.3);
+  line-height: 1;
+}
+
+/* ── Join screen live count ── */
+.live-count-pill {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(251, 191, 36, 0.08);
+  border: 1px solid rgba(251, 191, 36, 0.22);
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 0.875rem;
+  color: var(--gold);
+  font-weight: 600;
+}
+.live-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--gold);
+  box-shadow: 0 0 6px var(--gold);
+  flex-shrink: 0;
+  animation: livePulse 1.5s ease-in-out infinite;
+}
+@keyframes livePulse {
+  0%, 100% { opacity: 0.4; }
+  50%       { opacity: 1; }
+}
+
+/* ── Submitted progress dots ── */
+.table-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: var(--border);
+  transition: background 0.3s ease;
+}
+.table-dot.submitted { background: var(--purple); box-shadow: 0 0 6px rgba(124,58,237,0.5); }
+.table-dot.waiting   { animation: dotPulse 1.5s ease-in-out infinite; }
+@keyframes dotPulse {
+  0%, 100% { opacity: 0.3; }
+  50%       { opacity: 1; }
+}
+
+/* ── Seat info card ── */
+.seat-info-card {
+  background: rgba(124, 58, 237, 0.08);
+  border: 1px solid rgba(124, 58, 237, 0.25);
+  border-radius: 14px;
+  padding: 16px;
+}
+
+/* ── Standings rows ── */
+.standings-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  margin-bottom: 6px;
+  background: var(--surface);
+  font-family: 'Outfit', sans-serif;
+}
+.standings-row-first {
+  background: linear-gradient(135deg, rgba(251,191,36,0.12), rgba(245,158,11,0.06));
+  border: 1px solid rgba(251, 191, 36, 0.2);
+}
+.standings-rank { font-size: 0.75rem; font-weight: 700; color: var(--very-muted); width: 18px; flex-shrink: 0; }
+.standings-rank-1 { color: var(--gold); }
+.standings-name { font-size: 0.875rem; font-weight: 600; color: var(--text); flex: 1; }
+.standings-stat { font-size: 0.8125rem; font-weight: 700; color: var(--muted); min-width: 28px; text-align: center; }
+.standings-stat-highlight { color: var(--text); }
