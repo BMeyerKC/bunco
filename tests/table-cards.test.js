@@ -1,5 +1,5 @@
 // tests/table-cards.test.js
-import { renderTableCards } from '../js/table-cards.js';
+import { renderTableCards } from '../src/js/table-cards.js';
 
 beforeEach(() => {
   document.body.innerHTML = '<div id="root"></div>';

@@ -6,7 +6,7 @@ import {
   determineWinner,
   updateStandings,
   buildTableLayout,
-} from '../js/game-logic.js';
+} from '../src/js/game-logic.js';
 
 describe('generateGameCode', () => {
   test('returns a 4-character string', () => {
