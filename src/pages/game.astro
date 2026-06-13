@@ -1,0 +1,312 @@
+---
+import GameLayout from '../layouts/GameLayout.astro';
+---
+<GameLayout title="Bunco Game">
+
+  <a href="index.html" class="btn btn-sm btn-outline-secondary m-3 position-fixed top-0 start-0" style="z-index:100;">← Home</a>
+
+  <!-- VIEW: Host Setup -->
+  <div id="view-setup" data-view class="min-vh-100 d-flex align-items-center justify-content-center px-3">
+    <div class="w-100" style="max-width: 440px;">
+      <h2 class="text-center mb-1" style="font-weight:800;">Host a Game</h2>
+      <p class="text-center mb-4" style="color:var(--muted); font-size:0.9rem;">Set up tables and ghost slots</p>
+      <div class="mb-3">
+        <label class="form-label label-upper mb-2">Number of tables</label>
+        <select id="setup-tables" class="form-select">
+          <option value="2">2 tables (8 players)</option>
+          <option value="3" selected>3 tables (12 players)</option>
+          <option value="4">4 tables (16 players)</option>
+          <option value="5">5 tables (20 players)</option>
+          <option value="6">6 tables (24 players)</option>
+        </select>
+      </div>
+      <div class="mb-4">
+        <label class="form-label label-upper mb-2">Ghost player slots</label>
+        <select id="setup-ghosts" class="form-select"></select>
+      </div>
+      <button id="create-game-btn" class="btn btn-primary w-100" style="padding:13px;">Create Game</button>
+    </div>
+  </div>
+
+  <!-- VIEW: Waiting Room -->
+  <div id="view-waiting" data-view style="display:none;" class="min-vh-100 d-flex align-items-center justify-content-center px-3">
+    <div class="w-100 text-center" style="max-width: 500px;">
+      <p class="label-upper mb-2">Game Code</p>
+      <h1 class="waiting-code-display mb-2" id="waiting-code">----</h1>
+
+      <div id="waiting-qr" class="mb-1 mx-auto" style="display:inline-block; background:#fff; padding:10px; border-radius:12px;"></div>
+      <p style="font-size:0.75rem; color:var(--very-muted); margin-bottom:1.25rem;">Scan to join</p>
+
+      <p style="font-size:0.875rem; color:var(--muted); margin-bottom:0.5rem;">
+        Players joined: <strong style="color:var(--text);" id="waiting-count">0</strong> / <span id="waiting-total">0</span>
+      </p>
+      <div id="waiting-player-list" class="d-flex flex-wrap gap-2 justify-content-center mb-4"></div>
+
+      <!-- Shown to players once seats are assigned -->
+      <div id="waiting-seat-info" style="display:none;" class="seat-info-card mb-4 text-start">
+        <p class="label-upper mb-2">Your seat</p>
+        <h3 id="waiting-seat-table" style="font-weight:800; margin-bottom:12px;"></h3>
+        <div class="d-flex flex-column gap-1 mb-3">
+          <div><span style="color:var(--muted);" class="me-2">With</span><span id="waiting-seat-teammate" style="font-weight:600;"></span></div>
+          <div><span style="color:var(--muted);" class="me-2">vs.</span><span id="waiting-seat-opponents" style="font-weight:600;"></span></div>
+        </div>
+        <p style="font-size:0.875rem; color:var(--muted); margin:0;">Waiting for the host to start Round 1…</p>
+      </div>
+
+      <div id="host-seat-layout" style="display:none;" class="w-100 text-start mb-4"></div>
+
+      <div id="host-controls" style="display:none;">
+        <button id="random-seat-btn" class="btn btn-outline-light me-2">Assign Seats Randomly</button>
+        <button id="start-round-btn" class="btn btn-primary" disabled>Start Round 1</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- VIEW: Join (player enters name) -->
+  <div id="view-join" data-view style="display:none;" class="min-vh-100 d-flex align-items-center justify-content-center px-3">
+    <div class="w-100 text-center" style="max-width: 360px;">
+      <h2 class="mb-1" style="font-weight:800;">Join Game</h2>
+      <p style="color:var(--muted); margin-bottom:1.5rem;">Code: <strong style="color:var(--purple-light);" id="join-display-code"></strong></p>
+
+      <!-- Pre-game: name entry form -->
+      <div id="join-pregame">
+        <!-- Live count pill — shown when players are joining -->
+        <div id="join-live-count-pill" class="live-count-pill mb-4" style="display:none;">
+          <div class="live-dot"></div>
+          <span id="join-live-count"></span>
+        </div>
+        <input id="join-name" type="text" class="form-control form-control-lg text-center mb-3"
+               placeholder="Your name" maxlength="20" autocomplete="off" />
+        <button id="join-btn" class="btn btn-primary w-100">Join Game</button>
+        <p class="mt-3 mb-0">
+          <a id="join-spectate-link" href="#" style="font-size:0.875rem; color:var(--very-muted); text-decoration:none;">Watch as spectator →</a>
+        </p>
+      </div>
+
+      <!-- In-progress: spectate or take a ghost seat -->
+      <div id="join-inprogress" style="display:none;">
+        <p style="color:var(--muted); margin-bottom:1.5rem;">Round is in progress.</p>
+        <a id="join-spectate-btn" href="#" class="btn btn-outline-light w-100 mb-3">Watch as Spectator</a>
+        <div id="join-ghost-section" style="display:none;">
+          <p style="color:var(--muted); font-size:0.875rem; margin-bottom:0.75rem;">Or take an open seat:</p>
+          <div id="join-ghost-list" class="d-flex flex-column gap-2 mb-3"></div>
+          <div id="join-ghost-claim" style="display:none;">
+            <input id="join-ghost-name" type="text" class="form-control form-control-lg text-center mb-3"
+                   placeholder="Your name" maxlength="20" autocomplete="off" />
+            <button id="join-ghost-confirm" class="btn btn-primary w-100">Take this seat</button>
+            <button id="join-ghost-cancel" class="btn btn-link w-100 mt-1" style="color:var(--muted);">Cancel</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- VIEW: Scoring -->
+  <div id="view-scoring" data-view style="display:none;">
+
+    <!-- Top bar -->
+    <div class="score-topbar">
+      <span id="round-label" class="round-label"></span>
+      <span id="game-called-banner" class="game-called-pill">GAME CALLED — finish your roll</span>
+    </div>
+
+    <!-- BUNCO! animation overlay -->
+    <div id="bunco-overlay">
+      <canvas id="bunco-canvas"></canvas>
+      <div id="bunco-flash"></div>
+      <div id="bunco-content">
+        <div id="bunco-text">🎲 BUNCO!</div>
+        <div id="bunco-dice">
+          <div class="bunco-die" id="bunco-d1">⚄</div>
+          <div class="bunco-die" id="bunco-d2">⚄</div>
+          <div class="bunco-die" id="bunco-d3">⚄</div>
+        </div>
+        <div id="bunco-pts">+21 points · Round over!</div>
+      </div>
+    </div>
+
+    <!-- Score halves -->
+    <div class="score-halves">
+
+      <div id="sc-us" class="score-half score-half-us">
+        <div class="half-team-label">Us</div>
+        <div id="sc-us-names" class="half-player-names"></div>
+        <div id="sc-us-score" class="half-score-num">0</div>
+        <button id="sc-us-dec" class="half-dec-btn">−</button>
+      </div>
+
+      <div class="score-half-divider"></div>
+
+      <div id="sc-them" class="score-half score-half-them">
+        <div class="half-team-label">Them</div>
+        <div id="sc-them-names" class="half-player-names"></div>
+        <div id="sc-them-score" class="half-score-num">0</div>
+        <button id="sc-them-dec" class="half-dec-btn">−</button>
+      </div>
+
+    </div>
+
+    <!-- Footer -->
+    <div class="score-footer">
+      <button id="bunco-btn">🎲 BUNCO!</button>
+      <button id="call-game-btn">Call Game</button>
+      <button id="submit-scores-btn">Submit</button>
+    </div>
+
+  </div>
+
+  <!-- VIEW: Round submitted / waiting for others -->
+  <div id="view-submitted" data-view style="display:none;"
+       class="min-vh-100 d-flex align-items-center justify-content-center text-center px-3">
+    <div style="max-width:340px; width:100%;">
+      <div style="width:64px; height:64px; border-radius:50%; background:rgba(124,58,237,0.15); border:2px solid rgba(124,58,237,0.3); display:flex; align-items:center; justify-content:center; font-size:1.75rem; margin:0 auto 1.25rem;">✓</div>
+      <h3 style="font-weight:800; margin-bottom:6px;">Scores submitted!</h3>
+      <p style="color:var(--muted); margin-bottom:1.5rem;">Waiting for other tables…</p>
+
+      <!-- Table progress dots -->
+      <div id="submitted-table-dots" class="d-flex gap-3 justify-content-center mb-4"></div>
+
+      <a id="view-standings-link" href="standings.html" class="btn btn-outline-light w-100">View Standings</a>
+    </div>
+  </div>
+
+  <!-- VIEW: Between rounds — auto-shown when all tables submit -->
+  <div id="view-between-rounds" data-view style="display:none;"
+       class="min-vh-100 d-flex align-items-center justify-content-center px-3 py-4">
+    <div style="max-width:400px; width:100%;" class="text-center">
+      <h2 id="br-round-title" style="font-weight:800; margin-bottom:4px;"></h2>
+      <p style="color:var(--muted); margin-bottom:1.5rem;">All tables are in.</p>
+
+      <!-- Standings snapshot -->
+      <div style="background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:16px 20px; margin-bottom:1.25rem; text-align:left;">
+        <p class="label-upper mb-3" style="font-size:0.7rem;">Standings</p>
+        <div id="br-standings-list"></div>
+      </div>
+
+      <!-- Next seat (hidden on round 6) -->
+      <div id="br-next-seat" style="background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:16px 20px; margin-bottom:1.25rem; text-align:left; display:none;">
+        <p class="label-upper mb-2" style="font-size:0.7rem;">Your next seat</p>
+        <h4 id="br-next-table" style="font-weight:800; margin-bottom:8px;"></h4>
+        <div style="color:var(--muted); font-size:0.9rem; margin-bottom:2px;">With <strong id="br-next-teammate" style="color:var(--text);"></strong></div>
+        <div style="color:var(--muted); font-size:0.9rem;">vs. <strong id="br-next-opponents" style="color:var(--text);"></strong></div>
+      </div>
+
+      <!-- Host: start next round. Others: waiting message. -->
+      <button id="br-start-next-btn" class="btn btn-primary w-100 mb-2" style="display:none;"></button>
+      <p id="br-waiting-msg" style="color:var(--muted); font-size:0.875rem; margin-bottom:0.75rem; display:none;">Waiting for host to start next round…</p>
+      <a id="br-standings-link" href="standings.html" class="btn btn-outline-light w-100">View Full Standings</a>
+    </div>
+  </div>
+
+  <!-- QRCode CDN — keep as is:inline so Vite ignores it -->
+  <script is:inline src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+
+  <!-- Main game controller — Vite bundles and hashes this -->
+  <script>
+    import '../js/game-controller.js';
+  </script>
+
+  <!-- BUNCO animation — uses globals, must stay inline -->
+  <script is:inline>
+    window.playBuncoAnimation = function () {
+      const overlay = document.getElementById('bunco-overlay');
+      const flash   = document.getElementById('bunco-flash');
+      const text    = document.getElementById('bunco-text');
+      const dice    = document.getElementById('bunco-dice');
+      const pts     = document.getElementById('bunco-pts');
+      const canvas  = document.getElementById('bunco-canvas');
+
+      // Reset
+      overlay.classList.add('playing');
+      flash.className  = 'bunco-flash';
+      text.className   = '';
+      dice.className   = '';
+      pts.className    = '';
+      ['bunco-d1','bunco-d2','bunco-d3'].forEach(id => {
+        document.getElementById(id).className = 'bunco-die';
+      });
+      canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+
+      requestAnimationFrame(() => {
+        flash.classList.add('go');
+        text.classList.add('pop');
+
+        setTimeout(() => {
+          dice.classList.add('slide-in');
+          ['bunco-d1','bunco-d2','bunco-d3'].forEach((id, i) => {
+            setTimeout(() => document.getElementById(id).classList.add('shake'), i * 80);
+          });
+        }, 400);
+
+        setTimeout(() => pts.classList.add('fade-in'), 900);
+
+        setTimeout(() => overlay.classList.remove('playing'), 2200);
+      });
+
+      launchConfetti(canvas);
+    };
+
+    function launchConfetti(canvas) {
+      canvas.width  = canvas.offsetWidth;
+      canvas.height = canvas.offsetHeight;
+      const ctx = canvas.getContext('2d');
+      const colors = ['#a855f7','#fbbf24','#c084fc','#ffffff','#f59e0b','#e879f9'];
+      const pieces = Array.from({ length: 70 }, () => ({
+        x:  canvas.width  / 2 + (Math.random() - 0.5) * 60,
+        y:  canvas.height / 2,
+        r:  Math.random() * 5 + 3,
+        c:  colors[Math.floor(Math.random() * colors.length)],
+        vx: (Math.random() - 0.5) * 9,
+        vy: Math.random() * -7 - 2,
+        gy: 0.18,
+        rot: Math.random() * 360,
+        rv: (Math.random() - 0.5) * 10,
+        alpha: 1,
+      }));
+      let frame = 0;
+      (function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        pieces.forEach(p => {
+          p.vy += p.gy; p.x += p.vx; p.y += p.vy; p.rot += p.rv;
+          p.alpha = Math.max(0, 1 - frame / 90);
+          ctx.save();
+          ctx.globalAlpha = p.alpha;
+          ctx.fillStyle = p.c;
+          ctx.translate(p.x, p.y);
+          ctx.rotate(p.rot * Math.PI / 180);
+          ctx.fillRect(-p.r, -p.r / 2, p.r * 2, p.r);
+          ctx.restore();
+        });
+        frame++;
+        if (frame < 110) requestAnimationFrame(draw);
+        else ctx.clearRect(0, 0, canvas.width, canvas.height);
+      })();
+    }
+  </script>
+
+  <!-- Ghost selector — small IIFE, keep inline -->
+  <script is:inline>
+    (function () {
+      const tablesEl = document.getElementById('setup-tables');
+      const ghostsEl = document.getElementById('setup-ghosts');
+
+      function rebuildGhosts() {
+        const max = parseInt(tablesEl.value, 10) * 4 - 1;
+        const current = parseInt(ghostsEl.value, 10) || 0;
+        ghostsEl.innerHTML = '';
+        for (let i = 0; i <= max; i++) {
+          const opt = document.createElement('option');
+          opt.value = i;
+          opt.textContent = i === 0 ? '0 (no ghosts)' : i === 1 ? '1 ghost' : `${i} ghosts`;
+          if (i === Math.min(current, max)) opt.selected = true;
+          ghostsEl.appendChild(opt);
+        }
+      }
+
+      tablesEl.addEventListener('change', rebuildGhosts);
+      rebuildGhosts();
+    })();
+  </script>
+
+</GameLayout>
