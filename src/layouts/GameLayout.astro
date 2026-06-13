@@ -1,0 +1,12 @@
+---
+// src/layouts/GameLayout.astro
+import Layout from './Layout.astro';
+import '../styles/game.css';
+
+type Props = { title: string };
+const { title } = Astro.props;
+---
+<Layout title={title}>
+  <slot name="head" slot="head" />
+  <slot />
+</Layout>
