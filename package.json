@@ -20,6 +20,7 @@
   },
   "jest": {
     "testEnvironment": "jsdom",
-    "transform": {}
+    "transform": {},
+    "roots": ["<rootDir>/tests/"]
   }
 }
