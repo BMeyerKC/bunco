@@ -1,0 +1,137 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Bunco — Test Results">
+  <style is:global>
+    body { font-family: monospace; }
+    .test-result { margin-bottom: 12px; padding: 12px; border-radius: 4px; }
+    .test-pass { background-color: #1e4620; border-left: 4px solid #198754; }
+    .test-fail { background-color: #4d1f1f; border-left: 4px solid #dc3545; }
+    .test-name { color: #aaa; margin-bottom: 4px; }
+    .test-error { color: #ff6b6b; font-size: 0.9rem; }
+    .stats { margin-bottom: 20px; padding: 16px; background: #2a2a2a; border-radius: 4px; }
+    .stats h3 { margin: 0 0 12px 0; }
+    .stat-line { display: flex; justify-content: space-between; padding: 4px 0; }
+    .stat-pass { color: #198754; }
+    .stat-fail { color: #dc3545; }
+  </style>
+
+  <div class="container p-4" style="max-width: 700px;">
+    <div class="mb-4">
+      <a href="/" class="btn btn-sm btn-outline-secondary">← Home</a>
+    </div>
+
+    <h1 class="mb-4">Unit Tests</h1>
+
+    <div id="stats" class="stats"></div>
+    <div id="results"></div>
+  </div>
+
+  <script>
+    import { runner } from '../js/game-logic.test.js';
+    import { runner as utilsRunner } from '../js/game-utils.test.js';
+
+    async function runTests() {
+      const [logicResults, utilsResults] = await Promise.all([
+        runner.run(),
+        utilsRunner.run(),
+      ]);
+      const results = [...logicResults, ...utilsResults];
+      const passed = results.filter(r => r.status === 'PASS').length;
+      const failed = results.filter(r => r.status === 'FAIL').length;
+      const total = results.length;
+
+      const statsEl = document.getElementById('stats');
+      statsEl.innerHTML = `
+        <h3>Results</h3>
+        <div class="stat-line">
+          <span>Total tests</span>
+          <strong>${total}</strong>
+        </div>
+        <div class="stat-line">
+          <span>Passed</span>
+          <strong class="stat-pass">✓ ${passed}</strong>
+        </div>
+        <div class="stat-line">
+          <span>Failed</span>
+          <strong class="stat-fail">✗ ${failed}</strong>
+        </div>
+      `;
+
+      const logicGroups = {
+        'generateGameCode': [],
+        'assignRandomSeats': [],
+        'determineWinner': [],
+        'calculateNextRoundSeating': [],
+        'updateStandings': [],
+        'buildTableLayout': [],
+        'Integration': [],
+      };
+      logicResults.forEach(r => {
+        if (r.name.includes('generateGameCode')) logicGroups['generateGameCode'].push(r);
+        else if (r.name.includes('assignRandomSeats')) logicGroups['assignRandomSeats'].push(r);
+        else if (r.name.includes('determineWinner')) logicGroups['determineWinner'].push(r);
+        else if (r.name.includes('calculateNextRoundSeating')) logicGroups['calculateNextRoundSeating'].push(r);
+        else if (r.name.includes('updateStandings')) logicGroups['updateStandings'].push(r);
+        else if (r.name.includes('buildTableLayout')) logicGroups['buildTableLayout'].push(r);
+        else logicGroups['Integration'].push(r);
+      });
+
+      const utilsGroups = {
+        'isNameTaken': [],
+        'getAvailableGhostSeats': [],
+        'allTablesSubmitted': [],
+        'pickGhostNames': [],
+      };
+      utilsResults.forEach(r => {
+        if (r.name.includes('isNameTaken')) utilsGroups['isNameTaken'].push(r);
+        else if (r.name.includes('getAvailableGhostSeats')) utilsGroups['getAvailableGhostSeats'].push(r);
+        else if (r.name.includes('allTablesSubmitted')) utilsGroups['allTablesSubmitted'].push(r);
+        else if (r.name.includes('pickGhostNames')) utilsGroups['pickGhostNames'].push(r);
+      });
+
+      function renderGroups(groups, title) {
+        const entries = Object.entries(groups).filter(([, g]) => g.length > 0);
+        if (entries.length === 0) return '';
+        return `
+          <h3 style="color: #666; margin: 2rem 0 1rem; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em;">${title}</h3>
+          ${entries.map(([groupName, groupResults]) => {
+            const groupPassed = groupResults.filter(r => r.status === 'PASS').length;
+            return `
+              <div style="margin-bottom: 24px;">
+                <h4 style="color: #aaa; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #444;">
+                  ${groupName} <span style="color: #666; font-size: 0.85rem;">(${groupPassed}/${groupResults.length})</span>
+                </h4>
+                ${groupResults.map(r => `
+                  <div class="test-result ${r.status === 'PASS' ? 'test-pass' : 'test-fail'}">
+                    <div class="test-name">${r.status === 'PASS' ? '✓' : '✗'} ${r.name}</div>
+                    ${r.error ? `<div class="test-error">${escapeHtml(r.error)}</div>` : ''}
+                  </div>
+                `).join('')}
+              </div>
+            `;
+          }).join('')}
+        `;
+      }
+
+      const resultsEl = document.getElementById('results');
+      resultsEl.innerHTML =
+        renderGroups(logicGroups, 'game-logic.js') +
+        renderGroups(utilsGroups, 'game-utils.js');
+
+      document.title = failed === 0
+        ? `✓ All tests passed — Bunco`
+        : `✗ ${failed} test(s) failed — Bunco`;
+    }
+
+    function escapeHtml(text) {
+      return String(text)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+    }
+
+    runTests();
+  </script>
+</Layout>
