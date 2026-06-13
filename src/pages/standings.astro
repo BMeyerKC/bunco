@@ -1,0 +1,67 @@
+---
+import Layout from '../layouts/Layout.astro';
+import '../styles/game.css';
+---
+<Layout title="Bunco Standings">
+  <div class="container py-4" style="max-width: 600px;">
+
+    <!-- Shown only when no ?code= param in URL -->
+    <div id="no-code-section" style="display:none;" class="text-center py-5">
+      <h2 class="mb-4">Watch a Game</h2>
+      <form id="code-form" class="d-flex gap-2 justify-content-center">
+        <input id="code-input" type="text" class="form-control form-control-lg text-center"
+               placeholder="Game code" maxlength="4" autocomplete="off"
+               style="max-width:140px; text-transform:uppercase; letter-spacing:0.15em;" />
+        <button type="submit" class="btn btn-light">Watch</button>
+      </form>
+    </div>
+
+    <!-- Shown when ?code= param is present -->
+    <div id="standings-section">
+      <div class="d-flex align-items-center mb-4">
+        <a id="back-link" href="index.html" class="btn btn-sm btn-outline-secondary me-3">← Home</a>
+        <h2 class="mb-0" id="standings-title">Standings</h2>
+        <button id="leave-game-btn" class="btn btn-sm btn-outline-secondary ms-auto" style="display:none;">Leave Game</button>
+      </div>
+
+    <div id="round-indicator" class="text-muted mb-3"></div>
+
+    <!-- Live table cards — shown once seats are assigned -->
+    <div id="table-cards" class="mb-4"></div>
+
+    <!-- Ghost table scoring (host only) -->
+    <div id="ghost-scoring-section" style="display:none; margin-bottom:24px;">
+      <h4 class="mb-3">Ghost Tables</h4>
+      <div id="ghost-tables-list"></div>
+    </div>
+
+    <!-- Start next round button (host only) -->
+    <div id="advance-round-section" style="display:none;" class="card mb-4 text-center p-3">
+      <p style="color:var(--muted); margin-bottom:12px;">All scores submitted!</p>
+      <button id="advance-round-btn" class="btn btn-primary" style="min-width:200px;">Start Round <span id="next-round-num">2</span></button>
+    </div>
+
+    <!-- Standings header row -->
+    <div style="display:flex; align-items:center; gap:10px; padding:0 14px; margin-bottom:8px;">
+      <span style="flex:1;"></span>
+      <span class="label-upper" style="min-width:28px; text-align:center;">W</span>
+      <span class="label-upper" style="min-width:28px; text-align:center; margin:0 4px;">L</span>
+      <span class="label-upper" style="min-width:36px; text-align:center;">🎲</span>
+      <span class="label-upper" style="min-width:40px; text-align:center;">Pts</span>
+    </div>
+    <div id="standings-body">
+      <p class="text-muted text-center py-3">Loading…</p>
+    </div>
+
+    <!-- AdSense — shown only on final standings -->
+    <div id="ad-slot" style="display:none; min-height:90px; text-align:center; margin-top:24px;">
+      <!-- Google AdSense ad unit goes here -->
+    </div>
+    </div><!-- #standings-section -->
+
+  </div><!-- .container -->
+
+  <script type="module">
+    import '../js/standings-controller.js';
+  </script>
+</Layout>
