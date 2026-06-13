@@ -169,14 +169,14 @@ if (!code) {
       await saveStandings(code, next);
 
       if (roundNumber >= 6) {
-        await startRound(code, 7);
+        await startRound(code, roundNumber, 7);
         return;
       }
 
       // Calculate next round seating and advance
       const nextAssignments = calculateNextRoundSeating(assignments, roundResults, numTables);
       await saveRoundAssignments(code, roundNumber + 1, nextAssignments);
-      await startRound(code, roundNumber + 1);
+      await startRound(code, roundNumber, roundNumber + 1);
     } finally {
       isAdvancing = false;
     }
