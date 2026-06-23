@@ -736,19 +736,23 @@ document.getElementById('br-start-next-btn')?.addEventListener('click', async (e
   btn.disabled = true;
 
   if (round >= 6) {
-    await startRound(gameCode, round, 7).catch(() => {
+    try {
+      await startRound(gameCode, round, 7);
+      logEvent(gameCode, EVENT.GAME_ENDED).catch(() => {});
+    } catch {
       showToast('Error finishing game — please try again.', 'warning');
       btn.disabled = false;
-    });
-    logEvent(gameCode, EVENT.GAME_ENDED).catch(() => {});
+    }
     return;
   }
 
   btn.textContent = 'Starting…';
-  await startRound(gameCode, round, round + 1).catch(() => {
+  try {
+    await startRound(gameCode, round, round + 1);
+    logEvent(gameCode, EVENT.ROUND_STARTED, { round: round + 1 }).catch(() => {});
+  } catch {
     showToast('Error starting round — please try again.', 'warning');
     btn.disabled = false;
     btn.textContent = `Start Round ${round + 1}`;
-  });
-  logEvent(gameCode, EVENT.ROUND_STARTED, { round: round + 1 }).catch(() => {});
+  }
 });
