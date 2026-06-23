@@ -2,7 +2,8 @@
 import { createGame, addPlayer, claimGhostSeat, watchGame, getGame, saveRoundAssignments, startRound,
          recordBunco, callGame, submitTableScore,
          saveStandings,
-         incrementTableScore, decrementTableScore, watchTableScore, watchAllTableScores, initializeRoundTables } from './firebase.js';
+         incrementTableScore, decrementTableScore, watchTableScore, watchAllTableScores, initializeRoundTables,
+         EVENT, logEvent } from './firebase.js';
 import { generateGameCode, assignRandomSeats,
          calculateNextRoundSeating, determineWinner, updateStandings, buildTableLayout } from './game-logic.js';
 import { showView, showToast, getParam, getDeviceId } from './ui.js';
@@ -72,6 +73,7 @@ async function handleCreateGame() {
     gameCode = generateGameCode();
 
     await createGame(gameCode, deviceId, numTables, ghostSlots);
+    logEvent(gameCode, EVENT.GAME_CREATED, { tables: numTables, ghostSlots }).catch(() => {});
 
     // Add ghost players with random names
     const ghostNames = pickGhostNames(ghostSlots);
@@ -121,6 +123,7 @@ async function handleJoin() {
   }
 
   const playerId = await addPlayer(gameCode, name, false);
+  logEvent(gameCode, EVENT.PLAYER_JOINED, { playerId, name }).catch(() => {});
   localStorage.setItem(`bunco_player_${gameCode}`, playerId);
   myPlayerId = playerId;
 
@@ -292,6 +295,7 @@ async function handleRandomSeat() {
   const numTables   = gameData.meta.tables;
   const assignments = assignRandomSeats(playerIds, numTables);
   await saveRoundAssignments(gameCode, 1, assignments);
+  logEvent(gameCode, EVENT.SEATS_ASSIGNED).catch(() => {});
   showToast('Seats assigned randomly!', 'success');
 }
 
@@ -308,6 +312,7 @@ async function handleStartRound() {
     await submitTableScore(gameCode, 1, tableId, 0, 0);
   }
   await startRound(gameCode, 0, 1);
+  logEvent(gameCode, EVENT.ROUND_STARTED, { round: 1 }).catch(() => {});
 }
 
 // ─── Scoring view ─────────────────────────────────────────────
@@ -443,15 +448,18 @@ async function handleBunco(roundNumber) {
   if (!myPlayerId) return;
   window.playBuncoAnimation?.();
   await recordBunco(gameCode, roundNumber, myPlayerId);
+  logEvent(gameCode, EVENT.BUNCO_RECORDED, { round: roundNumber, playerId: myPlayerId }).catch(() => {});
 }
 
 async function handleCallGame() {
   await callGame(gameCode, myTableId);
+  logEvent(gameCode, EVENT.GAME_CALLED, { tableId: myTableId }).catch(() => {});
   showToast('Game called! Other tables are finishing their rolls.', 'info');
 }
 
 async function handleSubmitScores(roundNumber) {
   await submitTableScore(gameCode, roundNumber, myTableId, usScore, themScore);
+  logEvent(gameCode, EVENT.SCORE_SUBMITTED, { round: roundNumber, tableId: myTableId, usScore, themScore }).catch(() => {});
   document.getElementById('view-standings-link').href = `standings.html?code=${gameCode}`;
   showView('view-submitted');
 }
@@ -576,6 +584,7 @@ function handleClaimGhost(ghostId) {
     try {
       if (!gameData) throw new Error('Game data unavailable');
       await claimGhostSeat(gameCode, pendingGhostId, name);
+      logEvent(gameCode, EVENT.GHOST_CLAIMED, { playerId: pendingGhostId, name }).catch(() => {});
       localStorage.setItem(`bunco_player_${gameCode}`, pendingGhostId);
       navigateToScoring(gameData);
     } catch (err) {
@@ -731,6 +740,7 @@ document.getElementById('br-start-next-btn')?.addEventListener('click', async (e
       showToast('Error finishing game — please try again.', 'warning');
       btn.disabled = false;
     });
+    logEvent(gameCode, EVENT.GAME_ENDED).catch(() => {});
     return;
   }
 
@@ -740,4 +750,5 @@ document.getElementById('br-start-next-btn')?.addEventListener('click', async (e
     btn.disabled = false;
     btn.textContent = `Start Round ${round + 1}`;
   });
+  logEvent(gameCode, EVENT.ROUND_STARTED, { round: round + 1 }).catch(() => {});
 });
