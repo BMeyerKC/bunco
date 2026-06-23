@@ -195,3 +195,27 @@ export async function initializeRoundTables(code, roundNumber, numTables) {
   logSend(`games/${code}/rounds/${roundNumber}/tables`, tables);
   await set(ref(db, `games/${code}/rounds/${roundNumber}/tables`), tables);
 }
+
+// ─── Event log ───────────────────────────────────────────────
+
+export const EVENT = Object.freeze({
+  GAME_CREATED:    'game_created',
+  PLAYER_JOINED:   'player_joined',
+  GHOST_CLAIMED:   'ghost_claimed',
+  SEATS_ASSIGNED:  'seats_assigned',
+  ROUND_STARTED:   'round_started',
+  GAME_CALLED:     'game_called',
+  SCORE_SUBMITTED: 'score_submitted',
+  BUNCO_RECORDED:  'bunco_recorded',
+  GAME_ENDED:      'game_ended',
+});
+
+export async function logEvent(code, type, payload = {}) {
+  await push(ref(db, `games/${code}/events`), { type, ts: Date.now(), ...payload });
+}
+
+export function watchEvents(code, callback) {
+  const r = ref(db, `games/${code}/events`);
+  onValue(r, snap => callback(snap.val()));
+  return () => off(r);
+}
