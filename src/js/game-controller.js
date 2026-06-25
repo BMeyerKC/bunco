@@ -745,7 +745,7 @@ function showBetweenRoundsView(data) {
     }
     prepareNextRound(round, tables, assignments, buncos, players, numTables, newStandings)
       .then(() => {
-        if (startBtn) {
+        if (startBtn && round < 6) {
           startBtn.textContent = `Start Round ${round + 1}`;
           startBtn.disabled    = false;
         }
@@ -753,7 +753,7 @@ function showBetweenRoundsView(data) {
       .catch(err => {
         console.error('Failed to prep next round:', err);
         betweenRoundsPrepForRound = 0;
-        if (startBtn) {
+        if (startBtn && round < 6) {
           startBtn.textContent = `Start Round ${round + 1}`;
           startBtn.disabled    = false;
         }
