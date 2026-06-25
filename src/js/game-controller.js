@@ -37,6 +37,7 @@ if (isHost && !urlCode) {
   if (storedHostCode === gameCode || isHost) {
     // Host returning or first load
     localStorage.setItem('bunco_host_code', gameCode);
+    myPlayerId = localStorage.getItem(`bunco_player_${gameCode}`) || null;
     showWaitingRoom(true);
     subscribeToGame();
   } else if (storedPlayerId) {
@@ -149,7 +150,30 @@ function showWaitingRoom(isHostView) {
     document.getElementById('host-controls').style.display = '';
     document.getElementById('random-seat-btn').addEventListener('click', handleRandomSeat);
     document.getElementById('start-round-btn').addEventListener('click', handleStartRound);
+    if (!myPlayerId) {
+      const joinSection = document.getElementById('host-join-player');
+      if (joinSection) {
+        joinSection.style.display = '';
+        document.getElementById('host-join-btn').addEventListener('click', handleHostJoinAsPlayer);
+      }
+    }
   }
+}
+
+async function handleHostJoinAsPlayer() {
+  const btn  = document.getElementById('host-join-btn');
+  const name = document.getElementById('host-join-name').value.trim();
+  if (!name) { showToast('Please enter your name.', 'warning'); return; }
+
+  btn.disabled = true;
+  btn.textContent = 'Joining…';
+
+  const playerId = await addPlayer(gameCode, name, false);
+  logEvent(gameCode, EVENT.PLAYER_JOINED, { playerId, name }).catch(() => {});
+  localStorage.setItem(`bunco_player_${gameCode}`, playerId);
+  myPlayerId = playerId;
+
+  document.getElementById('host-join-player').style.display = 'none';
 }
 
 function subscribeToGame() {
