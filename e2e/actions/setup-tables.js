@@ -17,6 +17,9 @@ const selectors = {
   startRoundButton: "#start-round-btn",
   scoringView: "#view-scoring",
   roundLabel: "#round-label",
+  hostJoinPlayer: "#host-join-player",
+  hostJoinName: "#host-join-name",
+  hostJoinBtn: "#host-join-btn",
 };
 
 function buildRunId() {
@@ -66,6 +69,7 @@ export async function createGameAndStartRound({
   tables = 2,
   playerCount = 8,
   ghosts = 0,
+  hostPlayerName = null,
 }) {
   const runId = buildRunId();
   const totalSeats = tables * 4 - ghosts;
@@ -84,6 +88,13 @@ export async function createGameAndStartRound({
   const gameCode = (codeText || "").trim();
   expect(gameCode).toMatch(/^[A-Z0-9]{4}$/);
 
+  if (hostPlayerName) {
+    await hostPage.locator(selectors.hostJoinPlayer).waitFor({ state: "visible" });
+    await hostPage.fill(selectors.hostJoinName, hostPlayerName);
+    await hostPage.click(selectors.hostJoinBtn);
+    await hostPage.locator(selectors.hostJoinPlayer).waitFor({ state: "hidden" });
+  }
+
   const playerContexts = [];
   const playerPages = [];
   const players = [];
@@ -101,8 +112,9 @@ export async function createGameAndStartRound({
     players.push(player);
   }
 
+  const expectedCount = playerCount + (hostPlayerName ? 1 : 0);
   await expect(hostPage.locator(selectors.waitingCount)).toHaveText(
-    String(playerCount),
+    String(expectedCount),
   );
   await expect(hostPage.locator(selectors.waitingTotal)).toHaveText(
     String(totalSeats),
