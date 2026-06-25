@@ -723,13 +723,29 @@ function showBetweenRoundsView(data) {
 
   showView('view-between-rounds');
 
-  // Host auto-preps next round (save standings + calculate seating) in the background
+  // Host preps next round — disable button until prep completes so the host
+  // can't start the next round before assignments and tables are written.
   if (amHost && betweenRoundsPrepForRound !== round) {
     betweenRoundsPrepForRound = round;
+    if (startBtn && round < 6) {
+      startBtn.disabled    = true;
+      startBtn.textContent = 'Preparing…';
+    }
     prepareNextRound(round, tables, assignments, buncos, players, numTables, newStandings)
+      .then(() => {
+        if (startBtn) {
+          startBtn.textContent = `Start Round ${round + 1}`;
+          startBtn.disabled    = false;
+        }
+      })
       .catch(err => {
         console.error('Failed to prep next round:', err);
-        betweenRoundsPrepForRound = 0; // allow retry on next Firebase update
+        betweenRoundsPrepForRound = 0;
+        if (startBtn) {
+          startBtn.textContent = `Start Round ${round + 1}`;
+          startBtn.disabled    = false;
+        }
+        showToast('Failed to prepare next round — please try again.', 'warning');
       });
   }
 }
