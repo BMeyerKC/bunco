@@ -126,11 +126,18 @@ export async function createGameAndStartRound({
   await expect(hostPage.locator(selectors.startRoundButton)).toBeEnabled();
   await hostPage.click(selectors.startRoundButton);
 
-  const firstPlayerPage = playerPages[0];
-  await expect(firstPlayerPage.locator(selectors.scoringView)).toBeVisible();
-  await expect(firstPlayerPage.locator(selectors.roundLabel)).toHaveText(
-    /Round 1 of 6/,
-  );
+  if (playerPages.length > 0) {
+    const firstPlayerPage = playerPages[0];
+    await expect(firstPlayerPage.locator(selectors.scoringView)).toBeVisible();
+    await expect(firstPlayerPage.locator(selectors.roundLabel)).toHaveText(
+      /Round 1 of 6/,
+    );
+  } else if (hostPlayerName) {
+    await expect(hostPage.locator(selectors.scoringView)).toBeVisible();
+    await expect(hostPage.locator(selectors.roundLabel)).toHaveText(
+      /Round 1 of 6/,
+    );
+  }
 
   return {
     gameCode,
