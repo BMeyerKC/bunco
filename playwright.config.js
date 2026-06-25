@@ -17,7 +17,7 @@ export default defineConfig({
     video: "retain-on-failure",
   },
   webServer: {
-    command: "npx serve -l 4173 --no-clipboard",
+    command: "npm run build && npx astro preview --port 4173",
     url: "http://localhost:4173/game.html",
     reuseExistingServer: !process.env.CI,
     timeout: 120000,
