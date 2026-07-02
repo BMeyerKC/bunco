@@ -18,26 +18,29 @@ src/
     game.astro        Full multiplayer game (host + join views)
     standings.astro   Live standings dashboard
     scorer.astro      Quick single-table scorer
+    debug.astro       Developer event log timeline (debug.html?code=XXXX)
     tests.astro       Browser-based unit test runner
   layouts/
     Layout.astro      Master layout (Bootstrap CDN, Outfit font, version footer)
     GameLayout.astro  Extends Layout, adds game.css
   js/
-    firebase.js       Firebase Realtime Database read/write helpers
+    firebase.js       Firebase Realtime Database read/write helpers + EVENT constants + logEvent
     game-logic.js     Pure game logic (seat assignment, rotation, standings)
     game-controller.js  UI controller wiring Firebase + game-logic + DOM
     game-utils.js     Shared utilities (ghost names, seat helpers)
     ui.js             Shared UI helpers (showView, showToast, getParam, getDeviceId)
     standings-controller.js  Standings page logic
+    debug-controller.js      Event log timeline rendering for debug page
   styles/
     base.css          Shared styles
     game.css          Game page styles
 public/
   ads.txt
 tests/
-  game-logic.test.js  Jest unit tests for game-logic.js
-  game-utils.test.js  Jest unit tests for game-utils.js
-  table-cards.test.js Jest unit tests for table-cards.js
+  game-logic.test.js     Jest unit tests for game-logic.js
+  game-utils.test.js     Jest unit tests for game-utils.js
+  table-cards.test.js    Jest unit tests for table-cards.js
+  firebase-event.test.js Jest unit tests for EVENT constants in firebase.js
 ```
 
 ## How the full game works
