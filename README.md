@@ -19,6 +19,7 @@ src/
     standings.astro   Live standings dashboard
     scorer.astro      Quick single-table scorer
     debug.astro       Developer event log timeline (debug.html?code=XXXX)
+    admin.astro       Gated admin hub (admin.html) — quick links, recent games, stats
     tests.astro       Browser-based unit test runner
   layouts/
     Layout.astro      Master layout (Bootstrap CDN, Outfit font, version footer)
@@ -31,6 +32,8 @@ src/
     ui.js             Shared UI helpers (showView, showToast, getParam, getDeviceId)
     standings-controller.js  Standings page logic
     debug-controller.js      Event log timeline rendering for debug page
+    admin-gate.js            Passphrase gate for admin page (Firebase Auth slot-in later)
+    admin-controller.js      Admin dashboard rendering (recent games, stats, debug jump)
   styles/
     base.css          Shared styles
     game.css          Game page styles
