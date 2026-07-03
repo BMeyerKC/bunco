@@ -68,6 +68,30 @@ The join screen subscribes to Firebase immediately on load, giving players live 
 - **Spectate** — redirected to the live standings page
 - **Take a ghost seat** — pick an available ghost slot, enter a name; the ghost record is updated in-place so no seat reassignment is needed
 
+## Admin dashboard
+
+`admin.html` (not linked from any public page, `noindex`) collects the behind-the-scenes tools: links to the unit-test runner and Playwright report, a jump-to-debug box, recent games with per-game debug/standings links, and basic stats.
+
+The page is gated by a passphrase — a **deterrent, not security**: the check runs client-side and the SHA-256 hash constant is in `src/js/admin-gate.js` (to change the passphrase, replace `PASS_HASH` with the output of `node -e "console.log(require('crypto').createHash('sha256').update('NEW-PASSPHRASE').digest('hex'))"`). A successful unlock is remembered per device in localStorage. The planned real gate is Firebase Auth, swapped in behind `ensureAdminAccess()` without touching the rest of the page.
+
+### Database rules
+
+The Realtime Database rules live in the Firebase console (no rules file in this repo). As of 2026-07-03 they are:
+
+```json
+{
+  "rules": {
+    "games": {
+      ".read": true,
+      ".indexOn": ["meta/createdAt"],
+      "$code": { ".read": true, ".write": true, ".validate": "newData.hasChildren(['meta'])" }
+    }
+  }
+}
+```
+
+Root-level `.read` on `games` exists so the admin dashboard can list recent games; it means the games tree is publicly readable. The planned Firebase Auth phase should restrict root read to the owner and add key-format validation on writes.
+
 ## Running locally
 
 ```bash
