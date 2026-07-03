@@ -85,9 +85,15 @@ function renderGames(rows, listEl) {
 
     const linksTd = document.createElement('td');
     linksTd.className = 'text-end';
-    linksTd.innerHTML =
-      `<a href="debug.html?code=${row.code}" class="btn btn-sm btn-outline-secondary me-1">Debug</a>` +
-      `<a href="standings.html?code=${row.code}" class="btn btn-sm btn-outline-secondary">Standings</a>`;
+    const debugLink = document.createElement('a');
+    debugLink.href = `debug.html?code=${encodeURIComponent(row.code)}`;
+    debugLink.className = 'btn btn-sm btn-outline-secondary me-1';
+    debugLink.textContent = 'Debug';
+    const standingsLink = document.createElement('a');
+    standingsLink.href = `standings.html?code=${encodeURIComponent(row.code)}`;
+    standingsLink.className = 'btn btn-sm btn-outline-secondary';
+    standingsLink.textContent = 'Standings';
+    linksTd.append(debugLink, standingsLink);
 
     tr.append(codeTd, createdTd, statusTd, playersTd, linksTd);
     tbody.appendChild(tr);
