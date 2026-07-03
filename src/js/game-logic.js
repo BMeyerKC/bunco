@@ -142,3 +142,16 @@ export function buildTableLayout(players, assignments, numTables) {
   }
   return tables;
 }
+
+/**
+ * Human-readable game status from the meta record.
+ * Ended checks run first: a called game is Ended even mid-round.
+ * @param {{ currentRound: number, gameCalledBy: * }|null|undefined} meta
+ * @returns {string} 'Unknown' | 'Ended' | 'Waiting' | 'Round N'
+ */
+export function gameStatus(meta) {
+  if (!meta) return 'Unknown';
+  if (meta.gameCalledBy != null || meta.currentRound >= 7) return 'Ended';
+  if (meta.currentRound === 0) return 'Waiting';
+  return `Round ${meta.currentRound}`;
+}

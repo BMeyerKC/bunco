@@ -6,6 +6,7 @@ import {
   determineWinner,
   updateStandings,
   buildTableLayout,
+  gameStatus,
 } from '../src/js/game-logic.js';
 
 describe('generateGameCode', () => {
@@ -217,5 +218,29 @@ describe('buildTableLayout', () => {
     expect(result[1].them.map(p => p.name)).toEqual(expect.arrayContaining(['G', 'H']));
     expect(result[0].us).toHaveLength(2);
     expect(result[1].us).toHaveLength(2);
+  });
+});
+
+describe('gameStatus', () => {
+  test('returns Unknown for missing meta', () => {
+    expect(gameStatus(null)).toBe('Unknown');
+    expect(gameStatus(undefined)).toBe('Unknown');
+  });
+
+  test('returns Waiting for round 0', () => {
+    expect(gameStatus({ currentRound: 0, gameCalledBy: null })).toBe('Waiting');
+  });
+
+  test('returns Round N during rounds 1-6', () => {
+    expect(gameStatus({ currentRound: 1, gameCalledBy: null })).toBe('Round 1');
+    expect(gameStatus({ currentRound: 6, gameCalledBy: null })).toBe('Round 6');
+  });
+
+  test('returns Ended when currentRound reaches 7', () => {
+    expect(gameStatus({ currentRound: 7, gameCalledBy: null })).toBe('Ended');
+  });
+
+  test('returns Ended when game was called, even mid-round', () => {
+    expect(gameStatus({ currentRound: 3, gameCalledBy: 2 })).toBe('Ended');
   });
 });
