@@ -25,3 +25,9 @@ export const off = () => {};
 export const runTransaction = () => Promise.resolve();
 
 export const serverTimestamp = () => Date.now();
+
+export const query = (ref) => ref;
+
+export const orderByChild = () => ({});
+
+export const limitToLast = () => ({});

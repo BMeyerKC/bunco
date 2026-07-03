@@ -10,6 +10,9 @@ import {
   off,
   runTransaction,
   serverTimestamp,
+  query,
+  orderByChild,
+  limitToLast,
 } from 'firebase/database';
 
 // ⚠️  databaseURL must match your Firebase Realtime Database URL.
@@ -218,4 +221,17 @@ export function watchEvents(code, callback) {
   const r = ref(db, `games/${code}/events`);
   onValue(r, snap => callback(snap.val()));
   return () => off(r);
+}
+
+// ─── Admin ───────────────────────────────────────────────────
+
+export async function getRecentGames(limit = 25) {
+  const q = query(ref(db, 'games'), orderByChild('meta/createdAt'), limitToLast(limit));
+  const snap = await get(q);
+  const games = [];
+  snap.forEach(child => {
+    games.push({ code: child.key, ...child.val() });
+  });
+  logReceive(`games (recent, limit ${limit})`, `${games.length} games`);
+  return games;
 }
