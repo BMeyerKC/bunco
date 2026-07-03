@@ -30,3 +30,29 @@ test.describe('admin gate', () => {
     await expect(page.locator('#admin-links')).toBeVisible();
   });
 });
+
+test.describe('admin dashboard content', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.addInitScript(hash => localStorage.setItem('bunco_admin_unlock', hash), PASS_HASH);
+    await page.goto('/admin.html');
+  });
+
+  test('renders stats and the recent games section', async ({ page }) => {
+    await expect(page.locator('#stat-active')).not.toHaveText('–');
+    await expect(page.locator('#stat-recent')).not.toHaveText('–');
+    await expect(page.locator('#games-list')).not.toContainText('Loading…');
+  });
+
+  test('debug jump validates the code format', async ({ page }) => {
+    await page.fill('#debug-code-input', 'ab');
+    await page.click('#debug-jump button[type="submit"]');
+    await expect(page.locator('#debug-code-error')).toHaveText('Enter a 4-character game code.');
+    await expect(page).toHaveURL(/admin\.html/);
+  });
+
+  test('debug jump navigates to the debug page with an uppercased code', async ({ page }) => {
+    await page.fill('#debug-code-input', 'ab2d');
+    await page.click('#debug-jump button[type="submit"]');
+    await expect(page).toHaveURL(/debug\.html\?code=AB2D/);
+  });
+});
