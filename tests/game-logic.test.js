@@ -7,6 +7,7 @@ import {
   updateStandings,
   buildTableLayout,
   gameStatus,
+  buildGameRows,
 } from '../src/js/game-logic.js';
 
 describe('generateGameCode', () => {
@@ -242,5 +243,46 @@ describe('gameStatus', () => {
 
   test('returns Ended when game was called, even mid-round', () => {
     expect(gameStatus({ currentRound: 3, gameCalledBy: 2 })).toBe('Ended');
+  });
+});
+
+describe('buildGameRows', () => {
+  const game = (code, createdAt, players = {}) => ({
+    code,
+    meta: { currentRound: 0, gameCalledBy: null, createdAt },
+    players,
+  });
+
+  test('sorts newest first', () => {
+    const rows = buildGameRows([game('OLD1', 100), game('NEW1', 300), game('MID1', 200)]);
+    expect(rows.map(r => r.code)).toEqual(['NEW1', 'MID1', 'OLD1']);
+  });
+
+  test('counts only non-ghost players', () => {
+    const rows = buildGameRows([
+      game('ABCD', 100, {
+        p1: { name: 'Ann', isGhost: false },
+        p2: { name: 'Ghost 1', isGhost: true },
+        p3: { name: 'Bea', isGhost: false },
+      }),
+    ]);
+    expect(rows[0].playerCount).toBe(2);
+  });
+
+  test('derives status via gameStatus', () => {
+    const rows = buildGameRows([
+      { code: 'ENDD', meta: { currentRound: 7, gameCalledBy: null, createdAt: 50 }, players: {} },
+    ]);
+    expect(rows[0].status).toBe('Ended');
+  });
+
+  test('tolerates missing meta and players', () => {
+    const rows = buildGameRows([{ code: 'BARE' }]);
+    expect(rows[0]).toEqual({ code: 'BARE', createdAt: 0, status: 'Unknown', playerCount: 0 });
+  });
+
+  test('returns empty array for empty or missing input', () => {
+    expect(buildGameRows([])).toEqual([]);
+    expect(buildGameRows(null)).toEqual([]);
   });
 });

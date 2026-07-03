@@ -155,3 +155,20 @@ export function gameStatus(meta) {
   if (meta.currentRound === 0) return 'Waiting';
   return `Round ${meta.currentRound}`;
 }
+
+/**
+ * Shapes raw game records into display rows for the admin dashboard.
+ * @param {Array<{ code: string, meta?: object, players?: object }>} games
+ * @returns {Array<{ code: string, createdAt: number, status: string, playerCount: number }>}
+ *   sorted newest-first by createdAt
+ */
+export function buildGameRows(games) {
+  return (games || [])
+    .map(g => ({
+      code: g.code,
+      createdAt: g.meta?.createdAt ?? 0,
+      status: gameStatus(g.meta),
+      playerCount: Object.values(g.players || {}).filter(p => !p.isGhost).length,
+    }))
+    .sort((a, b) => b.createdAt - a.createdAt);
+}
