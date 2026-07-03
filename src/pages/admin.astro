@@ -1,0 +1,53 @@
+---
+import Layout from '../layouts/Layout.astro';
+const version = import.meta.env.PUBLIC_VERSION || 'dev';
+---
+<Layout title="Bunco Admin">
+  <meta slot="head" name="robots" content="noindex" />
+  <div style="padding:20px;max-width:960px;margin:0 auto;">
+    <h3 style="margin-bottom:20px;color:var(--fg);">Admin</h3>
+
+    <section id="admin-links" class="mb-4">
+      <h5 style="color:var(--muted);">Quick Links</h5>
+      <div class="d-flex flex-wrap align-items-center gap-2">
+        <a href="/tests.html" class="btn btn-outline-secondary btn-sm">Unit Tests</a>
+        <a href="/playwright-report/index.html" class="btn btn-outline-secondary btn-sm" target="_blank">E2E Report</a>
+        <form id="debug-jump" class="d-flex gap-2 ms-2">
+          <input id="debug-code-input" class="form-control form-control-sm text-uppercase"
+                 style="width:90px;font-family:monospace;" maxlength="4"
+                 placeholder="CODE" autocomplete="off" />
+          <button class="btn btn-outline-secondary btn-sm" type="submit">Debug →</button>
+        </form>
+      </div>
+      <p id="debug-code-error" style="color:#dc2626;font-size:0.8rem;min-height:1em;margin:4px 0 0;"></p>
+    </section>
+
+    <section id="admin-stats" class="mb-4">
+      <h5 style="color:var(--muted);">Stats</h5>
+      <div class="d-flex flex-wrap gap-3">
+        <div style="background:var(--surface,#1e1a2e);border:1px solid var(--border);border-radius:8px;padding:12px 20px;min-width:120px;">
+          <div id="stat-active" style="font-size:1.6rem;font-weight:800;color:var(--fg);">–</div>
+          <div style="font-size:0.75rem;color:var(--very-muted);">Active now (24h)</div>
+        </div>
+        <div style="background:var(--surface,#1e1a2e);border:1px solid var(--border);border-radius:8px;padding:12px 20px;min-width:120px;">
+          <div id="stat-recent" style="font-size:1.6rem;font-weight:800;color:var(--fg);">–</div>
+          <div style="font-size:0.75rem;color:var(--very-muted);">Recent games shown</div>
+        </div>
+        <div style="background:var(--surface,#1e1a2e);border:1px solid var(--border);border-radius:8px;padding:12px 20px;min-width:120px;">
+          <div style="font-size:1.6rem;font-weight:800;color:var(--fg);">{version}</div>
+          <div style="font-size:0.75rem;color:var(--very-muted);">App version</div>
+        </div>
+      </div>
+    </section>
+
+    <section id="admin-games">
+      <h5 style="color:var(--muted);">Recent Games</h5>
+      <div id="games-list">
+        <p style="color:var(--very-muted);">Loading…</p>
+      </div>
+    </section>
+  </div>
+  <script>
+    import '../js/admin-controller.js';
+  </script>
+</Layout>
