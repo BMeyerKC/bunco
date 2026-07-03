@@ -1,4 +1,4 @@
-import { watchGame, watchAllTableScores, submitTableScore, startRound, getRoundAssignments, saveStandings, saveRoundAssignments } from './firebase.js';
+import { watchGame, watchAllTableScores, submitTableScore, startRound, getRoundAssignments, saveStandings, saveRoundAssignments, EVENT, logEvent } from './firebase.js';
 import { getParam, getDeviceId } from './ui.js';
 import { buildTableLayout, calculateNextRoundSeating, determineWinner, updateStandings } from './game-logic.js';
 import { renderTableCards } from './table-cards.js';
@@ -30,9 +30,11 @@ if (!code) {
   let watchedRound    = 0;
   let latestTables    = [];
   let isAdvancing     = false;
+  let latestData      = null;
 
   const unwatchGame = watchGame(code, data => {
     if (!data) return;
+    latestData = data;
 
     // Detect if this device is the host
     isHost = data.meta?.hostDeviceId === deviceId;
@@ -46,9 +48,9 @@ if (!code) {
     const round = data.meta?.currentRound || 0;
 
     document.getElementById('round-indicator').textContent =
-      isFinal       ? 'Game complete!'
-      : round === 0 ? 'Waiting for Round 1…'
-      :               `Round ${round} of 6 — Live`;
+      isFinal || round >= 7 ? 'Game complete!'
+      : round === 0         ? 'Waiting for Round 1…'
+      :                       `Round ${round} of 6 — Live`;
 
     // Live table cards
     const tableCardsEl = document.getElementById('table-cards');
@@ -119,25 +121,38 @@ if (!code) {
     }
 
     const section = document.getElementById('advance-round-section');
-    if (allSubmitted) {
-      section.style.display = '';
-      document.getElementById('next-round-num').textContent = round + 1;
-      const btn = document.getElementById('advance-round-btn');
-      if (!btn.dataset.listenerAdded) {
-        btn.addEventListener('click', () => {
-          btn.disabled = true;
-          btn.textContent = 'Starting…';
-          checkAndAdvanceRound(code, data, round).catch(err => {
-            console.error('Error advancing round:', err);
-            btn.disabled = false;
-            btn.textContent = 'Start Round ' + (round + 1);
-          });
-        });
-        btn.dataset.listenerAdded = 'true';
-      }
-    } else {
+    if (!allSubmitted) {
       section.style.display = 'none';
+      return;
     }
+
+    section.style.display = '';
+    const btn = document.getElementById('advance-round-btn');
+    if (!isAdvancing) {
+      btn.textContent = advanceButtonLabel(round);
+      btn.disabled = false;
+    }
+    if (!btn.dataset.listenerAdded) {
+      btn.addEventListener('click', () => {
+        // The listener outlives this render — always act on the latest
+        // snapshot, never the data/round captured when it was attached.
+        const current = latestData;
+        if (!current) return;
+        const currentRound = current.meta.currentRound;
+        btn.disabled = true;
+        btn.textContent = currentRound >= 6 ? 'Finishing…' : 'Starting…';
+        checkAndAdvanceRound(code, current, currentRound).catch(err => {
+          console.error('Error advancing round:', err);
+          btn.disabled = false;
+          btn.textContent = advanceButtonLabel(currentRound);
+        });
+      });
+      btn.dataset.listenerAdded = 'true';
+    }
+  }
+
+  function advanceButtonLabel(round) {
+    return round >= 6 ? 'View Final Standings' : `Start Round ${round + 1}`;
   }
 
   async function checkAndAdvanceRound(code, data, roundNumber) {
@@ -169,14 +184,16 @@ if (!code) {
       await saveStandings(code, next);
 
       if (roundNumber >= 6) {
-        await startRound(code, roundNumber, 7);
+        const ended = await startRound(code, roundNumber, 7);
+        if (ended) logEvent(code, EVENT.GAME_ENDED).catch(() => {});
         return;
       }
 
       // Calculate next round seating and advance
       const nextAssignments = calculateNextRoundSeating(assignments, roundResults, numTables);
       await saveRoundAssignments(code, roundNumber + 1, nextAssignments);
-      await startRound(code, roundNumber, roundNumber + 1);
+      const advanced = await startRound(code, roundNumber, roundNumber + 1);
+      if (advanced) logEvent(code, EVENT.ROUND_STARTED, { round: roundNumber + 1 }).catch(() => {});
     } finally {
       isAdvancing = false;
     }
