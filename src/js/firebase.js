@@ -15,6 +15,8 @@ import {
   limitToLast,
 } from 'firebase/database';
 
+import { buncoClaimUpdate } from './game-logic.js';
+
 // ⚠️  databaseURL must match your Firebase Realtime Database URL.
 // Verify at: Firebase Console → Realtime Database → Data tab (shown at top)
 const firebaseConfig = {
@@ -156,12 +158,17 @@ export async function submitTableScore(code, roundNumber, tableId, usScore, them
   await update(ref(db, `games/${code}/rounds/${roundNumber}/tables/${tableId}`), updateData);
 }
 
-export async function recordBunco(code, roundNumber, playerId) {
-  const r = ref(db, `games/${code}/rounds/${roundNumber}/buncos/${playerId}`);
-  const snap = await get(r);
-  const newCount = (snap.val() || 0) + 1;
-  logSend(`games/${code}/rounds/${roundNumber}/buncos/${playerId}`, newCount);
-  await set(r, newCount);
+export async function recordBunco(code, roundNumber, playerId, tableId) {
+  const r = ref(db, `games/${code}/rounds/${roundNumber}/bunco`);
+  logSend(`games/${code}/rounds/${roundNumber}/bunco`, { playerId, tableId });
+  const result = await runTransaction(r, current =>
+    buncoClaimUpdate(current, playerId, tableId, Date.now())
+  );
+  if (!result.committed) return false;
+  // Legacy per-player shape — standings math and debug timeline read this.
+  logSend(`games/${code}/rounds/${roundNumber}/buncos/${playerId}`, 1);
+  await set(ref(db, `games/${code}/rounds/${roundNumber}/buncos/${playerId}`), 1);
+  return true;
 }
 
 // ─── Game flow ───────────────────────────────────────────────
