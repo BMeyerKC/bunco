@@ -160,6 +160,15 @@ import GameLayout from '../layouts/GameLayout.astro';
       <button id="submit-scores-btn">Submit</button>
     </div>
 
+    <!-- BUNCO player picker — who rolled it? -->
+    <div id="bunco-picker" class="bunco-picker-overlay" style="display:none;">
+      <div class="bunco-picker-card">
+        <h3 class="bunco-picker-title">🎲 Who rolled the BUNCO?</h3>
+        <div id="bunco-picker-list" class="bunco-picker-list"></div>
+        <button id="bunco-picker-cancel" class="bunco-picker-cancel">Cancel</button>
+      </div>
+    </div>
+
   </div>
 
   <!-- VIEW: Round submitted / waiting for others -->

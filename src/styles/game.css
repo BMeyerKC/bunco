@@ -171,6 +171,13 @@
   box-shadow: 0 4px 22px rgba(251, 191, 36, 0.5);
   transform: translateY(-1px);
 }
+#bunco-btn:disabled {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--very-muted);
+  box-shadow: none;
+  transform: none;
+  cursor: not-allowed;
+}
 
 #call-game-btn, #submit-scores-btn {
   background: rgba(255,255,255,0.04);
@@ -371,3 +378,61 @@
 .standings-name { font-size: 0.875rem; font-weight: 600; color: var(--text); flex: 1; }
 .standings-stat { font-size: 0.8125rem; font-weight: 700; color: var(--muted); min-width: 28px; text-align: center; }
 .standings-stat-highlight { color: var(--text); }
+
+/* ── BUNCO player picker modal ── */
+.bunco-picker-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 40; /* above score footer (20), below nothing else on this view */
+  background: rgba(10, 9, 16, 0.78);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.bunco-picker-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 20px;
+  width: 100%;
+  max-width: 340px;
+  text-align: center;
+}
+
+.bunco-picker-title {
+  font-weight: 800;
+  font-size: 1.1rem;
+  margin-bottom: 14px;
+}
+
+.bunco-picker-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.bunco-picker-player {
+  background: linear-gradient(135deg, var(--gold-deep), var(--gold));
+  color: var(--bg);
+  border: none;
+  font-family: 'Outfit', sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  padding: 12px 16px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.bunco-picker-cancel {
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.875rem;
+  font-weight: 600;
+  padding: 8px 16px;
+  cursor: pointer;
+}
