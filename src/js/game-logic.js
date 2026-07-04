@@ -172,3 +172,18 @@ export function buildGameRows(games) {
     }))
     .sort((a, b) => b.createdAt - a.createdAt);
 }
+
+/**
+ * Transaction updater for claiming the single per-round bunco.
+ * First writer wins: aborts (returns undefined) if a claim already exists.
+ *
+ * @param {{ playerId, tableId, ts }|null|undefined} current  existing claim node
+ * @param {string} playerId  player being credited
+ * @param {number} tableId   table the bunco happened at
+ * @param {number} ts        client timestamp (ms)
+ * @returns {{ playerId: string, tableId: number, ts: number }|undefined}
+ */
+export function buncoClaimUpdate(current, playerId, tableId, ts) {
+  if (current) return undefined; // someone already claimed it — abort
+  return { playerId, tableId, ts };
+}

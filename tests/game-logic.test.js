@@ -8,6 +8,7 @@ import {
   buildTableLayout,
   gameStatus,
   buildGameRows,
+  buncoClaimUpdate,
 } from '../src/js/game-logic.js';
 
 describe('generateGameCode', () => {
@@ -284,5 +285,28 @@ describe('buildGameRows', () => {
   test('returns empty array for empty or missing input', () => {
     expect(buildGameRows([])).toEqual([]);
     expect(buildGameRows(null)).toEqual([]);
+  });
+});
+
+describe('buncoClaimUpdate', () => {
+  test('claims the bunco when none exists yet', () => {
+    expect(buncoClaimUpdate(null, 'p1', 2, 12345)).toEqual({
+      playerId: 'p1',
+      tableId: 2,
+      ts: 12345,
+    });
+  });
+
+  test('returns undefined (aborts) when a bunco is already claimed', () => {
+    const existing = { playerId: 'p9', tableId: 1, ts: 1 };
+    expect(buncoClaimUpdate(existing, 'p1', 2, 12345)).toBeUndefined();
+  });
+
+  test('treats undefined current the same as null (fresh round)', () => {
+    expect(buncoClaimUpdate(undefined, 'p3', 1, 99)).toEqual({
+      playerId: 'p3',
+      tableId: 1,
+      ts: 99,
+    });
   });
 });
