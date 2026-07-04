@@ -253,9 +253,18 @@ export function onGameUpdate(data) {
     renderHostSeatLayout(data);
   }
 
-  // Show game-called banner on scoring view
+  // One bunco per round: once claimed, lock every device's button and close
+  // any open picker. Banner gets bunco flavor when the claim caused the call.
+  const buncoClaim = data.rounds?.[data.meta.currentRound]?.bunco || null;
+  const buncoBtn = document.getElementById('bunco-btn');
+  if (buncoBtn) buncoBtn.disabled = !!buncoClaim;
+  if (buncoClaim) closeBuncoPicker();
+
   const banner = document.getElementById('game-called-banner');
   if (banner) {
+    banner.textContent = buncoClaim
+      ? '🎲 BUNCO! — finish your rolls and submit'
+      : 'GAME CALLED — finish your roll';
     banner.classList.toggle('visible', !!data.meta.gameCalledBy);
   }
 
@@ -470,16 +479,52 @@ function attachScoringListeners(roundNumber) {
     decrementTableScore(gameCode, roundNumber, myTableId, 'them')
       .catch(() => showToast('Tap not saved — check connection.', 'warning'));
   }, { signal });
-  document.getElementById('bunco-btn').addEventListener('click', () => handleBunco(roundNumber), { signal });
+  document.getElementById('bunco-btn').addEventListener('click', () => openBuncoPicker(roundNumber), { signal });
+  document.getElementById('bunco-picker-cancel').addEventListener('click', closeBuncoPicker, { signal });
   document.getElementById('call-game-btn').addEventListener('click', () => handleCallGame(), { signal });
   document.getElementById('submit-scores-btn').addEventListener('click', () => handleSubmitScores(roundNumber), { signal });
 }
 
-async function handleBunco(roundNumber) {
-  if (!myPlayerId) return;
-  window.playBuncoAnimation?.();
-  await recordBunco(gameCode, roundNumber, myPlayerId);
-  logEvent(gameCode, EVENT.BUNCO_RECORDED, { round: roundNumber, playerId: myPlayerId }).catch(() => {});
+function openBuncoPicker(roundNumber) {
+  const players     = gameData?.players || {};
+  const assignments = gameData?.rounds?.[roundNumber]?.assignments || {};
+  const table = buildTableLayout(players, assignments, gameData.meta.tables)
+    .find(t => t.tableId === myTableId);
+  const seated = table ? [...table.us, ...table.them] : [];
+  if (seated.length === 0) return;
+
+  const list = document.getElementById('bunco-picker-list');
+  list.innerHTML = '';
+  seated.forEach(p => {
+    const btn = document.createElement('button');
+    btn.className = 'bunco-picker-player';
+    btn.textContent = p.name;
+    btn.addEventListener('click', () => confirmBunco(roundNumber, p.id));
+    list.appendChild(btn);
+  });
+  document.getElementById('bunco-picker').style.display = 'flex';
+}
+
+function closeBuncoPicker() {
+  const picker = document.getElementById('bunco-picker');
+  if (picker) picker.style.display = 'none';
+}
+
+async function confirmBunco(roundNumber, playerId) {
+  closeBuncoPicker();
+  try {
+    const won = await recordBunco(gameCode, roundNumber, playerId, myTableId);
+    if (!won) {
+      showToast('A bunco was already recorded this round.', 'warning');
+      return;
+    }
+    window.playBuncoAnimation?.();
+    await callGame(gameCode, myTableId);
+    logEvent(gameCode, EVENT.BUNCO_RECORDED, { round: roundNumber, playerId, tableId: myTableId }).catch(() => {});
+    logEvent(gameCode, EVENT.GAME_CALLED, { tableId: myTableId, bunco: true }).catch(() => {});
+  } catch {
+    showToast('Bunco not saved — check connection.', 'warning');
+  }
 }
 
 async function handleCallGame() {
