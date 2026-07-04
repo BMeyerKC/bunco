@@ -41,10 +41,14 @@ function seedGame(currentRound) {
   };
 }
 
-async function eventTypes(request, code) {
+async function allEvents(request, code) {
   const res = await request.get(`${DB}/games/${code}/events.json`);
   const events = (await res.json()) || {};
-  return Object.values(events).map(e => e.type);
+  return Object.values(events);
+}
+
+async function eventTypes(request, code) {
+  return (await allEvents(request, code)).map(e => e.type);
 }
 
 test.describe('standings page host advance', () => {
@@ -92,6 +96,8 @@ test.describe('standings page host advance', () => {
       return res.json();
     }).toBe(2);
     await expect.poll(() => eventTypes(request, code)).toContain('round_started');
+    await expect.poll(() => eventTypes(request, code)).toContain('seats_assigned');
+    await expect.poll(() => eventTypes(request, code)).toContain('standings_saved');
 
     // Round 2 finishes (winners are "us" again)
     await request.put(`${DB}/games/${code}/rounds/2/tables/1.json`, { data: submittedTable });
@@ -108,5 +114,40 @@ test.describe('standings page host advance', () => {
     // Standings must reflect BOTH rounds: p1 sat on the winning side twice
     const standingsRes = await request.get(`${DB}/games/${code}/standings/p1/wins.json`);
     expect(await standingsRes.json()).toBe(2);
+  });
+
+  test('ghost table score entry logs a ghost score_submitted event', async ({ page, request }) => {
+    const game = seedGame(1);
+    game.meta.tables = 2;
+    game.players = {
+      ...fourPlayers,
+      g1: { name: 'Ghost 1', isGhost: true },
+      g2: { name: 'Ghost 2', isGhost: true },
+      g3: { name: 'Ghost 3', isGhost: true },
+      g4: { name: 'Ghost 4', isGhost: true },
+    };
+    game.rounds[1].assignments = {
+      ...tableOneAssignments,
+      g1: { tableId: 2, side: 'us', seat: 1 },
+      g2: { tableId: 2, side: 'us', seat: 2 },
+      g3: { tableId: 2, side: 'them', seat: 1 },
+      g4: { tableId: 2, side: 'them', seat: 2 },
+    };
+    // Table 1 submitted; ghost table 2 pending, so the host must enter it
+    await request.put(`${DB}/games/${code}.json`, { data: game });
+    await page.goto(`/standings.html?code=${code}`);
+
+    await expect(page.locator('#ghost-scoring-section')).toBeVisible();
+    await page.fill('input[data-table="2"][data-side="us"]', '10');
+    await page.fill('input[data-table="2"][data-side="them"]', '5');
+    await page.click('#ghost-tables-list button[data-table="2"]');
+
+    await expect.poll(async () => {
+      const events = await allEvents(request, code);
+      return events.some(e =>
+        e.type === 'score_submitted' && e.ghost === true && e.tableId === 2 &&
+        e.usScore === 10 && e.themScore === 5
+      );
+    }).toBe(true);
   });
 });

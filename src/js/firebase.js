@@ -211,6 +211,7 @@ export const EVENT = Object.freeze({
   SCORE_SUBMITTED: 'score_submitted',
   BUNCO_RECORDED:  'bunco_recorded',
   GAME_ENDED:      'game_ended',
+  STANDINGS_SAVED: 'standings_saved',
 });
 
 export async function logEvent(code, type, payload = {}) {

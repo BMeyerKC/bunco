@@ -324,7 +324,7 @@ async function handleRandomSeat() {
   const numTables   = gameData.meta.tables;
   const assignments = assignRandomSeats(playerIds, numTables);
   await saveRoundAssignments(gameCode, 1, assignments);
-  logEvent(gameCode, EVENT.SEATS_ASSIGNED).catch(() => {});
+  logEvent(gameCode, EVENT.SEATS_ASSIGNED, { round: 1 }).catch(() => {});
   showToast('Seats assigned randomly!', 'success');
 }
 
@@ -339,6 +339,7 @@ async function handleStartRound() {
   await initializeRoundTables(gameCode, 1, numTables);
   for (const tableId of getGhostOnlyTableIds(assignments, players, numTables)) {
     await submitTableScore(gameCode, 1, tableId, 0, 0);
+    logEvent(gameCode, EVENT.SCORE_SUBMITTED, { round: 1, tableId, usScore: 0, themScore: 0, ghost: true, auto: true }).catch(() => {});
   }
   await startRound(gameCode, 0, 1);
   logEvent(gameCode, EVENT.ROUND_STARTED, { round: 1 }).catch(() => {});
@@ -764,6 +765,7 @@ function showBetweenRoundsView(data) {
 
 async function prepareNextRound(round, tables, assignments, buncos, players, numTables, newStandings) {
   await saveStandings(gameCode, newStandings);
+  logEvent(gameCode, EVENT.STANDINGS_SAVED, { round, source: 'game' }).catch(() => {});
   if (round >= 6) return;
 
   const roundResults = {};
@@ -774,9 +776,11 @@ async function prepareNextRound(round, tables, assignments, buncos, players, num
 
   const nextAssignments = calculateNextRoundSeating(assignments, roundResults, numTables);
   await saveRoundAssignments(gameCode, round + 1, nextAssignments);
+  logEvent(gameCode, EVENT.SEATS_ASSIGNED, { round: round + 1 }).catch(() => {});
   await initializeRoundTables(gameCode, round + 1, numTables);
   for (const tableId of getGhostOnlyTableIds(nextAssignments, players, numTables)) {
     await submitTableScore(gameCode, round + 1, tableId, 0, 0);
+    logEvent(gameCode, EVENT.SCORE_SUBMITTED, { round: round + 1, tableId, usScore: 0, themScore: 0, ghost: true, auto: true }).catch(() => {});
   }
 }
 

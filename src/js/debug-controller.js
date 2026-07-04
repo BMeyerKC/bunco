@@ -10,6 +10,7 @@ const EVENT_COLORS = {
   score_submitted: '#a855f7',
   bunco_recorded:  '#dc2626',
   game_ended:      '#fbbf24',
+  standings_saved: '#0d9488',
 };
 
 const code     = new URLSearchParams(window.location.search).get('code')?.toUpperCase();

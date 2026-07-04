@@ -182,6 +182,7 @@ if (!code) {
       const current = data.standings || {};
       const next = updateStandings(current, tables, roundResults, assignments, buncos);
       await saveStandings(code, next);
+      logEvent(code, EVENT.STANDINGS_SAVED, { round: roundNumber, source: 'standings' }).catch(() => {});
 
       if (roundNumber >= 6) {
         const ended = await startRound(code, roundNumber, 7);
@@ -192,6 +193,7 @@ if (!code) {
       // Calculate next round seating and advance
       const nextAssignments = calculateNextRoundSeating(assignments, roundResults, numTables);
       await saveRoundAssignments(code, roundNumber + 1, nextAssignments);
+      logEvent(code, EVENT.SEATS_ASSIGNED, { round: roundNumber + 1 }).catch(() => {});
       const advanced = await startRound(code, roundNumber, roundNumber + 1);
       if (advanced) logEvent(code, EVENT.ROUND_STARTED, { round: roundNumber + 1 }).catch(() => {});
     } finally {
@@ -262,6 +264,7 @@ if (!code) {
         input.disabled = true;
         try {
           await submitTableScore(code, round, tableId, usScore, themScore);
+          logEvent(code, EVENT.SCORE_SUBMITTED, { round, tableId, usScore, themScore, ghost: true }).catch(() => {});
         } catch (err) {
           console.error('Failed to submit ghost table score:', err);
           input.textContent = 'Submit';
