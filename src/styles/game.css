@@ -383,7 +383,7 @@
 .bunco-picker-overlay {
   position: fixed;
   inset: 0;
-  z-index: 40; /* above score footer (20), below nothing else on this view */
+  z-index: 40; /* above score footer (20), below the BUNCO celebration overlay (100) */
   background: rgba(10, 9, 16, 0.78);
   display: flex;
   align-items: center;

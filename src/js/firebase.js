@@ -165,9 +165,19 @@ export async function recordBunco(code, roundNumber, playerId, tableId) {
     buncoClaimUpdate(current, playerId, tableId, Date.now())
   );
   if (!result.committed) return false;
-  // Legacy per-player shape — standings math and debug timeline read this.
-  logSend(`games/${code}/rounds/${roundNumber}/buncos/${playerId}`, 1);
-  await set(ref(db, `games/${code}/rounds/${roundNumber}/buncos/${playerId}`), 1);
+  // Legacy per-player shape (standings math, debug timeline) + the round call
+  // ride together in one atomic multi-path update — a network drop after the
+  // claim commits must not leave the claim locked with no credit and no call.
+  const updateData = {
+    [`rounds/${roundNumber}/buncos/${playerId}`]: 1,
+    'meta/gameCalledBy': tableId,
+  };
+  logSend(`games/${code}`, updateData);
+  try {
+    await update(ref(db, `games/${code}`), updateData);
+  } catch (err) {
+    throw new Error('bunco-claim-sync-failed');
+  }
   return true;
 }
 

@@ -382,6 +382,10 @@ function navigateToScoring(data) {
   myTableId = myAssignment?.tableId || 1;
   usScore   = 0;
   themScore = 0;
+  // A picker left open from a round that just got submitted out from under
+  // this device (e.g. a teammate submitted while we were still choosing)
+  // must not survive into the new round's view with stale players/listeners.
+  closeBuncoPicker();
   if (scoringAbortController) scoringAbortController.abort();
   scoringAbortController = new AbortController();
   if (tableScoreUnsubscribe) tableScoreUnsubscribe();
@@ -508,6 +512,11 @@ function openBuncoPicker(roundNumber) {
 function closeBuncoPicker() {
   const picker = document.getElementById('bunco-picker');
   if (picker) picker.style.display = 'none';
+  // Clear so stale buttons (with stale onclick listeners bound to a finished
+  // round's roundNumber) can't survive into the next round's view. Harmless
+  // here since openBuncoPicker rebuilds the list from scratch on every open.
+  const list = document.getElementById('bunco-picker-list');
+  if (list) list.innerHTML = '';
 }
 
 async function confirmBunco(roundNumber, playerId) {
@@ -518,12 +527,16 @@ async function confirmBunco(roundNumber, playerId) {
       showToast('A bunco was already recorded this round.', 'warning');
       return;
     }
+    // The round call rides in recordBunco's atomic post-claim update.
     window.playBuncoAnimation?.();
-    await callGame(gameCode, myTableId);
     logEvent(gameCode, EVENT.BUNCO_RECORDED, { round: roundNumber, playerId, tableId: myTableId }).catch(() => {});
     logEvent(gameCode, EVENT.GAME_CALLED, { tableId: myTableId, bunco: true }).catch(() => {});
-  } catch {
-    showToast('Bunco not saved — check connection.', 'warning');
+  } catch (err) {
+    if (err?.message === 'bunco-claim-sync-failed') {
+      showToast('Bunco recorded, but calling the round failed — use Call Game if it doesn\'t appear.', 'warning');
+    } else {
+      showToast('Bunco not saved — check connection.', 'warning');
+    }
   }
 }
 
