@@ -32,9 +32,9 @@ jobs:
       - run: npm ci
 
       - name: Build
-        run: npm run build
-        env:
-          PUBLIC_VERSION: ${{ github.sha }}
+        run: |
+          export PUBLIC_VERSION="${GITHUB_SHA::7} · $(date -u +'%b %-d, %Y')"
+          npm run build
 
       - uses: actions/configure-pages@v4
 
