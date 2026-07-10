@@ -59,6 +59,13 @@
 :root {
   --font-hand: 'Caveat', 'Segoe Print', cursive;
   --font-body: 'Nunito', system-ui, sans-serif;
+  /* Type scale — raised floor for mobile readability.
+     caption: micro-labels (13px floor); small: helper text (15px);
+     hand-sm: Caveat's short x-height needs a bigger nominal size. */
+  --fs-caption: 0.8125rem;
+  --fs-small:   0.9375rem;
+  --fs-body:    1rem;
+  --fs-hand-sm: 1.45rem;
   /* Wobbly border-radius gives the hand-drawn look without images */
   --wobble-sm: 125px 10px 115px 10px / 10px 115px 10px 125px;
 }
@@ -95,7 +102,7 @@ h1, h2, h3, h4, h5, h6 {
 .text-muted { color: var(--muted) !important; }
 
 .label-upper {
-  font-size: 0.6875rem;
+  font-size: var(--fs-caption);
   font-weight: 800;
   letter-spacing: 0.175em;
   text-transform: uppercase;
@@ -111,7 +118,7 @@ h1, h2, h3, h4, h5, h6 {
   box-shadow: var(--shadow);
 }
 .card-title { color: var(--text); font-weight: 700; font-size: 1.6rem; }
-.card-text  { color: var(--muted); font-size: 0.875rem; font-family: var(--font-body); }
+.card-text  { color: var(--muted); font-size: var(--fs-small); font-family: var(--font-body); }
 
 .card-featured {
   border-color: var(--accent);
@@ -189,7 +196,7 @@ h1, h2, h3, h4, h5, h6 {
   display: inline-block;
   padding: 5px 12px;
   border-radius: 4px;
-  font-size: 0.8125rem;
+  font-size: var(--fs-small);
   font-weight: 700;
   font-family: var(--font-body);
   background: var(--surface);
@@ -267,7 +274,7 @@ h1, h2, h3, h4, h5, h6 {
   transform: translateX(-50%);
   padding: 12px 24px;
   border-radius: var(--wobble-sm);
-  font-size: 1rem;
+  font-size: var(--fs-body);
   font-family: var(--font-body);
   font-weight: 700;
   z-index: 9999;
