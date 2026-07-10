@@ -17,7 +17,7 @@ export function showView(viewId) {
 }
 
 /**
- * Shows a Bootstrap toast-style notification.
+ * Shows a toast notification styled by .app-toast classes in base.css.
  * @param {string} message
  * @param {'info'|'success'|'warning'} type
  */
@@ -25,15 +25,9 @@ export function showToast(message, type = 'info') {
   const existing = document.getElementById('bunco-toast');
   if (existing) existing.remove();
 
-  const colors = { info: '#0d6efd', success: '#198754', warning: '#ffc107' };
   const toast = document.createElement('div');
   toast.id = 'bunco-toast';
-  toast.style.cssText = `
-    position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
-    background: ${colors[type]}; color: #fff; padding: 12px 24px;
-    border-radius: 6px; font-size: 1rem; z-index: 9999;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-  `;
+  toast.className = `app-toast app-toast-${type}`;
   toast.textContent = message;
   document.body.appendChild(toast);
   setTimeout(() => toast.remove(), 3500);
