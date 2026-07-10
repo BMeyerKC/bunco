@@ -445,13 +445,9 @@ function renderScores() {
   }
 
   document.getElementById('sc-us').style.background =
-    usScore >= 21
-      ? 'linear-gradient(160deg, rgba(124,58,237,0.45) 0%, rgba(124,58,237,0.2) 100%)'
-      : 'linear-gradient(160deg, rgba(124,58,237,0.12) 0%, rgba(124,58,237,0.03) 100%)';
+    usScore >= 21 ? 'var(--accent-soft)' : 'transparent';
   document.getElementById('sc-them').style.background =
-    themScore >= 21
-      ? 'linear-gradient(200deg, rgba(245,158,11,0.4) 0%, rgba(245,158,11,0.15) 100%)'
-      : 'linear-gradient(200deg, rgba(245,158,11,0.10) 0%, rgba(245,158,11,0.02) 100%)';
+    themScore >= 21 ? 'var(--highlight-soft)' : 'transparent';
 }
 
 function triggerScorePop(el) {

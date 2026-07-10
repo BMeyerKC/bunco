@@ -31,7 +31,7 @@ export function renderTableCards(container, tables, tableScores = {}) {
     const themWin   = themScore > usScore;
 
     return `
-      <div data-table-card class="mb-3 p-3 rounded" style="background:rgba(255,255,255,0.06);">
+      <div data-table-card class="mb-3 p-3 rounded" style="background:var(--surface);border:1px solid var(--border);">
         <div class="d-flex justify-content-between align-items-center mb-2">
           <span class="text-muted" style="font-size:0.8rem;text-transform:uppercase;letter-spacing:0.08em;">Table ${Number(tableId)}</span>
           ${submitted ? '<span class="badge bg-success" style="font-size:0.75rem;">Submitted</span>' : ''}
