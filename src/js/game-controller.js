@@ -309,7 +309,7 @@ function renderSubmittedDots(tables, numTables) {
     const dot = document.createElement('div');
     dot.className = `table-dot ${done ? 'submitted' : 'waiting'}`;
     const label = document.createElement('div');
-    label.style.cssText = `font-size:9px;font-weight:700;color:${done ? 'var(--purple-light)' : 'var(--very-muted)'};`;
+    label.style.cssText = `font-size:9px;font-weight:700;color:${done ? 'var(--accent)' : 'var(--very-muted)'};`;
     label.textContent = `T${t}`;
     wrap.appendChild(dot);
     wrap.appendChild(label);
@@ -744,7 +744,7 @@ function showBetweenRoundsView(data) {
       <div style="display:flex;align-items:center;gap:8px;padding:6px 0;${i < rows.length - 1 ? 'border-bottom:1px solid var(--border);' : ''}">
         <span style="color:var(--very-muted);min-width:18px;font-size:0.85rem;">${i + 1}</span>
         <span style="flex:1;font-weight:600;font-size:0.95rem;">${esc(r.name)}</span>
-        <span style="color:var(--purple-light);font-weight:700;">${r.wins}W</span>
+        <span style="color:var(--accent);font-weight:700;">${r.wins}W</span>
         <span style="color:var(--muted);font-size:0.9rem;">${r.losses}L</span>
         ${r.buncos > 0 ? `<span style="font-size:0.85rem;margin-left:2px;">🎲${r.buncos}</span>` : '<span style="min-width:24px;"></span>'}
       </div>

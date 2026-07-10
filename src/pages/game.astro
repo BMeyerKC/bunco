@@ -72,7 +72,7 @@ import GameLayout from '../layouts/GameLayout.astro';
   <div id="view-join" data-view style="display:none;" class="min-vh-100 d-flex align-items-center justify-content-center px-3">
     <div class="w-100 text-center" style="max-width: 360px;">
       <h2 class="mb-1" style="font-weight:800;">Join Game</h2>
-      <p style="color:var(--muted); margin-bottom:1.5rem;">Code: <strong style="color:var(--purple-light);" id="join-display-code"></strong></p>
+      <p style="color:var(--muted); margin-bottom:1.5rem;">Code: <strong style="color:var(--accent);" id="join-display-code"></strong></p>
 
       <!-- Pre-game: name entry form -->
       <div id="join-pregame">
@@ -175,7 +175,7 @@ import GameLayout from '../layouts/GameLayout.astro';
   <div id="view-submitted" data-view style="display:none;"
        class="min-vh-100 d-flex align-items-center justify-content-center text-center px-3">
     <div style="max-width:340px; width:100%;">
-      <div style="width:64px; height:64px; border-radius:50%; background:rgba(124,58,237,0.15); border:2px solid rgba(124,58,237,0.3); display:flex; align-items:center; justify-content:center; font-size:1.75rem; margin:0 auto 1.25rem;">✓</div>
+      <div class="submitted-check">✓</div>
       <h3 style="font-weight:800; margin-bottom:6px;">Scores submitted!</h3>
       <p style="color:var(--muted); margin-bottom:1.5rem;">Waiting for other tables…</p>
 
@@ -266,7 +266,11 @@ import GameLayout from '../layouts/GameLayout.astro';
       canvas.width  = canvas.offsetWidth;
       canvas.height = canvas.offsetHeight;
       const ctx = canvas.getContext('2d');
-      const colors = ['#a855f7','#fbbf24','#c084fc','#ffffff','#f59e0b','#e879f9'];
+      const styles = getComputedStyle(document.documentElement);
+      const themeColors = ['--accent', '--highlight', '--line', '--ink-soft']
+        .map(n => styles.getPropertyValue(n).trim())
+        .filter(Boolean);
+      const colors = themeColors.length ? themeColors : ['#c9403a', '#f7e17d'];
       const pieces = Array.from({ length: 70 }, () => ({
         x:  canvas.width  / 2 + (Math.random() - 0.5) * 60,
         y:  canvas.height / 2,
