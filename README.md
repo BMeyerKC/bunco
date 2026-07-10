@@ -22,10 +22,11 @@ src/
     admin.astro       Gated admin hub (admin.html) — quick links, recent games, stats
     tests.astro       Browser-based unit test runner
   layouts/
-    Layout.astro      Master layout (Bootstrap CDN, Outfit font, version footer)
+    Layout.astro      Master layout (Bootstrap CDN, fonts, pre-paint theme script, theme toggle, version footer)
     GameLayout.astro  Extends Layout, adds game.css
   js/
     firebase.js       Firebase Realtime Database read/write helpers + EVENT constants + logEvent
+    theme.js          Light/dark theme resolution, persistence, and toggle
     game-logic.js     Pure game logic (seat assignment, rotation, standings)
     game-controller.js  UI controller wiring Firebase + game-logic + DOM
     game-utils.js     Shared utilities (ghost names, seat helpers)
@@ -35,7 +36,7 @@ src/
     admin-gate.js            Passphrase gate for admin page (Firebase Auth slot-in later)
     admin-controller.js      Admin dashboard rendering (recent games, stats, debug jump)
   styles/
-    base.css          Shared styles
+    base.css          Design tokens (light/dark themes) + shared component styles
     game.css          Game page styles
 public/
   ads.txt
@@ -44,7 +45,17 @@ tests/
   game-utils.test.js     Jest unit tests for game-utils.js
   table-cards.test.js    Jest unit tests for table-cards.js
   firebase-event.test.js Jest unit tests for EVENT constants in firebase.js
+  theme.test.js          Jest unit tests for theme.js
 ```
+
+## Theming
+
+The app has a **paper score-sheet** design with two modes: light is a paper score pad (off-white, ink text, red-pen accent, highlighter yellow), dark is a chalkboard (slate green, chalk white, chalk-pink accent).
+
+- All colors come from semantic CSS tokens in `src/styles/base.css`, defined once per theme under `:root[data-theme="light"]` and `:root[data-theme="dark"]`. Component CSS and inline JS styles reference only tokens (`--accent`, `--surface`, `--ink`, …) — never raw hex from a theme palette.
+- Theme follows the OS setting (`prefers-color-scheme`) by default; the toggle button (top-right, every page) overrides it and persists the choice in `localStorage` under `bunco_theme`.
+- An inline script in `Layout.astro` applies the theme before first paint (no flash) and sets both `data-theme` (our tokens) and `data-bs-theme` (Bootstrap widgets) on `<html>`. It mirrors `resolveTheme()` in `src/js/theme.js`, which owns the toggle and the live system-change listener.
+- Fonts: Caveat (handwritten headings/scores) + Nunito (body/UI).
 
 ## How the full game works
 
@@ -141,8 +152,8 @@ npm run e2e:ui
 - Astro 6 (static output, `.html` file format)
 - Vite (via Astro — content-hashed JS/CSS bundles)
 - Firebase Realtime Database (npm SDK, tree-shaken by Vite)
-- Bootstrap 5.3 (dark theme, CDN)
-- Outfit font (Google Fonts, CDN)
+- Bootstrap 5.3 (CDN, light/dark via `data-bs-theme`)
+- Caveat + Nunito fonts (Google Fonts, CDN)
 - Jest (unit tests)
 - Playwright (E2E tests)
 - GitHub Actions → GitHub Pages (CI/CD)
