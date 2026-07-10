@@ -54,7 +54,9 @@ Design rationale:
 
 ## Application map
 
-CSS-value changes only — no markup or JS changes.
+Style-value changes only — no markup structure or logic changes. Most edits
+are CSS; a few are `font-size` values inside JS template strings that render
+user-facing game UI (discovered during planning; amended 2026-07-10).
 
 - **`src/styles/base.css`**: `.label-upper`, `.card-text`, `.player-chip`,
   `.app-toast`; add the four tokens.
@@ -65,7 +67,8 @@ CSS-value changes only — no markup or JS changes.
   `.bunco-picker-player`, `#bunco-pts`, `#bunco-btn`.
 - **`src/pages/game.astro`**: inline `font-size` styles (0.7–0.9rem tier) and
   any Bootstrap `.small` usage on user-facing text.
-- **`src/pages/index.astro`**: inline sizes and the `.small` ad-slot label.
+- **`src/pages/index.astro`**: inline sizes. (The `.small` ad-slot div is an
+  empty placeholder with no visible text — no change needed.)
 - **`src/pages/scorer.astro`**: the page's own `<style>` block (0.75rem and
   0.85rem entries; the giant score clamp stays).
 - **`src/pages/admin.astro`**: inline 0.75/0.8rem stat labels (cheap
@@ -73,6 +76,13 @@ CSS-value changes only — no markup or JS changes.
   behind).
 - **`src/layouts/Layout.astro`**: footer version stamp (0.65rem → caption
   token).
+- **`src/js/game-controller.js`**: submitted-dots table labels (9px → caption
+  token) and between-rounds standings rows (0.85–0.95rem tier) — inline styles
+  inside template strings; no logic changes.
+- **`src/js/table-cards.js`**: table-card header label (0.8rem) and Submitted
+  badge (0.75rem) → caption token.
+- **`src/js/admin-controller.js`**: created-date cell (0.85rem → small token),
+  matching the admin.astro cleanup.
 
 **Out of scope:** `tests.astro` (dev-only page), `debug.astro` timeline
 (internal tooling; already ≥0.9rem where it matters), font families, colors,
@@ -87,7 +97,8 @@ than their font size.
 
 ## Verification
 
-1. `npm test` — must pass unchanged (no JS is touched).
+1. `npm test` — must pass unchanged (JS edits are style values inside
+   template strings only; no logic changes).
 2. Visual pass at 360px viewport, light and dark themes, through: home → host
    setup → join → waiting room → scoring → standings, plus the scorer page.
 3. Grep check: no remaining `font-size` below `0.8125rem` in user-facing
