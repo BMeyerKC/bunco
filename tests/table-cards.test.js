@@ -49,22 +49,22 @@ test('does not show submitted badge when not submitted', () => {
   expect(el.textContent).not.toContain('Submitted');
 });
 
-test('highlights winning side score as text-white, losing as text-muted', () => {
+test('highlights winning side score with ink token, losing with muted token', () => {
   const el = document.getElementById('root');
   const tables = [{ tableId: 1, us: [], them: [] }];
   renderTableCards(el, tables, { 1: { liveUs: 7, liveThem: 2, submitted: false } });
   const scores = el.querySelectorAll('[data-score]');
-  expect(scores[0].classList.contains('text-white')).toBe(true);  // us winning
-  expect(scores[1].classList.contains('text-muted')).toBe(true);  // them losing
+  expect(scores[0].getAttribute('style')).toContain('var(--ink)');    // us winning
+  expect(scores[1].getAttribute('style')).toContain('var(--muted)');  // them losing
 });
 
-test('both scores are text-muted when tied', () => {
+test('both scores use muted token when tied', () => {
   const el = document.getElementById('root');
   const tables = [{ tableId: 1, us: [], them: [] }];
   renderTableCards(el, tables, { 1: { liveUs: 4, liveThem: 4, submitted: false } });
   const scores = el.querySelectorAll('[data-score]');
-  expect(scores[0].classList.contains('text-muted')).toBe(true);
-  expect(scores[1].classList.contains('text-muted')).toBe(true);
+  expect(scores[0].getAttribute('style')).toContain('var(--muted)');
+  expect(scores[1].getAttribute('style')).toContain('var(--muted)');
 });
 
 test('shows 0–0 when no scores provided', () => {

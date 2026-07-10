@@ -38,9 +38,9 @@ export function renderTableCards(container, tables, tableScores = {}) {
         </div>
         <div class="d-flex align-items-center gap-2">
           <div class="flex-grow-1 text-start">${nameList(us)}</div>
-          <span data-score class="fw-bold fs-5 ${usWin ? 'text-white' : 'text-muted'}">${usScore}</span>
+          <span data-score class="fw-bold fs-5" style="color:${usWin ? 'var(--ink)' : 'var(--muted)'}">${usScore}</span>
           <span class="text-muted px-1">–</span>
-          <span data-score class="fw-bold fs-5 ${themWin ? 'text-white' : 'text-muted'}">${themScore}</span>
+          <span data-score class="fw-bold fs-5" style="color:${themWin ? 'var(--ink)' : 'var(--muted)'}">${themScore}</span>
           <div class="flex-grow-1 text-end">${nameList(them)}</div>
         </div>
       </div>`;
