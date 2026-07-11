@@ -74,7 +74,7 @@ function renderGames(rows, listEl) {
     codeTd.textContent = row.code;
 
     const createdTd = document.createElement('td');
-    createdTd.style.cssText = 'font-size:0.85rem;color:var(--muted);';
+    createdTd.style.cssText = 'font-size:var(--fs-small);color:var(--muted);';
     createdTd.textContent = row.createdAt ? new Date(row.createdAt).toLocaleString() : '—';
 
     const statusTd = document.createElement('td');

@@ -33,8 +33,8 @@ export function renderTableCards(container, tables, tableScores = {}) {
     return `
       <div data-table-card class="mb-3 p-3 rounded" style="background:var(--surface);border:1px solid var(--border);">
         <div class="d-flex justify-content-between align-items-center mb-2">
-          <span class="text-muted" style="font-size:0.8rem;text-transform:uppercase;letter-spacing:0.08em;">Table ${Number(tableId)}</span>
-          ${submitted ? '<span class="badge bg-success" style="font-size:0.75rem;">Submitted</span>' : ''}
+          <span class="text-muted" style="font-size:var(--fs-caption);text-transform:uppercase;letter-spacing:0.08em;">Table ${Number(tableId)}</span>
+          ${submitted ? '<span class="badge bg-success" style="font-size:var(--fs-caption);">Submitted</span>' : ''}
         </div>
         <div class="d-flex align-items-center gap-2">
           <div class="flex-grow-1 text-start">${nameList(us)}</div>
