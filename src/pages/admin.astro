@@ -19,7 +19,7 @@ const version = import.meta.env.PUBLIC_VERSION || 'dev';
           <button class="btn btn-outline-secondary btn-sm" type="submit">Debug →</button>
         </form>
       </div>
-      <p id="debug-code-error" style="color:#dc2626;font-size:0.8rem;min-height:1em;margin:4px 0 0;"></p>
+      <p id="debug-code-error" style="color:#dc2626;font-size:var(--fs-small);min-height:1em;margin:4px 0 0;"></p>
     </section>
 
     <section id="admin-stats" class="mb-4">
@@ -27,15 +27,15 @@ const version = import.meta.env.PUBLIC_VERSION || 'dev';
       <div class="d-flex flex-wrap gap-3">
         <div style="background:var(--surface,#1e1a2e);border:1px solid var(--border);border-radius:8px;padding:12px 20px;min-width:120px;">
           <div id="stat-active" style="font-size:1.6rem;font-weight:800;color:var(--fg);">–</div>
-          <div style="font-size:0.75rem;color:var(--very-muted);">Active now (24h)</div>
+          <div style="font-size:var(--fs-caption);color:var(--very-muted);">Active now (24h)</div>
         </div>
         <div style="background:var(--surface,#1e1a2e);border:1px solid var(--border);border-radius:8px;padding:12px 20px;min-width:120px;">
           <div id="stat-recent" style="font-size:1.6rem;font-weight:800;color:var(--fg);">–</div>
-          <div style="font-size:0.75rem;color:var(--very-muted);">Recent games shown</div>
+          <div style="font-size:var(--fs-caption);color:var(--very-muted);">Recent games shown</div>
         </div>
         <div style="background:var(--surface,#1e1a2e);border:1px solid var(--border);border-radius:8px;padding:12px 20px;min-width:120px;">
           <div style="font-size:1.6rem;font-weight:800;color:var(--fg);">{version}</div>
-          <div style="font-size:0.75rem;color:var(--very-muted);">App version</div>
+          <div style="font-size:var(--fs-caption);color:var(--very-muted);">App version</div>
         </div>
       </div>
     </section>

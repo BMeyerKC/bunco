@@ -41,7 +41,7 @@ const version = import.meta.env.PUBLIC_VERSION || 'dev';
     import { initTheme } from '../js/theme.js';
     initTheme();
   </script>
-  <footer style="position:fixed;bottom:0;right:0;padding:4px 10px;font-size:0.65rem;color:var(--very-muted);z-index:9999;pointer-events:none;">
+  <footer style="position:fixed;bottom:0;right:0;padding:4px 10px;font-size:var(--fs-caption);color:var(--very-muted);z-index:9999;pointer-events:none;">
     {version}
   </footer>
 </body>

@@ -9,7 +9,7 @@ import GameLayout from '../layouts/GameLayout.astro';
   <div id="view-setup" data-view class="min-vh-100 d-flex align-items-center justify-content-center px-3">
     <div class="w-100" style="max-width: 440px;">
       <h2 class="text-center mb-1" style="font-weight:800;">Host a Game</h2>
-      <p class="text-center mb-4" style="color:var(--muted); font-size:0.9rem;">Set up tables and ghost slots</p>
+      <p class="text-center mb-4" style="color:var(--muted); font-size:var(--fs-small);">Set up tables and ghost slots</p>
       <div class="mb-3">
         <label class="form-label label-upper mb-2">Number of tables</label>
         <select id="setup-tables" class="form-select">
@@ -35,9 +35,9 @@ import GameLayout from '../layouts/GameLayout.astro';
       <h1 class="waiting-code-display mb-2" id="waiting-code">----</h1>
 
       <div id="waiting-qr" class="mb-1 mx-auto" style="display:inline-block; background:#fff; padding:10px; border-radius:12px;"></div>
-      <p style="font-size:0.75rem; color:var(--very-muted); margin-bottom:1.25rem;">Scan to join</p>
+      <p style="font-size:var(--fs-caption); color:var(--very-muted); margin-bottom:1.25rem;">Scan to join</p>
 
-      <p style="font-size:0.875rem; color:var(--muted); margin-bottom:0.5rem;">
+      <p style="font-size:var(--fs-small); color:var(--muted); margin-bottom:0.5rem;">
         Players joined: <strong style="color:var(--text);" id="waiting-count">0</strong> / <span id="waiting-total">0</span>
       </p>
       <div id="waiting-player-list" class="d-flex flex-wrap gap-2 justify-content-center mb-4"></div>
@@ -50,7 +50,7 @@ import GameLayout from '../layouts/GameLayout.astro';
           <div><span style="color:var(--muted);" class="me-2">With</span><span id="waiting-seat-teammate" style="font-weight:600;"></span></div>
           <div><span style="color:var(--muted);" class="me-2">vs.</span><span id="waiting-seat-opponents" style="font-weight:600;"></span></div>
         </div>
-        <p style="font-size:0.875rem; color:var(--muted); margin:0;">Waiting for the host to start Round 1…</p>
+        <p style="font-size:var(--fs-small); color:var(--muted); margin:0;">Waiting for the host to start Round 1…</p>
       </div>
 
       <div id="host-seat-layout" style="display:none;" class="w-100 text-start mb-4"></div>
@@ -85,7 +85,7 @@ import GameLayout from '../layouts/GameLayout.astro';
                placeholder="Your name" maxlength="20" autocomplete="off" />
         <button id="join-btn" class="btn btn-primary w-100">Join Game</button>
         <p class="mt-3 mb-0">
-          <a id="join-spectate-link" href="#" style="font-size:0.875rem; color:var(--very-muted); text-decoration:none;">Watch as spectator →</a>
+          <a id="join-spectate-link" href="#" style="font-size:var(--fs-small); color:var(--very-muted); text-decoration:none;">Watch as spectator →</a>
         </p>
       </div>
 
@@ -94,7 +94,7 @@ import GameLayout from '../layouts/GameLayout.astro';
         <p style="color:var(--muted); margin-bottom:1.5rem;">Round is in progress.</p>
         <a id="join-spectate-btn" href="#" class="btn btn-outline-light w-100 mb-3">Watch as Spectator</a>
         <div id="join-ghost-section" style="display:none;">
-          <p style="color:var(--muted); font-size:0.875rem; margin-bottom:0.75rem;">Or take an open seat:</p>
+          <p style="color:var(--muted); font-size:var(--fs-small); margin-bottom:0.75rem;">Or take an open seat:</p>
           <div id="join-ghost-list" class="d-flex flex-column gap-2 mb-3"></div>
           <div id="join-ghost-claim" style="display:none;">
             <input id="join-ghost-name" type="text" class="form-control form-control-lg text-center mb-3"
@@ -195,21 +195,21 @@ import GameLayout from '../layouts/GameLayout.astro';
 
       <!-- Standings snapshot -->
       <div style="background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:16px 20px; margin-bottom:1.25rem; text-align:left;">
-        <p class="label-upper mb-3" style="font-size:0.7rem;">Standings</p>
+        <p class="label-upper mb-3">Standings</p>
         <div id="br-standings-list"></div>
       </div>
 
       <!-- Next seat (hidden on round 6) -->
       <div id="br-next-seat" style="background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:16px 20px; margin-bottom:1.25rem; text-align:left; display:none;">
-        <p class="label-upper mb-2" style="font-size:0.7rem;">Your next seat</p>
+        <p class="label-upper mb-2">Your next seat</p>
         <h4 id="br-next-table" style="font-weight:800; margin-bottom:8px;"></h4>
-        <div style="color:var(--muted); font-size:0.9rem; margin-bottom:2px;">With <strong id="br-next-teammate" style="color:var(--text);"></strong></div>
-        <div style="color:var(--muted); font-size:0.9rem;">vs. <strong id="br-next-opponents" style="color:var(--text);"></strong></div>
+        <div style="color:var(--muted); font-size:var(--fs-small); margin-bottom:2px;">With <strong id="br-next-teammate" style="color:var(--text);"></strong></div>
+        <div style="color:var(--muted); font-size:var(--fs-small);">vs. <strong id="br-next-opponents" style="color:var(--text);"></strong></div>
       </div>
 
       <!-- Host: start next round. Others: waiting message. -->
       <button id="br-start-next-btn" class="btn btn-primary w-100 mb-2" style="display:none;"></button>
-      <p id="br-waiting-msg" style="color:var(--muted); font-size:0.875rem; margin-bottom:0.75rem; display:none;">Waiting for host to start next round…</p>
+      <p id="br-waiting-msg" style="color:var(--muted); font-size:var(--fs-small); margin-bottom:0.75rem; display:none;">Waiting for host to start next round…</p>
       <a id="br-standings-link" href="standings.html" class="btn btn-outline-light w-100">View Full Standings</a>
     </div>
   </div>
