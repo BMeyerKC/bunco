@@ -57,11 +57,11 @@
 }
 
 :root {
-  --font-hand: 'Caveat', 'Segoe Print', cursive;
+  --font-hand: 'Kalam', 'Segoe Print', cursive;
   --font-body: 'Nunito', system-ui, sans-serif;
   /* Type scale — raised floor for mobile readability.
      caption: micro-labels (13px floor); small: helper text (15px);
-     hand-sm: Caveat's short x-height needs a bigger nominal size. */
+     hand-sm: handwriting font needs a bigger nominal size at small scales. */
   --fs-caption: 0.8125rem;
   --fs-small:   0.9375rem;
   --fs-body:    1rem;
