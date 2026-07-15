@@ -32,7 +32,11 @@ function wireDebugJump() {
 async function loadGames() {
   const listEl = document.getElementById('games-list');
   try {
-    const [games, origins] = await Promise.all([getRecentGames(25), getOriginAudits()]);
+    const games = await getRecentGames(25);
+    const origins = await getOriginAudits().catch(err => {
+      console.error('[admin] failed to load origin audits', err);
+      return {};
+    });
     const rows = buildGameRows(games, origins);
     renderStats(rows);
     renderGames(rows, listEl);
