@@ -3,7 +3,8 @@ import { createGame, addPlayer, claimGhostSeat, watchGame, getGame, saveRoundAss
          recordBunco, callGame, submitTableScore,
          saveStandings,
          incrementTableScore, decrementTableScore, watchTableScore, watchAllTableScores, initializeRoundTables,
-         EVENT, logEvent } from './firebase.js';
+         EVENT, logEvent, logGameOrigin } from './firebase.js';
+import { captureOrigin } from './geo.js';
 import { generateGameCode, assignRandomSeats,
          calculateNextRoundSeating, determineWinner, updateStandings, buildTableLayout } from './game-logic.js';
 import { showView, showToast, getParam, getDeviceId } from './ui.js';
@@ -79,6 +80,7 @@ async function handleCreateGame() {
 
     await createGame(gameCode, deviceId, numTables, ghostSlots);
     logEvent(gameCode, EVENT.GAME_CREATED, { tables: numTables, ghostSlots }).catch(() => {});
+    captureOrigin().then(origin => logGameOrigin(gameCode, origin)).catch(() => {});
 
     // Add ghost players with random names
     const ghostNames = pickGhostNames(ghostSlots);
