@@ -10,8 +10,8 @@ Start collecting basic usage-geography analytics: capture the IP address and res
 ## Out of Scope
 
 - Capturing origin data for players joining a game (host-creation only, for now)
-- Any UI to view this data (admin dashboard column, map, etc.) — a follow-up once there's data to look at
-- Authentication/access control changes beyond the new rule below
+- A map or any visualization beyond a plain text column in the existing admin table
+- Real authentication (Firebase Auth) — deferred to the already-planned Auth phase; the admin page's passphrase gate remains a client-side UI deterrent only, not real access control
 - Non-geo analytics (referrer, user agent, device type, etc.)
 
 ---
@@ -45,11 +45,12 @@ Add to the production RTDB rules (see `bunco-firebase-rules` memory for the CLI 
 
 ```json
 "originAudits": {
-  "$code": { ".read": false, ".write": true }
+  ".read": true,
+  "$code": { ".write": true }
 }
 ```
 
-Write-only from clients (matches the existing no-auth trust model used for `games`), unreadable except via the Firebase console. This keeps IP data out of the debug page and out of any future admin-dashboard read unless a read path is deliberately added later.
+`.read: true` is required so the admin dashboard (a plain unauthenticated Firebase client, gated only by a client-side passphrase check — see Admin Dashboard section below) can read this data. This matches the trust model already accepted for the `games` tree: no real access control until the planned Firebase Auth phase, at which point both trees get locked down together. IP/location data is technically world-readable via direct Firebase REST calls, same as game state already is; it stays out of the *public-facing* debug page only because nothing links to it or queries it from there.
 
 ---
 
@@ -91,18 +92,55 @@ captureOrigin().then(origin => logGameOrigin(gameCode, origin)).catch(() => {});
 
 This must never block game creation or surface an error to the host — geo lookup failure (blocked, offline, rate-limited) is silently swallowed, identical to how `logEvent(...).catch(() => {})` already behaves on the preceding line.
 
+### Admin Dashboard changes
+
+`getRecentGames` in `firebase.js` already loads the last 25 games for `admin.html`. Add a sibling function to load origin data in the same pass:
+
+```js
+export async function getOriginAudits() {
+  const snap = await get(ref(db, 'originAudits'));
+  const result = snap.exists() ? snap.val() : {};
+  logReceive('originAudits', `${Object.keys(result).length} records`);
+  return result;
+}
+```
+
+`buildGameRows` in `game-logic.js` gains an optional second parameter so it can join origin data by game code:
+
+```js
+export function buildGameRows(games, origins = {}) {
+  return (games || [])
+    .map(g => {
+      const o = origins[g.code];
+      const location = o ? [o.city, o.region].filter(Boolean).join(', ') || o.country || null : null;
+      return {
+        code: g.code,
+        createdAt: g.meta?.createdAt ?? 0,
+        status: gameStatus(g.meta),
+        playerCount: Object.values(g.players || {}).filter(p => !p.isGhost).length,
+        location,
+      };
+    })
+    .sort((a, b) => b.createdAt - a.createdAt);
+}
+```
+
+`admin-controller.js`'s `loadGames()` fetches both in parallel (`Promise.all([getRecentGames(25), getOriginAudits()])`) and passes origins into `buildGameRows`. `renderGames()` gets a new `<th>Location</th>` column, rendering `row.location || '—'`.
+
 ---
 
 ## Testing
 
 - Jest test for `captureOrigin()`: mock `fetch`, verify the returned shape on success, verify it throws/rejects cleanly on a non-OK response (caller is responsible for swallowing).
 - Jest test for `logGameOrigin()`: mirrors the existing mock pattern in `tests/firebase-event.test.js`, verifying it writes to `originAudits/{code}` with the expected shape.
-- No e2e coverage — this hits a real external network call in production only; not worth mocking in Playwright for this pass.
+- Jest test for `getOriginAudits()`: mocks `get()`, verifies it returns `{}` on an empty snapshot and the raw map otherwise.
+- Jest test for `buildGameRows(games, origins)`: verifies the `location` join (city+region, city-only, country fallback, and no-match → `null`) without touching Firebase.
+- No e2e coverage for the geo capture itself — real external network call, not worth mocking in Playwright for this pass. Confirmed `e2e/admin.spec.js` has no column-specific assertions on the Recent Games table, so the new Location column needs no e2e changes.
 
 ---
 
 ## Future Considerations
 
-- Admin dashboard could eventually show city/country per game (would need a new authenticated read path, since `originAudits` is write-only from clients).
 - Could extend capture to player-join events, not just host-creation, if per-player geography becomes useful.
 - `ipapi.co` free tier could be swapped for a paid tier or alternate provider (e.g. `geojs.io`) if volume grows.
+- When the Firebase Auth phase lands, `originAudits` and `games` should be locked down together (see `bunco-firebase-rules` memory).
