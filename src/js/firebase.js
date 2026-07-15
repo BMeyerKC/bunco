@@ -241,6 +241,20 @@ export function watchEvents(code, callback) {
   return () => off(r);
 }
 
+// ─── Origin analytics ───────────────────────────────────────
+
+export async function logGameOrigin(code, origin) {
+  logSend(`originAudits/${code}`, origin);
+  await set(ref(db, `originAudits/${code}`), { ...origin, capturedAt: serverTimestamp() });
+}
+
+export async function getOriginAudits() {
+  const snap = await get(ref(db, 'originAudits'));
+  const result = snap.val() || {};
+  logReceive('originAudits', `${Object.keys(result).length} records`);
+  return result;
+}
+
 // ─── Admin ───────────────────────────────────────────────────
 
 export async function getRecentGames(limit = 25) {

@@ -1,5 +1,5 @@
 import { ensureAdminAccess } from './admin-gate.js';
-import { getRecentGames } from './firebase.js';
+import { getRecentGames, getOriginAudits } from './firebase.js';
 import { buildGameRows } from './game-logic.js';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -33,7 +33,11 @@ async function loadGames() {
   const listEl = document.getElementById('games-list');
   try {
     const games = await getRecentGames(25);
-    const rows  = buildGameRows(games);
+    const origins = await getOriginAudits().catch(err => {
+      console.error('[admin] failed to load origin audits', err);
+      return {};
+    });
+    const rows = buildGameRows(games, origins);
     renderStats(rows);
     renderGames(rows, listEl);
   } catch (err) {
@@ -62,7 +66,7 @@ function renderGames(rows, listEl) {
   table.className = 'table table-dark table-sm align-middle';
   table.innerHTML =
     '<thead><tr>' +
-    '<th>Code</th><th>Created</th><th>Status</th><th>Players</th><th></th>' +
+    '<th>Code</th><th>Created</th><th>Status</th><th>Players</th><th>Location</th><th></th>' +
     '</tr></thead>';
 
   const tbody = document.createElement('tbody');
@@ -83,6 +87,10 @@ function renderGames(rows, listEl) {
     const playersTd = document.createElement('td');
     playersTd.textContent = String(row.playerCount);
 
+    const locationTd = document.createElement('td');
+    locationTd.style.cssText = 'font-size:var(--fs-small);color:var(--muted);';
+    locationTd.textContent = row.location || '—';
+
     const linksTd = document.createElement('td');
     linksTd.className = 'text-end';
     const debugLink = document.createElement('a');
@@ -95,7 +103,7 @@ function renderGames(rows, listEl) {
     standingsLink.textContent = 'Standings';
     linksTd.append(debugLink, standingsLink);
 
-    tr.append(codeTd, createdTd, statusTd, playersTd, linksTd);
+    tr.append(codeTd, createdTd, statusTd, playersTd, locationTd, linksTd);
     tbody.appendChild(tr);
   }
   table.appendChild(tbody);
