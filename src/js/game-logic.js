@@ -159,17 +159,24 @@ export function gameStatus(meta) {
 /**
  * Shapes raw game records into display rows for the admin dashboard.
  * @param {Array<{ code: string, meta?: object, players?: object }>} games
- * @returns {Array<{ code: string, createdAt: number, status: string, playerCount: number }>}
+ * @param {Object<string, { city?: string|null, region?: string|null, country?: string|null }>} [origins]
+ *   keyed by game code, e.g. from getOriginAudits()
+ * @returns {Array<{ code: string, createdAt: number, status: string, playerCount: number, location: string|null }>}
  *   sorted newest-first by createdAt
  */
-export function buildGameRows(games) {
+export function buildGameRows(games, origins = {}) {
   return (games || [])
-    .map(g => ({
-      code: g.code,
-      createdAt: g.meta?.createdAt ?? 0,
-      status: gameStatus(g.meta),
-      playerCount: Object.values(g.players || {}).filter(p => !p.isGhost).length,
-    }))
+    .map(g => {
+      const o = origins[g.code];
+      const location = o ? ([o.city, o.region].filter(Boolean).join(', ') || o.country || null) : null;
+      return {
+        code: g.code,
+        createdAt: g.meta?.createdAt ?? 0,
+        status: gameStatus(g.meta),
+        playerCount: Object.values(g.players || {}).filter(p => !p.isGhost).length,
+        location,
+      };
+    })
     .sort((a, b) => b.createdAt - a.createdAt);
 }
 

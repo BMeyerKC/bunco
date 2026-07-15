@@ -279,12 +279,54 @@ describe('buildGameRows', () => {
 
   test('tolerates missing meta and players', () => {
     const rows = buildGameRows([{ code: 'BARE' }]);
-    expect(rows[0]).toEqual({ code: 'BARE', createdAt: 0, status: 'Unknown', playerCount: 0 });
+    expect(rows[0]).toEqual({ code: 'BARE', createdAt: 0, status: 'Unknown', playerCount: 0, location: null });
   });
 
   test('returns empty array for empty or missing input', () => {
     expect(buildGameRows([])).toEqual([]);
     expect(buildGameRows(null)).toEqual([]);
+  });
+});
+
+describe('buildGameRows location join', () => {
+  const game = (code, createdAt) => ({
+    code,
+    meta: { currentRound: 0, gameCalledBy: null, createdAt },
+    players: {},
+  });
+
+  test('joins city and region when both are present', () => {
+    const rows = buildGameRows(
+      [game('ABCD', 100)],
+      { ABCD: { city: 'Kansas City', region: 'Missouri', country: 'United States' } }
+    );
+    expect(rows[0].location).toBe('Kansas City, Missouri');
+  });
+
+  test('falls back to country when city and region are missing', () => {
+    const rows = buildGameRows(
+      [game('ABCD', 100)],
+      { ABCD: { city: null, region: null, country: 'United States' } }
+    );
+    expect(rows[0].location).toBe('United States');
+  });
+
+  test('uses city alone when region is missing', () => {
+    const rows = buildGameRows(
+      [game('ABCD', 100)],
+      { ABCD: { city: 'Kansas City', region: null, country: 'United States' } }
+    );
+    expect(rows[0].location).toBe('Kansas City');
+  });
+
+  test('is null when there is no matching origin record', () => {
+    const rows = buildGameRows([game('ABCD', 100)], {});
+    expect(rows[0].location).toBeNull();
+  });
+
+  test('defaults origins to {} when omitted', () => {
+    const rows = buildGameRows([game('ABCD', 100)]);
+    expect(rows[0].location).toBeNull();
   });
 });
 
