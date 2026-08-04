@@ -1,6 +1,5 @@
 // js/feedback-controller.js — wires the FeedbackWidget DOM to Firebase.
 
-import { submitFeedback } from './firebase.js';
 import { validateFeedbackMessage, buildFeedbackPayload } from './feedback-logic.js';
 import { showToast, getParam, getDeviceId } from './ui.js';
 
@@ -56,7 +55,17 @@ export function initFeedback() {
         timeoutId = setTimeout(() => reject(new Error('feedback-submit-timeout')), SUBMIT_TIMEOUT_MS);
       });
 
-      await Promise.race([submitFeedback(feedback, contact), timeout]);
+      // Firebase is loaded on demand so pages that never open the feedback
+      // modal (e.g. the landing page, the scorer) never pay for the SDK.
+      // The dynamic import itself is raced against the timeout too, so an
+      // offline user who can't even fetch the chunk still gets the normal
+      // "couldn't send" toast instead of hanging indefinitely.
+      const send = (async () => {
+        const { submitFeedback } = await import('./firebase.js');
+        return submitFeedback(feedback, contact);
+      })();
+
+      await Promise.race([send, timeout]);
       clearTimeout(timeoutId);
 
       messageEl.value = '';
