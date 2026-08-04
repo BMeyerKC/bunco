@@ -102,7 +102,9 @@ RTDB rules cascade and cannot be revoked at a deeper level, which is why contact
 
 The same publish also adds the missing `originAudits` rules, fixing the silently broken host-origin analytics feature.
 
-Rules live only in the console/REST — there is no rules file in the repo. Publish via the REST endpoint `/.settings/rules.json?access_token=…` with a token minted from the firebase-tools refresh token. Keep tokens out of any output.
+Rules currently live only in the Firebase Console, which is the direct cause of the `originAudits` bug — there was no reviewable artifact to notice was missing. This work brings them into the repo as `database.rules.json`, referenced by a new `firebase.json`, and publishes with `npx firebase-tools deploy --only database`. Rules become version-controlled and diffable from then on.
+
+Because that deploy overwrites the live ruleset wholesale, the current live rules must be captured into the file first so nothing is silently dropped.
 
 **Verification after publishing** — the check that was missing when origin analytics shipped:
 
@@ -114,6 +116,7 @@ Rules live only in the console/REST — there is no rules file in the repo. Publ
 
 | File | Change |
 |---|---|
+| `firebase.json`, `.firebaserc`, `database.rules.json` | **new** — version-controlled RTDB rules |
 | `src/components/FeedbackWidget.astro` | **new** — pill + modal markup |
 | `src/js/feedback-logic.js` | **new** — pure: validation and payload construction |
 | `src/js/feedback-controller.js` | **new** — wires DOM to Firebase |
@@ -135,7 +138,9 @@ Rules live only in the console/REST — there is no rules file in the repo. Publ
 
 ### Admin view
 
-A "Feedback" section above Recent Games: newest first, showing timestamp, message, page and game code, app version, and a "✉ contact provided" badge carrying the record id to look up in the Firebase Console.
+A "Feedback" section above Recent Games: newest first, showing timestamp, message, page and game code, app version, and the record id.
+
+The page cannot read `feedbackContacts`, so it cannot know whether a given record has a contact attached — a "contact provided" badge would be a guess. The record id is shown instead and is the lookup key for **Firebase Console → Realtime Database → `feedbackContacts`**.
 
 Loaded by `loadFeedback()` with its own independent `try/catch`, following commit `aa345a4` — a feedback fetch failure must not take down the games list.
 
