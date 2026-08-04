@@ -90,6 +90,37 @@ describe('buildFeedbackPayload', () => {
     expect(feedback.ua).toHaveLength(300);
   });
 
+  test('truncates a very long page to 300 characters', () => {
+    const { feedback } = buildFeedbackPayload({ message: 'hi', page: '/game.html?code=' + 'p'.repeat(500) });
+    expect(feedback.page).toHaveLength(300);
+  });
+
+  test('truncates a very long code to 8 characters', () => {
+    const { feedback } = buildFeedbackPayload({ message: 'hi', code: 'x'.repeat(50) });
+    expect(feedback.code).toHaveLength(8);
+  });
+
+  test('truncates a very long version to 40 characters', () => {
+    const { feedback } = buildFeedbackPayload({ message: 'hi', version: 'v'.repeat(60) });
+    expect(feedback.version).toHaveLength(40);
+  });
+
+  test('truncates a very long theme to 10 characters', () => {
+    const { feedback } = buildFeedbackPayload({ message: 'hi', theme: 't'.repeat(20) });
+    expect(feedback.theme).toHaveLength(10);
+  });
+
+  test('truncates a very long deviceId to 40 characters', () => {
+    const { feedback } = buildFeedbackPayload({ message: 'hi', deviceId: 'd'.repeat(60) });
+    expect(feedback.deviceId).toHaveLength(40);
+  });
+
+  test('leaves normal page and code values untouched', () => {
+    const { feedback } = buildFeedbackPayload({ message: 'hi', page: '/game.html?code=AB2D', code: 'AB2D' });
+    expect(feedback.page).toBe('/game.html?code=AB2D');
+    expect(feedback.code).toBe('AB2D');
+  });
+
   test('throws when the message is empty', () => {
     expect(() => buildFeedbackPayload({ message: '   ' })).toThrow('feedback-message-empty');
   });
