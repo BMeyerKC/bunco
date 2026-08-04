@@ -1,0 +1,33 @@
+{
+  "rules": {
+    "games": {
+      ".read": true,
+      ".indexOn": ["meta/createdAt"],
+      "$code": {
+        ".read": true,
+        ".write": true,
+        ".validate": "newData.hasChildren(['meta'])"
+      }
+    },
+    "originAudits": {
+      ".read": true,
+      "$code": {
+        ".write": true
+      }
+    },
+    "feedback": {
+      ".read": true,
+      ".indexOn": ["createdAt"],
+      "$id": {
+        ".write": "!data.exists()",
+        ".validate": "newData.hasChildren(['message','createdAt']) && newData.child('message').isString() && newData.child('message').val().length <= 1000"
+      }
+    },
+    "feedbackContacts": {
+      "$id": {
+        ".write": "!data.exists()",
+        ".validate": "newData.child('contact').isString() && newData.child('contact').val().length <= 200"
+      }
+    }
+  }
+}
