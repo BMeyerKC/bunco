@@ -10,11 +10,15 @@ export const ref = (db, path) => {
 
 export const set = () => Promise.resolve();
 
-export const get = () => Promise.resolve({ val: () => null });
+export const get = () => Promise.resolve({ val: () => null, forEach: () => {} });
 
 export const update = () => Promise.resolve();
 
-export const push = () => Promise.resolve();
+let pushCounter = 0;
+export const push = (ref) => ({
+  path: ref && ref.path,
+  key: `mock-key-${++pushCounter}`,
+});
 
 export const onValue = (ref, callback) => {
   callback({ val: () => null });

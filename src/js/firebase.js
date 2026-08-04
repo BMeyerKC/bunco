@@ -255,6 +255,52 @@ export async function getOriginAudits() {
   return result;
 }
 
+// ─── Feedback ────────────────────────────────────────────────
+
+/**
+ * Writes a feedback message and, optionally, the sender's contact info.
+ * The two land in separate nodes sharing one push id: `feedback/` is
+ * world-readable, `feedbackContacts/` is write-only and readable solely
+ * from the Firebase Console.
+ * @param {object} feedback - from buildFeedbackPayload().feedback
+ * @param {string|null} contact - from buildFeedbackPayload().contact
+ * @returns {Promise<string>} the shared push id
+ */
+export async function submitFeedback(feedback, contact = null) {
+  const feedbackRef = push(ref(db, 'feedback'));
+  const id = feedbackRef.key;
+
+  logSend(`feedback/${id}`, feedback);
+  await set(feedbackRef, { ...feedback, createdAt: serverTimestamp() });
+
+  if (contact) {
+    // Never log the value — this node exists precisely to keep it private.
+    logSend(`feedbackContacts/${id}`, '[redacted]');
+    await set(ref(db, `feedbackContacts/${id}`), {
+      contact,
+      createdAt: serverTimestamp(),
+    });
+  }
+
+  return id;
+}
+
+/**
+ * Reads recent feedback, newest first.
+ * @param {number} limit
+ * @returns {Promise<Array<object>>}
+ */
+export async function getFeedback(limit = 50) {
+  const q = query(ref(db, 'feedback'), orderByChild('createdAt'), limitToLast(limit));
+  const snap = await get(q);
+  const items = [];
+  snap.forEach(child => {
+    items.push({ id: child.key, ...child.val() });
+  });
+  logReceive(`feedback (limit ${limit})`, `${items.length} items`);
+  return items.reverse();
+}
+
 // ─── Admin ───────────────────────────────────────────────────
 
 export async function getRecentGames(limit = 25) {
