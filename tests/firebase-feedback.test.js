@@ -1,4 +1,9 @@
 import { submitFeedback, getFeedback } from '../src/js/firebase.js';
+import { __seedSnapshot, __resetMock } from 'firebase/database';
+
+afterEach(() => {
+  __resetMock();
+});
 
 const sample = {
   message: 'The round counter confused me.',
@@ -29,5 +34,23 @@ describe('submitFeedback', () => {
 describe('getFeedback', () => {
   test('returns an empty array when there is no data', async () => {
     await expect(getFeedback()).resolves.toEqual([]);
+  });
+
+  test('returns seeded records newest first, with id populated from the child key', async () => {
+    // Seeded in ascending order (oldest first), mirroring what a real
+    // orderByChild('createdAt') query returns before getFeedback reverses it.
+    __seedSnapshot('feedback', {
+      'id-1': { message: 'first', page: '/a', code: 'A1', version: '1.0', theme: 'light', ua: 'ua1', deviceId: 'd1', createdAt: 100 },
+      'id-2': { message: 'second', page: '/b', code: 'B2', version: '1.0', theme: 'dark', ua: 'ua2', deviceId: 'd2', createdAt: 200 },
+      'id-3': { message: 'third', page: '/c', code: 'C3', version: '1.0', theme: 'light', ua: 'ua3', deviceId: 'd3', createdAt: 300 },
+    });
+
+    const result = await getFeedback();
+
+    expect(result.map(r => r.id)).toEqual(['id-3', 'id-2', 'id-1']);
+    expect(result[0]).toEqual({
+      id: 'id-3', message: 'third', page: '/c', code: 'C3', version: '1.0',
+      theme: 'light', ua: 'ua3', deviceId: 'd3', createdAt: 300,
+    });
   });
 });
