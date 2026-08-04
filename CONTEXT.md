@@ -40,8 +40,7 @@ The device that created the game, recorded as `meta.hostDeviceId`, one per game,
 _Known limitation_: no host-transfer mechanism exists. If the host's device is lost (not just reloaded — `bunco_host_code` survives reloads via localStorage), no other client has UI to advance the game. Accepted as a rare-edge-case risk for now, not designed around yet.
 
 **Bunco**:
-A player rolling three-of-a-kind on their called number, worth bonus credit and triggering a Round Called for their table. Scoped **per table** — each table can independently credit its own Bunco in a round; one table's Bunco does not block another table's Bunco in the same round.
-_Avoid_: Global first-claim-wins semantics (the current implementation's `recordBunco` transaction rejects a second Bunco claim game-wide per round — this is a known bug to fix, not the intended rule)
+A player rolling three-of-a-kind on their called number, worth bonus credit and triggering a Round Called for their table. Scoped **per table** — each table can independently credit its own Bunco in a round; one table's Bunco does not block another table's Bunco in the same round. `recordBunco` claims against a per-table node (`rounds/{round}/bunco/{tableId}`), so the transaction's first-writer-wins semantics apply within a table, not game-wide.
 _Known gap_: the host needs the ability to edit or erase a Bunco recorded by accident. Not yet built.
 
 **Standings**:

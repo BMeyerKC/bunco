@@ -22,9 +22,11 @@ const selectors = {
   hostJoinBtn: "#host-join-btn",
 };
 
+// Short enough that "Player N <runId>" always fits #join-name's
+// maxlength="20" — a longer id gets silently truncated by the browser,
+// breaking any exact name match against the untruncated JS string.
 function buildRunId() {
-  const random = Math.random().toString(36).slice(2, 6);
-  return `${Date.now()}-${random}`;
+  return Date.now().toString(36);
 }
 
 async function selectGhosts(hostPage, ghosts) {

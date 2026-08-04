@@ -181,8 +181,10 @@ export function buildGameRows(games, origins = {}) {
 }
 
 /**
- * Transaction updater for claiming the single per-round bunco.
- * First writer wins: aborts (returns undefined) if a claim already exists.
+ * Transaction updater for claiming a table's bunco for the round. Scoped to
+ * one table's claim node — first writer at that table wins: aborts (returns
+ * undefined) if that table already has a claim. Other tables claim
+ * independently against their own node.
  *
  * @param {{ playerId, tableId, ts }|null|undefined} current  existing claim node
  * @param {string} playerId  player being credited

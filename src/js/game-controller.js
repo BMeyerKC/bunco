@@ -255,16 +255,20 @@ export function onGameUpdate(data) {
     renderHostSeatLayout(data);
   }
 
-  // One bunco per round: once claimed, lock every device's button and close
-  // any open picker. Banner gets bunco flavor when the claim caused the call.
-  const buncoClaim = data.rounds?.[data.meta.currentRound]?.bunco || null;
+  // Bunco is claimed independently per table: once my table has claimed,
+  // lock my device's button and close any open picker. Other tables' claims
+  // don't affect me. Banner gets bunco flavor when the call that triggered
+  // it (gameCalledBy, game-wide) was a bunco claim.
+  const roundBuncos = data.rounds?.[data.meta.currentRound]?.bunco || {};
+  const myTableBuncoClaim = roundBuncos[myTableId] || null;
   const buncoBtn = document.getElementById('bunco-btn');
-  if (buncoBtn) buncoBtn.disabled = !!buncoClaim;
-  if (buncoClaim) closeBuncoPicker();
+  if (buncoBtn) buncoBtn.disabled = !!myTableBuncoClaim;
+  if (myTableBuncoClaim) closeBuncoPicker();
 
   const banner = document.getElementById('game-called-banner');
   if (banner) {
-    banner.textContent = buncoClaim
+    const calledByBunco = !!roundBuncos[data.meta.gameCalledBy];
+    banner.textContent = calledByBunco
       ? '🎲 BUNCO! — finish your rolls and submit'
       : 'GAME CALLED — finish your roll';
     banner.classList.toggle('visible', !!data.meta.gameCalledBy);

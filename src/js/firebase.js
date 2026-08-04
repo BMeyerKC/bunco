@@ -159,8 +159,8 @@ export async function submitTableScore(code, roundNumber, tableId, usScore, them
 }
 
 export async function recordBunco(code, roundNumber, playerId, tableId) {
-  const r = ref(db, `games/${code}/rounds/${roundNumber}/bunco`);
-  logSend(`games/${code}/rounds/${roundNumber}/bunco`, { playerId, tableId });
+  const r = ref(db, `games/${code}/rounds/${roundNumber}/bunco/${tableId}`);
+  logSend(`games/${code}/rounds/${roundNumber}/bunco/${tableId}`, { playerId, tableId });
   const result = await runTransaction(r, current =>
     buncoClaimUpdate(current, playerId, tableId, Date.now())
   );
