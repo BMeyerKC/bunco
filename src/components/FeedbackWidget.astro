@@ -1,0 +1,45 @@
+---
+// src/components/FeedbackWidget.astro
+// Fixed feedback pill + modal. Rendered by Layout.astro on every page
+// that does not opt out via showFeedback={false}.
+const version = import.meta.env.PUBLIC_VERSION || 'dev';
+---
+<button
+  id="feedback-fab"
+  class="feedback-fab"
+  type="button"
+  data-bs-toggle="modal"
+  data-bs-target="#feedback-modal"
+>
+  <span aria-hidden="true">✍</span> Feedback
+</button>
+
+<div class="modal fade" id="feedback-modal" tabindex="-1"
+     aria-labelledby="feedback-modal-title" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content feedback-modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="feedback-modal-title">Tell us what you think</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form id="feedback-form" data-version={version}>
+        <div class="modal-body">
+          <label for="feedback-message" class="form-label">What's on your mind?</label>
+          <textarea id="feedback-message" class="form-control" rows="5" maxlength="1000"
+                    placeholder="Something confusing? Something broken? An idea?"></textarea>
+
+          <label for="feedback-contact" class="form-label mt-3">
+            Name or email
+            <span style="color:var(--muted);font-weight:400;">— only if you'd like a reply</span>
+          </label>
+          <input id="feedback-contact" type="text" class="form-control"
+                 maxlength="200" autocomplete="off" />
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" id="feedback-send" class="btn btn-primary" disabled>Send</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
