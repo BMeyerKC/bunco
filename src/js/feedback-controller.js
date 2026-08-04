@@ -4,6 +4,15 @@ import { submitFeedback } from './firebase.js';
 import { validateFeedbackMessage, buildFeedbackPayload } from './feedback-logic.js';
 import { showToast, getParam, getDeviceId } from './ui.js';
 
+// Firebase RTDB queues writes while offline instead of rejecting them, so
+// `set()` never settles on flaky/absent connectivity and `await submitFeedback`
+// would otherwise hang forever with the button stuck on "Sending…". This caps
+// how long we wait before treating the submit as failed. 10s is generous enough
+// that a genuinely slow-but-working connection usually finishes in time, while
+// still giving a stuck user a definite answer well before they'd give up on
+// their own.
+const SUBMIT_TIMEOUT_MS = 10000;
+
 /**
  * Binds the feedback modal. No-ops on pages that opt out of the widget
  * (admin, debug, tests), where the markup is absent.
@@ -30,6 +39,7 @@ export function initFeedback() {
     sendBtn.disabled = true;
     sendBtn.textContent = 'Sending…';
 
+    let timeoutId;
     try {
       const { feedback, contact } = buildFeedbackPayload({
         message:  messageEl.value,
@@ -42,7 +52,12 @@ export function initFeedback() {
         deviceId: getDeviceId(),
       });
 
-      await submitFeedback(feedback, contact);
+      const timeout = new Promise((_, reject) => {
+        timeoutId = setTimeout(() => reject(new Error('feedback-submit-timeout')), SUBMIT_TIMEOUT_MS);
+      });
+
+      await Promise.race([submitFeedback(feedback, contact), timeout]);
+      clearTimeout(timeoutId);
 
       messageEl.value = '';
       contactEl.value = '';
@@ -50,6 +65,7 @@ export function initFeedback() {
       showToast('Thanks — we got it!', 'success');
     } catch (err) {
       // Leave the text in place so a retry costs the user nothing.
+      clearTimeout(timeoutId);
       console.error('[feedback] submit failed', err);
       showToast("Couldn't send — try again?", 'warning');
     } finally {
