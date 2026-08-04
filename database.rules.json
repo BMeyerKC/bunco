@@ -20,13 +20,25 @@
       ".indexOn": ["createdAt"],
       "$id": {
         ".write": "!data.exists()",
-        ".validate": "newData.hasChildren(['message','createdAt']) && newData.child('message').isString() && newData.child('message').val().length <= 1000"
+        ".validate": "newData.hasChildren(['message','createdAt'])",
+        "message":   { ".validate": "newData.isString() && newData.val().length <= 1000" },
+        "createdAt": { ".validate": "newData.isNumber()" },
+        "page":      { ".validate": "newData.isString() && newData.val().length <= 300" },
+        "code":      { ".validate": "newData.isString() && newData.val().length <= 8" },
+        "version":   { ".validate": "newData.isString() && newData.val().length <= 40" },
+        "theme":     { ".validate": "newData.isString() && newData.val().length <= 10" },
+        "ua":        { ".validate": "newData.isString() && newData.val().length <= 300" },
+        "deviceId":  { ".validate": "newData.isString() && newData.val().length <= 40" },
+        "$other":    { ".validate": false }
       }
     },
     "feedbackContacts": {
       "$id": {
         ".write": "!data.exists()",
-        ".validate": "newData.child('contact').isString() && newData.child('contact').val().length <= 200"
+        ".validate": "newData.hasChildren(['contact'])",
+        "contact":   { ".validate": "newData.isString() && newData.val().length <= 200" },
+        "createdAt": { ".validate": "newData.isNumber()" },
+        "$other":    { ".validate": false }
       }
     }
   }
