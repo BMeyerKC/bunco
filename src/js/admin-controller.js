@@ -1,5 +1,5 @@
 import { ensureAdminAccess } from './admin-gate.js';
-import { getRecentGames, getOriginAudits } from './firebase.js';
+import { getRecentGames, getOriginAudits, getFeedback } from './firebase.js';
 import { buildGameRows } from './game-logic.js';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -9,7 +9,7 @@ init();
 async function init() {
   await ensureAdminAccess();
   wireDebugJump();
-  await loadGames();
+  await Promise.allSettled([loadGames(), loadFeedback()]);
 }
 
 function wireDebugJump() {
@@ -110,4 +110,65 @@ function renderGames(rows, listEl) {
 
   listEl.innerHTML = '';
   listEl.appendChild(table);
+}
+
+async function loadFeedback() {
+  const listEl = document.getElementById('feedback-list');
+  try {
+    const items = await getFeedback(50);
+    renderFeedback(items, listEl);
+  } catch (err) {
+    console.error('[admin] failed to load feedback', err);
+    listEl.innerHTML =
+      '<p style="color:#dc2626;">Couldn’t load feedback. ' +
+      '<button id="feedback-retry" class="btn btn-sm btn-outline-secondary ms-2">Retry</button></p>';
+    document.getElementById('feedback-retry').addEventListener('click', loadFeedback);
+  }
+}
+
+function renderFeedback(items, listEl) {
+  listEl.innerHTML = '';
+
+  if (items.length === 0) {
+    listEl.innerHTML = '<p style="color:var(--very-muted);">No feedback yet.</p>';
+    return;
+  }
+
+  for (const item of items) {
+    const card = document.createElement('div');
+    card.style.cssText =
+      'background:var(--surface);border:1px solid var(--border);border-radius:8px;' +
+      'padding:12px 16px;margin-bottom:10px;';
+
+    const meta = document.createElement('div');
+    meta.style.cssText =
+      'font-size:var(--fs-caption);color:var(--very-muted);margin-bottom:6px;' +
+      'display:flex;flex-wrap:wrap;gap:10px;';
+
+    const when = document.createElement('span');
+    when.textContent = item.createdAt ? new Date(item.createdAt).toLocaleString() : '—';
+
+    const where = document.createElement('span');
+    where.textContent = item.code ? `${item.page || '—'} · ${item.code}` : (item.page || '—');
+
+    const ver = document.createElement('span');
+    ver.textContent = `v${item.version || '?'} · ${item.theme || '?'}`;
+
+    meta.append(when, where, ver);
+
+    // Contact lives in the write-only feedbackContacts/ node, which this
+    // page cannot read by design — so it cannot know whether one exists.
+    // Surface the id instead; it is the console lookup key.
+    const idEl = document.createElement('span');
+    idEl.style.cssText = 'font-family:monospace;';
+    idEl.textContent = item.id;
+    meta.appendChild(idEl);
+
+    const body = document.createElement('p');
+    body.style.cssText = 'margin:0;color:var(--text);white-space:pre-wrap;';
+    body.textContent = item.message || '';
+
+    card.append(meta, body);
+    listEl.appendChild(card);
+  }
 }

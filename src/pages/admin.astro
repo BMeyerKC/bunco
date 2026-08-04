@@ -2,7 +2,7 @@
 import Layout from '../layouts/Layout.astro';
 const version = import.meta.env.PUBLIC_VERSION || 'dev';
 ---
-<Layout title="Bunco Admin">
+<Layout title="Bunco Admin" showFeedback={false}>
   <meta slot="head" name="robots" content="noindex" />
   <div style="padding:20px;max-width:960px;margin:0 auto;">
     <h3 style="margin-bottom:20px;color:var(--fg);">Admin</h3>
@@ -37,6 +37,13 @@ const version = import.meta.env.PUBLIC_VERSION || 'dev';
           <div style="font-size:1.6rem;font-weight:800;color:var(--fg);">{version}</div>
           <div style="font-size:var(--fs-caption);color:var(--very-muted);">App version</div>
         </div>
+      </div>
+    </section>
+
+    <section id="admin-feedback" class="mb-4">
+      <h5 style="color:var(--muted);">Feedback</h5>
+      <div id="feedback-list">
+        <p style="color:var(--very-muted);">Loading…</p>
       </div>
     </section>
 

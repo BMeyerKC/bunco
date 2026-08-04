@@ -68,6 +68,9 @@
   --fs-hand-sm: 1.45rem;
   /* Wobbly border-radius gives the hand-drawn look without images */
   --wobble-sm: 125px 10px 115px 10px / 10px 115px 10px 125px;
+  /* Larger surfaces need a gentler wobble — --wobble-sm's 125px radii
+     read as a lozenge at modal size. */
+  --wobble-md: 24px 8px 22px 10px / 10px 22px 8px 24px;
 }
 
 /* ── Base ── */
@@ -265,6 +268,61 @@ h1, h2, h3, h4, h5, h6 {
 /* Show the icon of the mode you'd switch TO */
 :root[data-theme="light"] .theme-icon-to-light { display: none; }
 :root[data-theme="dark"] .theme-icon-to-dark { display: none; }
+
+/* ── Feedback pill + modal (components/FeedbackWidget.astro) ── */
+.feedback-fab {
+  position: fixed;
+  bottom: 12px;
+  right: 12px;
+  z-index: 900;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 16px;
+  background: var(--surface);
+  color: var(--ink);
+  border: 2px solid var(--sketch);
+  border-radius: var(--wobble-sm);
+  box-shadow: var(--shadow);
+  font-family: var(--font-body);
+  font-size: var(--fs-small);
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  transform: rotate(-2deg);
+  transition: transform 0.15s ease;
+}
+.feedback-fab:hover { transform: rotate(2deg) scale(1.06); }
+
+.feedback-modal-content {
+  background: var(--surface);
+  color: var(--ink);
+  border: 2px solid var(--sketch);
+  border-radius: var(--wobble-md);
+  box-shadow: var(--shadow);
+}
+.feedback-modal-content .modal-header,
+.feedback-modal-content .modal-footer {
+  border-color: var(--border);
+}
+.feedback-modal-content .modal-title {
+  font-family: var(--font-hand);
+}
+.feedback-modal-content .form-label {
+  font-weight: 700;
+  font-size: var(--fs-small);
+}
+.feedback-modal-content .form-control {
+  background: var(--bg);
+  color: var(--ink);
+  border: 2px solid var(--border);
+}
+.feedback-modal-content .form-control:focus {
+  background: var(--bg);
+  color: var(--ink);
+  border-color: var(--sketch);
+  box-shadow: none;
+}
 
 /* ── Toasts (created by ui.js showToast) ── */
 .app-toast {
