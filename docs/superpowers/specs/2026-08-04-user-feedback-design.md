@@ -56,7 +56,7 @@ Labeled, not icon-only — an unlabeled glyph does not read as "tell us somethin
 A Bootstrap 5.3 modal. The bundle is already loaded in `Layout.astro`, and it provides focus trapping, Escape-to-close and backdrop handling. It honours the `data-bs-theme` attribute the app already sets, with token overrides so it reads as paper/chalkboard rather than stock Bootstrap.
 
 - Heading: "Tell us what you think"
-- Textarea, autofocused, `maxlength=1000`
+- Textarea, **not** autofocused (deliberate — autofocusing pops the on-screen keyboard the instant the modal opens, and on a phone that keyboard covers the form before the user can see what they're filling in), `maxlength=1000`
 - One optional input: "Name or email — only if you'd like a reply", `maxlength=200`
 - **Send** disabled until the message contains non-whitespace
 - Success → modal closes, `showToast('Thanks — we got it!', 'success')`
@@ -169,3 +169,8 @@ The existing specs already write real games to production, so a real submit is c
 - **Unauthenticated writes.** Anyone can push to `feedback/`. Length caps and create-only writes limit the damage; volume abuse is accepted until Firebase Auth lands, consistent with the existing posture on `games`.
 - **Public messages.** A user could type personal information into the message body, which is world-readable. Accepted — the contact field is the one we can control, and it is protected.
 - **Bootstrap modal styling.** Stock Bootstrap may clash with the paper theme. Mitigated by token overrides, verified visually in both themes before merge.
+- **Feedback records are joinable to a game's roster.** `feedback` is world-readable and each record carries `code` and `page` (which itself embeds `?code=...`), plus `deviceId`. The `games` node is also world-readable and maps a game code to player first names (`games/$code/players/$id = { name, isGhost }`). So a reader of the public feedback list can take any record's `code`, look up `games/$code/players`, and join a feedback message to the first names of everyone at that game — or enumerate every game a given `deviceId` has touched across records. This does not make `games` any more exposed than it already is (see "Background: what the database currently exposes" above) — that posture is explicitly accepted until the Firebase Auth phase — but it was undocumented, and undocumented assumptions are exactly what caused the `originAudits` rules to ship broken. Recording it here so it's a known, reviewed trade-off rather than a rediscovered surprise.
+
+## Future considerations
+
+- When the Firebase Auth phase lands, `feedback`, `originAudits`, and `games` should be locked down together (see `bunco-firebase-rules` memory) — including revisiting the `feedback`/`games` join described above, since restricting `games` alone would also close that join.
