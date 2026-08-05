@@ -3,8 +3,8 @@
 import '../styles/base.css';
 import FeedbackWidget from '../components/FeedbackWidget.astro';
 
-type Props = { title: string; showFeedback?: boolean };
-const { title, showFeedback = true } = Astro.props;
+type Props = { title: string; showFeedback?: boolean; showFooter?: boolean };
+const { title, showFeedback = true, showFooter = true } = Astro.props;
 const version = import.meta.env.PUBLIC_VERSION || 'dev';
 ---
 <!doctype html>
@@ -37,7 +37,6 @@ const version = import.meta.env.PUBLIC_VERSION || 'dev';
     <span class="theme-icon-to-light" aria-hidden="true">☀</span>
   </button>
   <slot />
-  {showFeedback && <FeedbackWidget />}
   <script is:inline src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script>
     import { initTheme } from '../js/theme.js';
@@ -45,8 +44,11 @@ const version = import.meta.env.PUBLIC_VERSION || 'dev';
     initTheme();
     initFeedback();
   </script>
-  <footer style="position:fixed;bottom:0;left:0;padding:4px 10px;font-size:var(--fs-caption);color:var(--very-muted);z-index:9999;pointer-events:none;">
-    {version}
-  </footer>
+  {showFooter && (
+    <footer class="site-footer">
+      <span class="version-tag">{version}</span>
+      {showFeedback && <FeedbackWidget />}
+    </footer>
+  )}
 </body>
 </html>

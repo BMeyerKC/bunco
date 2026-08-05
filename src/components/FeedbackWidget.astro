@@ -1,12 +1,12 @@
 ---
 // src/components/FeedbackWidget.astro
-// Fixed feedback pill + modal. Rendered by Layout.astro on every page
-// that does not opt out via showFeedback={false}.
+// Feedback trigger button + modal. Rendered inside the site footer by
+// Layout.astro, on every page that does not opt out via showFeedback={false}.
 const version = import.meta.env.PUBLIC_VERSION || 'dev';
 ---
 <button
   id="feedback-fab"
-  class="feedback-fab"
+  class="feedback-btn"
   type="button"
   data-bs-toggle="modal"
   data-bs-target="#feedback-modal"

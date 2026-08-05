@@ -5,8 +5,12 @@
   animation: viewFadeIn 0.2s ease forwards;
 }
 @keyframes viewFadeIn {
-  from { opacity: 0; }
-  to   { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 /* ── Scoring screen ── */
@@ -19,7 +23,9 @@
 
 .score-topbar {
   position: absolute;
-  top: 0; left: 0; right: 0;
+  top: 0;
+  left: 0;
+  right: 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -50,7 +56,9 @@
   font-weight: 800;
   letter-spacing: 0.08em;
 }
-.game-called-pill.visible { display: inline-block; }
+.game-called-pill.visible {
+  display: inline-block;
+}
 
 .score-halves {
   display: flex;
@@ -112,9 +120,15 @@
   animation: scorePop 0.18s cubic-bezier(0.22, 1, 0.36, 1);
 }
 @keyframes scorePop {
-  0%   { transform: scale(1); }
-  50%  { transform: scale(1.09); }
-  100% { transform: scale(1); }
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.09);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 
 .half-dec-btn {
@@ -122,7 +136,8 @@
   bottom: 18px;
   left: 50%;
   transform: translateX(-50%);
-  width: 48px; height: 48px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
   border: 2px solid var(--border);
   background: transparent;
@@ -132,7 +147,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: border-color 0.15s, color 0.15s;
+  transition:
+    border-color 0.15s,
+    color 0.15s;
 }
 .half-dec-btn:hover {
   border-color: var(--sketch);
@@ -142,12 +159,14 @@
 /* ── Scoring footer ── */
 .score-footer {
   position: absolute;
-  bottom: 0; left: 0; right: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 12px;
-  padding: 14px 16px;
+  padding: 8px 10px;
   z-index: 20;
   background: var(--bg-veil);
   border-top: 2px solid var(--line);
@@ -167,7 +186,9 @@
   cursor: pointer;
   box-shadow: var(--shadow);
   transform: rotate(-1.5deg);
-  transition: transform 0.15s, filter 0.15s;
+  transition:
+    transform 0.15s,
+    filter 0.15s;
 }
 #bunco-btn:hover {
   filter: brightness(0.94) saturate(1.1);
@@ -182,7 +203,8 @@
   cursor: not-allowed;
 }
 
-#call-game-btn, #submit-scores-btn {
+#call-game-btn,
+#submit-scores-btn {
   background: transparent;
   border: 2px solid var(--sketch);
   color: var(--ink-soft);
@@ -194,9 +216,12 @@
   padding: 9px 18px;
   border-radius: var(--wobble-sm);
   cursor: pointer;
-  transition: background 0.15s, color 0.15s;
+  transition:
+    background 0.15s,
+    color 0.15s;
 }
-#call-game-btn:hover, #submit-scores-btn:hover {
+#call-game-btn:hover,
+#submit-scores-btn:hover {
   background: var(--accent-soft);
   color: var(--ink);
 }
@@ -209,7 +234,9 @@
   pointer-events: none;
   display: none;
 }
-#bunco-overlay.playing { display: block; }
+#bunco-overlay.playing {
+  display: block;
+}
 
 #bunco-canvas {
   position: absolute;
@@ -224,10 +251,16 @@
   background: var(--highlight-soft);
   opacity: 0;
 }
-#bunco-flash.go { animation: flashFade 0.4s ease forwards; }
+#bunco-flash.go {
+  animation: flashFade 0.4s ease forwards;
+}
 @keyframes flashFade {
-  0%   { opacity: 1; }
-  100% { opacity: 0; }
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
 }
 
 #bunco-content {
@@ -258,9 +291,18 @@
   animation: buncoTextPop 0.5s cubic-bezier(0.17, 0.67, 0.3, 1.4) forwards;
 }
 @keyframes buncoTextPop {
-  0%   { transform: scale(0) rotate(-30deg); opacity: 0; }
-  60%  { transform: scale(1.12) rotate(-1deg); opacity: 1; }
-  100% { transform: scale(1) rotate(-4deg); opacity: 1; }
+  0% {
+    transform: scale(0) rotate(-30deg);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.12) rotate(-1deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) rotate(-4deg);
+    opacity: 1;
+  }
 }
 
 #bunco-dice {
@@ -273,12 +315,16 @@
   animation: diceSlideUp 0.4s 0.45s ease forwards;
 }
 @keyframes diceSlideUp {
-  to { transform: translateY(0); opacity: 1; }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
 /* Hand-drawn dice: paper face, ink pips */
 .bunco-die {
-  width: 52px; height: 52px;
+  width: 52px;
+  height: 52px;
   background: var(--surface);
   color: var(--ink);
   border: 2px solid var(--sketch);
@@ -293,11 +339,22 @@
   animation: dieShake 0.5s 0.65s ease both;
 }
 @keyframes dieShake {
-  0%,100% { transform: rotate(0deg); }
-  20%  { transform: rotate(-12deg) scale(1.1); }
-  40%  { transform: rotate(10deg) scale(1.15); }
-  60%  { transform: rotate(-8deg) scale(1.1); }
-  80%  { transform: rotate(6deg); }
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  20% {
+    transform: rotate(-12deg) scale(1.1);
+  }
+  40% {
+    transform: rotate(10deg) scale(1.15);
+  }
+  60% {
+    transform: rotate(-8deg) scale(1.1);
+  }
+  80% {
+    transform: rotate(6deg);
+  }
 }
 
 #bunco-pts {
@@ -307,8 +364,14 @@
   color: var(--ink-soft);
   opacity: 0;
 }
-#bunco-pts.fade-in { animation: ptsFadeIn 0.3s 0.95s ease forwards; }
-@keyframes ptsFadeIn { to { opacity: 1; } }
+#bunco-pts.fade-in {
+  animation: ptsFadeIn 0.3s 0.95s ease forwards;
+}
+@keyframes ptsFadeIn {
+  to {
+    opacity: 1;
+  }
+}
 
 /* ── Waiting room ── */
 .waiting-code-display {
@@ -335,29 +398,45 @@
   font-weight: 700;
 }
 .live-dot {
-  width: 8px; height: 8px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
   background: var(--accent);
   flex-shrink: 0;
   animation: livePulse 1.5s ease-in-out infinite;
 }
 @keyframes livePulse {
-  0%, 100% { opacity: 0.4; }
-  50%       { opacity: 1; }
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 1;
+  }
 }
 
 /* ── Submitted progress dots ── */
 .table-dot {
-  width: 10px; height: 10px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
   background: var(--border);
   transition: background 0.3s ease;
 }
-.table-dot.submitted { background: var(--accent); }
-.table-dot.waiting   { animation: dotPulse 1.5s ease-in-out infinite; }
+.table-dot.submitted {
+  background: var(--accent);
+}
+.table-dot.waiting {
+  animation: dotPulse 1.5s ease-in-out infinite;
+}
 @keyframes dotPulse {
-  0%, 100% { opacity: 0.3; }
-  50%       { opacity: 1; }
+  0%,
+  100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 1;
+  }
 }
 
 /* ── Submitted checkmark badge ── */
@@ -398,19 +477,42 @@
 /* Leader gets the highlighter swipe */
 .standings-row-first {
   background:
-    linear-gradient(100deg,
+    linear-gradient(
+      100deg,
       transparent 0.5%,
       var(--highlight-soft) 2.5%,
       var(--highlight-soft) 97.5%,
-      transparent 99.5%),
+      transparent 99.5%
+    ),
     var(--surface);
   border: 1px solid var(--highlight);
 }
-.standings-rank { font-size: var(--fs-caption); font-weight: 800; color: var(--very-muted); width: 18px; flex-shrink: 0; }
-.standings-rank-1 { color: var(--accent); }
-.standings-name { font-size: var(--fs-small); font-weight: 700; color: var(--text); flex: 1; }
-.standings-stat { font-size: var(--fs-small); font-weight: 800; color: var(--muted); min-width: 28px; text-align: center; }
-.standings-stat-highlight { color: var(--text); }
+.standings-rank {
+  font-size: var(--fs-caption);
+  font-weight: 800;
+  color: var(--very-muted);
+  width: 18px;
+  flex-shrink: 0;
+}
+.standings-rank-1 {
+  color: var(--accent);
+}
+.standings-name {
+  font-size: var(--fs-small);
+  font-weight: 700;
+  color: var(--text);
+  flex: 1;
+}
+.standings-stat {
+  font-size: var(--fs-small);
+  font-weight: 800;
+  color: var(--muted);
+  min-width: 28px;
+  text-align: center;
+}
+.standings-stat-highlight {
+  color: var(--text);
+}
 
 /* ── BUNCO player picker modal ── */
 .bunco-picker-overlay {

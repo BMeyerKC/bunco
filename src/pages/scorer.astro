@@ -1,185 +1,79 @@
 ---
 import Layout from '../layouts/Layout.astro';
+import '../styles/game.css';
 ---
 <Layout title="Bunco Scorer">
   <Fragment slot="head">
     <style is:global>
       html, body {
         width: 100%;
-        height: 100%;
         background: var(--bg);
-        overflow: hidden;
       }
 
-      #back-btn {
-        position: fixed;
-        top: 12px;
-        left: 12px;
-        background: transparent;
-        border: 1.5px solid var(--sketch);
-        color: var(--muted);
-        font-family: var(--font-body);
-        font-size: var(--fs-caption);
-        letter-spacing: 0.06em;
-        text-transform: uppercase;
-        padding: 4px 12px;
-        border-radius: var(--wobble-sm);
-        cursor: pointer;
-        z-index: 10;
-        text-decoration: none;
-      }
-
-      #back-btn:hover { color: var(--ink-soft); border-color: var(--ink-soft); }
-
+      /* Reuses .score-half / .half-team-label / .half-score-num /
+         .half-dec-btn / .score-half-divider from game.css so the quick
+         scorer matches the game scorer's look — including how it just
+         reflows in portrait instead of forcing a rotated layout. */
       #app {
         display: flex;
         width: 100%;
-        height: 100%;
+        height: 100vh;
         position: relative;
       }
 
-      .half {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        user-select: none;
-        -webkit-tap-highlight-color: transparent;
-        position: relative;
-        touch-action: manipulation;
-      }
-
-      #us-half   { background-color: var(--accent-soft); }
-      #them-half { background-color: var(--highlight-soft); }
-      #us-half.winner   { background-color: var(--accent); }
-      #us-half.winner .score, #us-half.winner .label { color: var(--accent-contrast); }
-      #them-half.winner { background-color: var(--highlight); }
-      #them-half.winner .score, #them-half.winner .label { color: #26241f; }
-
-      .winner .score { text-shadow: none; }
-
-      .half:active { background-color: var(--accent-soft); }
-
-      .label {
-        color: var(--muted);
-        font-family: var(--font-hand);
-        font-size: 1.6rem;
-        font-weight: 700;
-        letter-spacing: 0.08em;
-        text-transform: none;
-        margin-bottom: 12px;
-      }
-
-      .score {
-        color: var(--ink);
-        font-family: var(--font-body);
-        font-size: clamp(120px, 22vw, 240px);
-        font-weight: 700;
-        line-height: 1;
-      }
-
-      .divider { width: 0; border-left: 2px dashed var(--line); background: none; align-self: stretch; }
-
-      .decrement {
-        position: absolute;
-        bottom: 24px;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 60px;
-        height: 60px;
-        border-radius: 50%;
-        border: 2px solid var(--border);
-        background: transparent;
-        color: var(--muted);
-        font-size: 2rem;
-        line-height: 1;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        -webkit-tap-highlight-color: transparent;
-        touch-action: manipulation;
-      }
-
-      .decrement:active { background: var(--accent-soft); color: var(--ink); }
-
-      #reset-btn {
-        position: absolute;
-        bottom: 16px;
-        left: 50%;
-        transform: translateX(-50%);
-        background: transparent;
-        border: 1.5px solid var(--sketch);
-        color: var(--muted);
-        font-family: var(--font-body);
-        font-size: var(--fs-small);
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-        padding: 6px 18px;
-        border-radius: var(--wobble-sm);
-        cursor: pointer;
-        z-index: 10;
-        -webkit-tap-highlight-color: transparent;
-      }
-
-      #reset-btn:active { border-color: var(--ink-soft); color: var(--ink-soft); }
-
-      @media (orientation: portrait) {
-        #app {
-          width: 100vh;
-          height: 100vw;
-          position: fixed;
-          top: calc((100vh - 100vw) / 2);
-          left: calc((100vw - 100vh) / 2);
-          transform: rotate(90deg);
-        }
+      #app .score-half-divider {
+        margin: 0;
       }
     </style>
   </Fragment>
 
-  <a href="index.html" id="back-btn">← Home</a>
+  <a href="index.html" class="btn btn-sm btn-outline-secondary m-3 position-fixed top-0 start-0">← Home</a>
 
   <div id="app">
-    <div class="half" id="us-half">
-      <div class="label">Us</div>
-      <div class="score" id="us-score">0</div>
-      <button class="decrement" id="us-dec" aria-label="Decrease Us score">−</button>
+    <div class="score-half" id="us-half">
+      <div class="half-team-label">Us</div>
+      <div class="half-score-num" id="us-score">0</div>
+      <button class="half-dec-btn" id="us-dec" aria-label="Decrease Us score">−</button>
     </div>
 
-    <div class="divider"></div>
+    <div class="score-half-divider"></div>
 
-    <div class="half" id="them-half">
-      <div class="label">Them</div>
-      <div class="score" id="them-score">0</div>
-      <button class="decrement" id="them-dec" aria-label="Decrease Them score">−</button>
+    <div class="score-half" id="them-half">
+      <div class="half-team-label">Them</div>
+      <div class="half-score-num" id="them-score">0</div>
+      <button class="half-dec-btn" id="them-dec" aria-label="Decrease Them score">−</button>
     </div>
-
-    <button id="reset-btn" aria-label="Reset scores">Reset</button>
   </div>
 
   <script is:inline>
-    if (screen.orientation && screen.orientation.lock) {
-      screen.orientation.lock('landscape').catch(() => {});
-    }
-
     let usScore = 0, themScore = 0;
+
+    function triggerScorePop(el) {
+      el.classList.remove('score-pop');
+      void el.offsetWidth; // force reflow to restart animation
+      el.classList.add('score-pop');
+    }
 
     function render() {
       document.getElementById('us-score').textContent = usScore;
       document.getElementById('them-score').textContent = themScore;
-      document.getElementById('us-half').classList.toggle('winner', usScore >= 21);
-      document.getElementById('them-half').classList.toggle('winner', themScore >= 21);
+      document.getElementById('us-half').style.background =
+        usScore >= 21 ? 'var(--accent-soft)' : 'transparent';
+      document.getElementById('them-half').style.background =
+        themScore >= 21 ? 'var(--highlight-soft)' : 'transparent';
     }
 
     document.getElementById('us-half').addEventListener('click', e => {
-      if (e.target.closest('.decrement')) return;
-      usScore++; render();
+      if (e.target.closest('.half-dec-btn')) return;
+      usScore++;
+      triggerScorePop(document.getElementById('us-score'));
+      render();
     });
     document.getElementById('them-half').addEventListener('click', e => {
-      if (e.target.closest('.decrement')) return;
-      themScore++; render();
+      if (e.target.closest('.half-dec-btn')) return;
+      themScore++;
+      triggerScorePop(document.getElementById('them-score'));
+      render();
     });
     document.getElementById('us-dec').addEventListener('click', e => {
       e.stopPropagation();
@@ -190,10 +84,6 @@ import Layout from '../layouts/Layout.astro';
       e.stopPropagation();
       if (themScore > 0) themScore--;
       render();
-    });
-    document.getElementById('reset-btn').addEventListener('click', e => {
-      e.stopPropagation();
-      if (confirm('Reset scores?')) { usScore = 0; themScore = 0; render(); }
     });
   </script>
 </Layout>
