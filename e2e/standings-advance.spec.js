@@ -151,3 +151,52 @@ test.describe('standings page host advance', () => {
     }).toBe(true);
   });
 });
+
+test.describe('standings page returns a seated player to scoring', () => {
+  let code;
+  const PLAYER_DEVICE = 'e2e-standings-player';
+
+  test.beforeEach(async ({ page }) => {
+    code = randomCode();
+    await page.addInitScript(id => localStorage.setItem('bunco_device_id', id), PLAYER_DEVICE);
+  });
+
+  test.afterEach(async ({ request }) => {
+    await request.delete(`${DB}/games/${code}.json`);
+  });
+
+  test('navigates back to game.html when the host starts the next round', async ({ page, request }) => {
+    await request.put(`${DB}/games/${code}.json`, { data: seedGame(1) });
+    await page.addInitScript(
+      ({ storageCode, playerId }) => localStorage.setItem(`bunco_player_${storageCode}`, playerId),
+      { storageCode: code, playerId: 'p1' }
+    );
+
+    await page.goto(`/standings.html?code=${code}`);
+    await expect(page.locator('#round-indicator')).toHaveText('Round 1 of 6 — Live');
+
+    // Host advances the round from elsewhere (their own device/tab).
+    await request.put(`${DB}/games/${code}/meta/currentRound.json`, { data: 2 });
+
+    await expect(page).toHaveURL(/\/game\.html\?code=/);
+  });
+
+  test('does not redirect the host device using standings as a dashboard', async ({ page, request }) => {
+    // This device is both the host and a seated player (host joined own game).
+    const game = seedGame(1);
+    game.meta.hostDeviceId = PLAYER_DEVICE;
+    await request.put(`${DB}/games/${code}.json`, { data: game });
+    await page.addInitScript(
+      ({ storageCode, playerId }) => localStorage.setItem(`bunco_player_${storageCode}`, playerId),
+      { storageCode: code, playerId: 'p1' }
+    );
+
+    await page.goto(`/standings.html?code=${code}`);
+    await expect(page.locator('#round-indicator')).toHaveText('Round 1 of 6 — Live');
+
+    await request.put(`${DB}/games/${code}/meta/currentRound.json`, { data: 2 });
+
+    await expect(page.locator('#round-indicator')).toHaveText('Round 2 of 6 — Live');
+    await expect(page).toHaveURL(/\/standings\.html\?code=/);
+  });
+});

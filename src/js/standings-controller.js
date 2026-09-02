@@ -31,6 +31,7 @@ if (!code) {
   let latestTables    = [];
   let isAdvancing     = false;
   let latestData      = null;
+  let lastObservedRound = null;
 
   const unwatchGame = watchGame(code, data => {
     if (!data) return;
@@ -46,6 +47,21 @@ if (!code) {
     }
 
     const round = data.meta?.currentRound || 0;
+
+    // A seated player who navigated here (e.g. the "View Standings" link
+    // during the between-rounds break) has no other listener bringing them
+    // back when the host advances the round — game-controller.js only does
+    // that while the player is actually on game.html. Send them back once
+    // we observe the round change under us. The host's own use of this page
+    // as a control dashboard is untouched.
+    const myPlayerId = localStorage.getItem(`bunco_player_${code}`);
+    if (!isHost && myPlayerId) {
+      if (lastObservedRound !== null && round !== lastObservedRound && round >= 1 && round <= 6) {
+        window.location.href = `game.html?code=${code}`;
+        return;
+      }
+      lastObservedRound = round;
+    }
 
     document.getElementById('round-indicator').textContent =
       isFinal || round >= 7 ? 'Game complete!'
