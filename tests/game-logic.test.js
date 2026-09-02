@@ -9,6 +9,7 @@ import {
   gameStatus,
   buildGameRows,
   buncoClaimUpdate,
+  describeResumableGame,
 } from '../src/js/game-logic.js';
 
 describe('generateGameCode', () => {
@@ -350,5 +351,45 @@ describe('buncoClaimUpdate', () => {
       tableId: 1,
       ts: 99,
     });
+  });
+});
+
+describe('describeResumableGame', () => {
+  test('returns null when the game no longer exists', () => {
+    expect(describeResumableGame('ABCD', null)).toBeNull();
+  });
+
+  test('waiting for round 1 (currentRound 0) points back to the game', () => {
+    const game = { meta: { currentRound: 0 } };
+    expect(describeResumableGame('ABCD', game)).toEqual({
+      code: 'ABCD',
+      ended: false,
+      text: 'You have a game in progress — code ABCD.',
+      linkText: 'Rejoin Game',
+      href: 'game.html?code=ABCD',
+    });
+  });
+
+  test('a round in progress (1-6) points back to the game', () => {
+    const game = { meta: { currentRound: 3 } };
+    expect(describeResumableGame('ABCD', game)).toMatchObject({
+      ended: false,
+      href: 'game.html?code=ABCD',
+    });
+  });
+
+  test('a finished game (currentRound 7) points to final standings', () => {
+    const game = { meta: { currentRound: 7 } };
+    expect(describeResumableGame('WXYZ', game)).toEqual({
+      code: 'WXYZ',
+      ended: true,
+      text: 'Game WXYZ is over.',
+      linkText: 'View Final Standings',
+      href: 'standings.html?code=WXYZ&final=true',
+    });
+  });
+
+  test('missing meta is treated as round 0 (waiting)', () => {
+    expect(describeResumableGame('ABCD', {})).toMatchObject({ ended: false });
   });
 });

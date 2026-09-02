@@ -1,5 +1,5 @@
 import { watchGame, watchAllTableScores, submitTableScore, startRound, getRoundAssignments, saveStandings, saveRoundAssignments, EVENT, logEvent } from './firebase.js';
-import { getParam, getDeviceId } from './ui.js';
+import { getParam, getDeviceId, forgetActiveGame } from './ui.js';
 import { buildTableLayout, calculateNextRoundSeating, determineWinner, updateStandings } from './game-logic.js';
 import { renderTableCards } from './table-cards.js';
 
@@ -42,7 +42,10 @@ if (!code) {
     const leaveBtn = document.getElementById('leave-game-btn');
     if (isHost && leaveBtn && !leaveBtn.dataset.listenerAdded) {
       leaveBtn.style.display = '';
-      leaveBtn.addEventListener('click', () => { window.location.href = 'index.html'; });
+      leaveBtn.addEventListener('click', () => {
+        forgetActiveGame();
+        window.location.href = 'index.html';
+      });
       leaveBtn.dataset.listenerAdded = 'true';
     }
 

@@ -196,3 +196,34 @@ export function buncoClaimUpdate(current, playerId, tableId, ts) {
   if (current) return undefined; // someone already claimed it — abort
   return { playerId, tableId, ts };
 }
+
+/**
+ * Decides what the home page's "resume your game" banner should show for a
+ * locally-remembered game code, given a one-shot fetch of that game.
+ * @param {string} code
+ * @param {{ meta?: { currentRound?: number } }|null} game - null if the
+ *   game no longer exists (e.g. deleted, expired)
+ * @returns {{ code: string, ended: boolean, text: string, linkText: string, href: string }|null}
+ */
+export function describeResumableGame(code, game) {
+  if (!game) return null;
+
+  const round = game.meta?.currentRound || 0;
+  if (round >= 7) {
+    return {
+      code,
+      ended: true,
+      text: `Game ${code} is over.`,
+      linkText: 'View Final Standings',
+      href: `standings.html?code=${code}&final=true`,
+    };
+  }
+
+  return {
+    code,
+    ended: false,
+    text: `You have a game in progress — code ${code}.`,
+    linkText: 'Rejoin Game',
+    href: `game.html?code=${code}`,
+  };
+}

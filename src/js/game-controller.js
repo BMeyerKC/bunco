@@ -7,7 +7,7 @@ import { createGame, addPlayer, claimGhostSeat, watchGame, getGame, saveRoundAss
 import { captureOrigin } from './geo.js';
 import { generateGameCode, assignRandomSeats,
          calculateNextRoundSeating, determineWinner, updateStandings, buildTableLayout } from './game-logic.js';
-import { showView, showToast, getParam, getDeviceId } from './ui.js';
+import { showView, showToast, getParam, getDeviceId, rememberActiveGame } from './ui.js';
 import { renderTableCards } from './table-cards.js';
 import { isNameTaken, getAvailableGhostSeats, allTablesSubmitted, pickGhostNames, getGhostOnlyTableIds } from './game-utils.js';
 
@@ -42,6 +42,7 @@ if (isHost && !urlCode) {
   if (storedHostCode === gameCode || isHost) {
     // Host returning or first load
     localStorage.setItem('bunco_host_code', gameCode);
+    rememberActiveGame(gameCode);
     myPlayerId = localStorage.getItem(`bunco_player_${gameCode}`) || null;
     showWaitingRoom(true);
     subscribeToGame();
@@ -49,6 +50,7 @@ if (isHost && !urlCode) {
     // Returning player — skip join form, go straight to waiting room.
     // onGameUpdate will auto-navigate to scoring if round is already active.
     myPlayerId = storedPlayerId;
+    rememberActiveGame(gameCode);
     showWaitingRoom(false);
     subscribeToGame();
   } else {
@@ -90,6 +92,7 @@ async function handleCreateGame() {
 
     // Remember this device is the host for this code
     localStorage.setItem('bunco_host_code', gameCode);
+    rememberActiveGame(gameCode);
 
     // Update URL so the code is visible/shareable, then show waiting room without a full reload.
     // A full redirect causes bfcache to restore the old setup-form DOM on some browsers.
@@ -132,6 +135,7 @@ async function handleJoin() {
   const playerId = await addPlayer(gameCode, name, false);
   logEvent(gameCode, EVENT.PLAYER_JOINED, { playerId, name }).catch(() => {});
   localStorage.setItem(`bunco_player_${gameCode}`, playerId);
+  rememberActiveGame(gameCode);
   myPlayerId = playerId;
 
   const amHost = game.meta.hostDeviceId === deviceId;
@@ -177,6 +181,7 @@ async function handleHostJoinAsPlayer() {
   const playerId = await addPlayer(gameCode, name, false);
   logEvent(gameCode, EVENT.PLAYER_JOINED, { playerId, name }).catch(() => {});
   localStorage.setItem(`bunco_player_${gameCode}`, playerId);
+  rememberActiveGame(gameCode);
   myPlayerId = playerId;
 
   document.getElementById('host-join-player').style.display = 'none';
@@ -683,6 +688,7 @@ function handleClaimGhost(ghostId) {
       await claimGhostSeat(gameCode, pendingGhostId, name);
       logEvent(gameCode, EVENT.GHOST_CLAIMED, { playerId: pendingGhostId, name }).catch(() => {});
       localStorage.setItem(`bunco_player_${gameCode}`, pendingGhostId);
+      rememberActiveGame(gameCode);
       navigateToScoring(gameData);
     } catch (err) {
       console.error('Failed to claim ghost seat:', err);

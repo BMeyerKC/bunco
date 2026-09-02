@@ -99,6 +99,16 @@ import Layout from '../layouts/Layout.astro';
     </div>
     <p style="color:var(--muted); margin-bottom:2.5rem; font-size:var(--fs-body);">Live scoring for game night</p>
 
+    <!-- Resume banner — shown by resume-banner.js when a recent game is found in localStorage -->
+    <div id="resume-banner" style="display:none; width:100%; max-width:800px; margin-bottom:1.5rem;
+         background:var(--surface); border:1px solid var(--border); border-radius:12px;
+         padding:14px 18px; align-items:center; gap:12px; flex-wrap:wrap;">
+      <span id="resume-banner-text" style="flex:1; min-width:200px; font-weight:600;"></span>
+      <a id="resume-banner-link" href="#" class="btn btn-primary btn-sm"></a>
+      <button id="resume-banner-dismiss" type="button" aria-label="Dismiss"
+              class="btn btn-outline-light btn-sm" style="padding:0.25rem 0.6rem;">✕</button>
+    </div>
+
     <div class="row g-3 w-100" style="max-width: 800px;">
 
       <!-- Quick Scorer -->
@@ -330,5 +340,9 @@ import Layout from '../layouts/Layout.astro';
       }
       window.location.href = `game.html?code=${code}`;
     }
+  </script>
+
+  <script>
+    import '../js/resume-banner.js';
   </script>
 </Layout>

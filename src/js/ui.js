@@ -55,3 +55,32 @@ export function getDeviceId() {
   }
   return id;
 }
+
+const LAST_CODE_KEY = 'bunco_last_code';
+
+/**
+ * Remembers the most recently hosted/joined game code, so the home page can
+ * offer a way back in if the player navigates away (e.g. the browser back
+ * button) without finishing. Separate from the per-game identity keys
+ * (bunco_host_code, bunco_player_<code>) — this is purely "what to resume",
+ * not "who am I in that game".
+ * @param {string} code
+ */
+export function rememberActiveGame(code) {
+  localStorage.setItem(LAST_CODE_KEY, code);
+}
+
+/**
+ * @returns {string|null} the most recently remembered game code, if any
+ */
+export function getActiveGame() {
+  return localStorage.getItem(LAST_CODE_KEY);
+}
+
+/**
+ * Stops the home page from offering to resume the remembered game — call
+ * when the player dismisses the resume banner, or explicitly leaves a game.
+ */
+export function forgetActiveGame() {
+  localStorage.removeItem(LAST_CODE_KEY);
+}
