@@ -10,6 +10,7 @@ import {
   buildGameRows,
   buncoClaimUpdate,
   describeResumableGame,
+  uncallGameUpdate,
 } from '../src/js/game-logic.js';
 
 describe('generateGameCode', () => {
@@ -351,6 +352,20 @@ describe('buncoClaimUpdate', () => {
       tableId: 1,
       ts: 99,
     });
+  });
+});
+
+describe('uncallGameUpdate', () => {
+  test('clears gameCalledBy when it still points at the undoing table', () => {
+    expect(uncallGameUpdate(2, 2)).toBeNull();
+  });
+
+  test('aborts (leaves it alone) when another table has since called Game', () => {
+    expect(uncallGameUpdate(3, 2)).toBeUndefined();
+  });
+
+  test('aborts when nothing has called Game', () => {
+    expect(uncallGameUpdate(null, 2)).toBeUndefined();
   });
 });
 

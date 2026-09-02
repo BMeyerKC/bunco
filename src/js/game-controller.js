@@ -1,6 +1,6 @@
 // js/game-controller.js
 import { createGame, addPlayer, claimGhostSeat, watchGame, getGame, saveRoundAssignments, startRound,
-         recordBunco, callGame, submitTableScore,
+         recordBunco, undoBunco, callGame, submitTableScore,
          saveStandings,
          incrementTableScore, decrementTableScore, watchTableScore, watchAllTableScores, initializeRoundTables,
          EVENT, logEvent, logGameOrigin } from './firebase.js';
@@ -261,13 +261,24 @@ export function onGameUpdate(data) {
   }
 
   // Bunco is claimed independently per table: once my table has claimed,
-  // lock my device's button and close any open picker. Other tables' claims
-  // don't affect me. Banner gets bunco flavor when the call that triggered
-  // it (gameCalledBy, game-wide) was a bunco claim.
+  // relabel my device's button to show who claimed it and let a tap undo
+  // it instead of opening the picker again, and close any open picker.
+  // Other tables' claims don't affect me. Banner gets bunco flavor when
+  // the call that triggered it (gameCalledBy, game-wide) was a bunco claim.
   const roundBuncos = data.rounds?.[data.meta.currentRound]?.bunco || {};
   const myTableBuncoClaim = roundBuncos[myTableId] || null;
   const buncoBtn = document.getElementById('bunco-btn');
-  if (buncoBtn) buncoBtn.disabled = !!myTableBuncoClaim;
+  if (buncoBtn) {
+    if (myTableBuncoClaim) {
+      const claimant = data.players?.[myTableBuncoClaim.playerId]?.name || 'Someone';
+      buncoBtn.textContent = `🎲 ${claimant} — Undo`;
+      buncoBtn.dataset.claimed = 'true';
+    } else {
+      buncoBtn.textContent = '🎲 BUNCO!';
+      buncoBtn.dataset.claimed = 'false';
+    }
+    buncoBtn.disabled = false;
+  }
   if (myTableBuncoClaim) closeBuncoPicker();
 
   const banner = document.getElementById('game-called-banner');
@@ -490,7 +501,13 @@ function attachScoringListeners(roundNumber) {
     decrementTableScore(gameCode, roundNumber, myTableId, 'them')
       .catch(() => showToast('Tap not saved — check connection.', 'warning'));
   }, { signal });
-  document.getElementById('bunco-btn').addEventListener('click', () => openBuncoPicker(roundNumber), { signal });
+  document.getElementById('bunco-btn').addEventListener('click', e => {
+    if (e.currentTarget.dataset.claimed === 'true') {
+      handleUndoBunco(roundNumber);
+    } else {
+      openBuncoPicker(roundNumber);
+    }
+  }, { signal });
   document.getElementById('bunco-picker-cancel').addEventListener('click', closeBuncoPicker, { signal });
   document.getElementById('call-game-btn').addEventListener('click', () => handleCallGame(), { signal });
   document.getElementById('submit-scores-btn').addEventListener('click', () => handleSubmitScores(roundNumber), { signal });
@@ -544,6 +561,19 @@ async function confirmBunco(roundNumber, playerId) {
     } else {
       showToast('Bunco not saved — check connection.', 'warning');
     }
+  }
+}
+
+async function handleUndoBunco(roundNumber) {
+  const btn = document.getElementById('bunco-btn');
+  if (btn) btn.disabled = true;
+  try {
+    await undoBunco(gameCode, roundNumber, myTableId);
+    logEvent(gameCode, EVENT.BUNCO_UNDONE, { round: roundNumber, tableId: myTableId }).catch(() => {});
+    showToast('Bunco undone.', 'info');
+  } catch (err) {
+    showToast('Undo failed — check connection.', 'warning');
+    if (btn) btn.disabled = false;
   }
 }
 

@@ -119,15 +119,22 @@ test("bunco picker: player select, per-table lockout, round call, re-enable next
     await expect(pageA.locator("#bunco-picker")).toBeHidden();
     await expect(pageA.locator("#bunco-overlay")).toHaveClass(/playing/);
 
-    // Winner device: locked + bunco-flavored banner
-    await expect(pageA.locator("#bunco-btn")).toBeDisabled();
+    // Winner device: button relabeled to show the claimant + Undo (still
+    // tappable — a claim can be undone), bunco-flavored banner shown
+    await expect(pageA.locator("#bunco-btn")).toBeEnabled();
+    await expect(pageA.locator("#bunco-btn")).toHaveText(
+      `🎲 ${deviceA.name} — Undo`,
+    );
     await expect(pageA.locator("#game-called-banner")).toBeVisible();
     await expect(pageA.locator("#game-called-banner")).toHaveText(
       "🎲 BUNCO! — finish your rolls and submit",
     );
 
-    // Other device at the same table: locked out with the same banner
-    await expect(pageB.locator("#bunco-btn")).toBeDisabled();
+    // Other device at the same table: same claimant shown, same banner
+    await expect(pageB.locator("#bunco-btn")).toBeEnabled();
+    await expect(pageB.locator("#bunco-btn")).toHaveText(
+      `🎲 ${deviceA.name} — Undo`,
+    );
     await expect(pageB.locator("#game-called-banner")).toBeVisible();
     await expect(pageB.locator("#game-called-banner")).toHaveText(
       "🎲 BUNCO! — finish your rolls and submit",
@@ -182,9 +189,9 @@ test("bunco picker: player select, per-table lockout, round call, re-enable next
     await expect(pageA.locator("#bunco-picker")).toBeHidden();
     await expect(pageB.locator("#bunco-picker")).toBeHidden();
 
-    // Both devices end up locked either way
-    await expect(pageA.locator("#bunco-btn")).toBeDisabled();
-    await expect(pageB.locator("#bunco-btn")).toBeDisabled();
+    // Both devices see a claimant + Undo either way (shared per-table state)
+    await expect(pageA.locator("#bunco-btn")).toHaveText(/— Undo$/);
+    await expect(pageB.locator("#bunco-btn")).toHaveText(/— Undo$/);
 
     // Submit round 2 → cumulative buncos must be 2 (not 3): the race
     // produced exactly one new credit.
@@ -235,11 +242,12 @@ test("bunco picker: different tables record buncos independently", async ({
     await hostPage
       .locator("#bunco-picker-list .bunco-picker-player", { hasText: "Host" })
       .click({ timeout: 10000 });
-    await expect(hostPage.locator("#bunco-btn")).toBeDisabled();
+    await expect(hostPage.locator("#bunco-btn")).toHaveText("🎲 Host — Undo");
 
     // The other table is unaffected — its own table hasn't claimed yet, so
-    // its button stays enabled (pre-fix, this would already be locked).
-    await expect(otherPage.locator("#bunco-btn")).toBeEnabled();
+    // its button still shows the plain BUNCO! label (pre-fix, this would
+    // already be locked).
+    await expect(otherPage.locator("#bunco-btn")).toHaveText("🎲 BUNCO!");
 
     // The other table independently claims its own bunco.
     await otherPage.click("#bunco-btn", { timeout: 10000 });
@@ -248,12 +256,85 @@ test("bunco picker: different tables record buncos independently", async ({
         hasText: otherPlayer.name,
       })
       .click({ timeout: 10000 });
-    await expect(otherPage.locator("#bunco-btn")).toBeDisabled();
+    await expect(otherPage.locator("#bunco-btn")).toHaveText(
+      `🎲 ${otherPlayer.name} — Undo`,
+    );
 
     // Both tables' claims survive — standings show 2 credited buncos, not 1
     // (pre-fix, the second table's claim was silently rejected game-wide).
     await submitRound([hostPage, ...session.playerPages]);
     expect(await buncoTotal(hostPage)).toBe(2);
+  } finally {
+    await closeGameContexts(session);
+  }
+});
+
+// 2 tables (the UI's minimum), 8 real players, no ghosts — every seat is a
+// human, so any two players sharing a table (found via tableOf) work; the
+// picker lists both sides of a table, not just teammates.
+test("bunco undo: clears a mis-recorded claim and lets the table re-record for someone else", async ({
+  browser,
+  baseURL,
+}) => {
+  test.setTimeout(240000);
+  const session = await createGameAndStartRound({
+    browser,
+    baseURL,
+    tables: 2,
+    playerCount: 7,
+    ghosts: 0,
+    // A host-only device (not also seated) auto-redirects to standings.html
+    // once the round starts — buncoTotal/submitRound below need hostPage on
+    // game.html's between-rounds view instead, same as the other two tests.
+    hostPlayerName: "Host",
+  });
+  const { hostPage } = session;
+
+  const tables = new Map();
+  for (const player of session.players) {
+    const t = await tableOf(player.page);
+    if (!tables.has(t)) tables.set(t, []);
+    tables.get(t).push(player);
+  }
+  const [claimant, undoer] = [...tables.values()].find((ps) => ps.length >= 2);
+
+  try {
+    await expect(claimant.page.locator("#view-scoring")).toBeVisible();
+
+    // Wrong player picked by accident.
+    await claimant.page.click("#bunco-btn", { timeout: 10000 });
+    await claimant.page
+      .locator("#bunco-picker-list .bunco-picker-player", {
+        hasText: claimant.name,
+      })
+      .click({ timeout: 10000 });
+    await expect(claimant.page.locator("#bunco-btn")).toHaveText(
+      `🎲 ${claimant.name} — Undo`,
+    );
+    await expect(undoer.page.locator("#game-called-banner")).toBeVisible();
+
+    // Any player at the table can undo it — not host-gated.
+    await undoer.page.click("#bunco-btn", { timeout: 10000 });
+    await expect(undoer.page.locator("#bunco-btn")).toHaveText("🎲 BUNCO!");
+    await expect(claimant.page.locator("#bunco-btn")).toHaveText(
+      "🎲 BUNCO!",
+    );
+    await expect(claimant.page.locator("#game-called-banner")).toBeHidden();
+
+    // Re-record for the right player.
+    await undoer.page.click("#bunco-btn", { timeout: 10000 });
+    await undoer.page
+      .locator("#bunco-picker-list .bunco-picker-player", {
+        hasText: undoer.name,
+      })
+      .click({ timeout: 10000 });
+    await expect(undoer.page.locator("#bunco-btn")).toHaveText(
+      `🎲 ${undoer.name} — Undo`,
+    );
+
+    // Exactly one bunco credited — the undone claim didn't double-count.
+    await submitRound([hostPage, ...session.playerPages]);
+    expect(await buncoTotal(hostPage)).toBe(1);
   } finally {
     await closeGameContexts(session);
   }

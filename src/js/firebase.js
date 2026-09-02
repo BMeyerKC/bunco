@@ -15,7 +15,7 @@ import {
   limitToLast,
 } from 'firebase/database';
 
-import { buncoClaimUpdate } from './game-logic.js';
+import { buncoClaimUpdate, uncallGameUpdate } from './game-logic.js';
 
 // ⚠️  databaseURL must match your Firebase Realtime Database URL.
 // Verify at: Firebase Console → Realtime Database → Data tab (shown at top)
@@ -181,6 +181,29 @@ export async function recordBunco(code, roundNumber, playerId, tableId) {
   return true;
 }
 
+/**
+ * Undoes a table's Bunco claim for the given round — clears the claim, the
+ * legacy per-player counter it drove, and (only if this table was the one
+ * that triggered it) the round-call banner. Correction only applies to the
+ * current round's own live data; once a round advances its Bunco can no
+ * longer be reached from the scoring view.
+ */
+export async function undoBunco(code, roundNumber, tableId) {
+  const claimSnap = await get(ref(db, `games/${code}/rounds/${roundNumber}/bunco/${tableId}`));
+  const claim = claimSnap.exists() ? claimSnap.val() : null;
+  if (!claim) return; // nothing to undo
+
+  const updateData = {
+    [`rounds/${roundNumber}/bunco/${tableId}`]: null,
+    [`rounds/${roundNumber}/buncos/${claim.playerId}`]: null,
+  };
+  logSend(`games/${code}`, updateData);
+  await update(ref(db, `games/${code}`), updateData);
+
+  const r = ref(db, `games/${code}/meta/gameCalledBy`);
+  await runTransaction(r, current => uncallGameUpdate(current, tableId));
+}
+
 // ─── Game flow ───────────────────────────────────────────────
 
 export async function callGame(code, tableId) {
@@ -227,6 +250,7 @@ export const EVENT = Object.freeze({
   GAME_CALLED:     'game_called',
   SCORE_SUBMITTED: 'score_submitted',
   BUNCO_RECORDED:  'bunco_recorded',
+  BUNCO_UNDONE:    'bunco_undone',
   GAME_ENDED:      'game_ended',
   STANDINGS_SAVED: 'standings_saved',
 });

@@ -198,6 +198,19 @@ export function buncoClaimUpdate(current, playerId, tableId, ts) {
 }
 
 /**
+ * Transaction updater for undoing a Bunco's round call. Only clears
+ * meta/gameCalledBy if it still points at the table being undone — another
+ * table may have independently called Game (Bunco or otherwise) since,
+ * and that call must not be clobbered by this table's correction.
+ * @param {number|null} current - current meta/gameCalledBy value
+ * @param {number} tableId - the table undoing its Bunco
+ * @returns {null|undefined} null to clear it, undefined to abort (leave as-is)
+ */
+export function uncallGameUpdate(current, tableId) {
+  return current === tableId ? null : undefined;
+}
+
+/**
  * Decides what the home page's "resume your game" banner should show for a
  * locally-remembered game code, given a one-shot fetch of that game.
  * @param {string} code

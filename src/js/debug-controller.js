@@ -9,6 +9,7 @@ const EVENT_COLORS = {
   game_called:     '#d97706',
   score_submitted: '#a855f7',
   bunco_recorded:  '#dc2626',
+  bunco_undone:    '#991b1b',
   game_ended:      '#fbbf24',
   standings_saved: '#0d9488',
 };
