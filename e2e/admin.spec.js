@@ -43,6 +43,11 @@ test.describe('admin dashboard content', () => {
     await expect(page.locator('#games-list')).not.toContainText('Loading…');
   });
 
+  test('renders the quick scorer sessions section', async ({ page }) => {
+    await expect(page.locator('#quick-scorer-list')).not.toContainText('Loading…');
+    await expect(page.locator('#quick-scorer-list')).not.toContainText('Couldn’t load');
+  });
+
   test('debug jump validates the code format', async ({ page }) => {
     await page.fill('#debug-code-input', 'ab');
     await page.click('#debug-jump button[type="submit"]');

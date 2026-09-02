@@ -279,6 +279,40 @@ export async function getOriginAudits() {
   return result;
 }
 
+// ─── Quick Scorer sessions ─────────────────────────────────────
+//
+// The Quick Scorer (scorer.astro) has no game/code concept — each page
+// load is an anonymous session. One record per session, started on load
+// and refreshed by a heartbeat while the tab stays open, so duration is
+// `lastSeenAt - startedAt`. See quick-scorer-tracking.js.
+
+export async function startQuickScorerSession(origin = {}) {
+  const sessionRef = push(ref(db, 'quickScorerSessions'));
+  const id = sessionRef.key;
+  const payload = { startedAt: serverTimestamp(), ...origin };
+
+  logSend(`quickScorerSessions/${id}`, payload);
+  await set(sessionRef, payload);
+  return id;
+}
+
+export async function heartbeatQuickScorerSession(id) {
+  const payload = { lastSeenAt: serverTimestamp() };
+  logSend(`quickScorerSessions/${id}`, payload);
+  await update(ref(db, `quickScorerSessions/${id}`), payload);
+}
+
+export async function getQuickScorerSessions(limit = 50) {
+  const q = query(ref(db, 'quickScorerSessions'), orderByChild('startedAt'), limitToLast(limit));
+  const snap = await get(q);
+  const items = [];
+  snap.forEach(child => {
+    items.push({ id: child.key, ...child.val() });
+  });
+  logReceive(`quickScorerSessions (limit ${limit})`, `${items.length} items`);
+  return items.reverse();
+}
+
 // ─── Feedback ────────────────────────────────────────────────
 
 /**

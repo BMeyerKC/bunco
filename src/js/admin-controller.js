@@ -1,6 +1,7 @@
 import { ensureAdminAccess } from './admin-gate.js';
-import { getRecentGames, getOriginAudits, getFeedback } from './firebase.js';
+import { getRecentGames, getOriginAudits, getFeedback, getQuickScorerSessions } from './firebase.js';
 import { buildGameRows } from './game-logic.js';
+import { buildQuickScorerRows } from './quick-scorer-logic.js';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -9,7 +10,7 @@ init();
 async function init() {
   await ensureAdminAccess();
   wireDebugJump();
-  await Promise.allSettled([loadGames(), loadFeedback()]);
+  await Promise.allSettled([loadGames(), loadFeedback(), loadQuickScorerSessions()]);
 }
 
 function wireDebugJump() {
@@ -171,4 +172,60 @@ function renderFeedback(items, listEl) {
     card.append(meta, body);
     listEl.appendChild(card);
   }
+}
+
+async function loadQuickScorerSessions() {
+  const listEl = document.getElementById('quick-scorer-list');
+  try {
+    const sessions = await getQuickScorerSessions(50);
+    renderQuickScorerSessions(buildQuickScorerRows(sessions), listEl);
+  } catch (err) {
+    console.error('[admin] failed to load quick scorer sessions', err);
+    listEl.innerHTML =
+      '<p style="color:#dc2626;">Couldn’t load quick scorer sessions. ' +
+      '<button id="quick-scorer-retry" class="btn btn-sm btn-outline-secondary ms-2">Retry</button></p>';
+    document.getElementById('quick-scorer-retry').addEventListener('click', loadQuickScorerSessions);
+  }
+}
+
+function formatDuration(durationMs) {
+  if (durationMs == null) return '—';
+  const totalSeconds = Math.max(0, Math.round(durationMs / 1000));
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${minutes}:${String(seconds).padStart(2, '0')}`;
+}
+
+function renderQuickScorerSessions(rows, listEl) {
+  if (rows.length === 0) {
+    listEl.innerHTML = '<p style="color:var(--very-muted);">No quick scorer sessions yet.</p>';
+    return;
+  }
+
+  const table = document.createElement('table');
+  table.className = 'table table-dark table-sm align-middle';
+  table.innerHTML = '<thead><tr><th>Started</th><th>Duration</th><th>Location</th></tr></thead>';
+
+  const tbody = document.createElement('tbody');
+  for (const row of rows) {
+    const tr = document.createElement('tr');
+
+    const startedTd = document.createElement('td');
+    startedTd.style.cssText = 'font-size:var(--fs-small);color:var(--muted);';
+    startedTd.textContent = row.startedAt ? new Date(row.startedAt).toLocaleString() : '—';
+
+    const durationTd = document.createElement('td');
+    durationTd.textContent = formatDuration(row.durationMs);
+
+    const locationTd = document.createElement('td');
+    locationTd.style.cssText = 'font-size:var(--fs-small);color:var(--muted);';
+    locationTd.textContent = row.location || '—';
+
+    tr.append(startedTd, durationTd, locationTd);
+    tbody.appendChild(tr);
+  }
+  table.appendChild(tbody);
+
+  listEl.innerHTML = '';
+  listEl.appendChild(table);
 }
