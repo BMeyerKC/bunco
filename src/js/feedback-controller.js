@@ -2,6 +2,7 @@
 
 import { validateFeedbackMessage, buildFeedbackPayload } from './feedback-logic.js';
 import { showToast, getParam, getDeviceId } from './ui.js';
+import { closeDialog } from './dialogs.js';
 
 // Firebase RTDB queues writes while offline instead of rejecting them, so
 // `set()` never settles on flaky/absent connectivity and `await submitFeedback`
@@ -23,7 +24,6 @@ export function initFeedback() {
   const messageEl = document.getElementById('feedback-message');
   const contactEl = document.getElementById('feedback-contact');
   const sendBtn   = document.getElementById('feedback-send');
-  const modalEl   = document.getElementById('feedback-modal');
 
   const syncSendButton = () => {
     sendBtn.disabled = !validateFeedbackMessage(messageEl.value).valid;
@@ -70,15 +70,15 @@ export function initFeedback() {
 
       messageEl.value = '';
       contactEl.value = '';
-      window.bootstrap.Modal.getOrCreateInstance(modalEl).hide();
-      showToast('Thanks — we got it!', 'success');
+      closeDialog('feedback-modal');
+      showToast('Feedback sent. Thank you!', 'success');
     } catch (err) {
       // Leave the text in place so a retry costs the user nothing.
       clearTimeout(timeoutId);
       console.error('[feedback] submit failed', err);
-      showToast("Couldn't send — try again?", 'warning');
+      showToast("Feedback didn't send. Check your connection and try again.", 'warning');
     } finally {
-      sendBtn.textContent = 'Send';
+      sendBtn.textContent = 'Send feedback';
       syncSendButton();
     }
   });
