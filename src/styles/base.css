@@ -104,6 +104,10 @@
 *, *::before, *::after { box-sizing: border-box; }
 
 html { -webkit-text-size-adjust: 100%; }
+button, input, select, textarea { font: inherit; color: inherit; }
+img, svg, canvas { vertical-align: middle; }
+ul, ol { padding-left: 1.5em; }
+abbr[title] { text-decoration: none; }
 
 body {
   margin: 0;
@@ -317,6 +321,13 @@ a.wordmark:hover { color: var(--pen); }
   color: var(--ink);
   border-color: var(--stroke);
 }
+.btn-ink:disabled, .btn-quiet:disabled {
+  background: transparent;
+  color: var(--muted);
+  border-style: dashed;
+  border-color: var(--hairline);
+  cursor: not-allowed;
+}
 
 .btn-quiet, .btn-outline-secondary {
   background: transparent;
@@ -437,6 +448,8 @@ a.wordmark:hover { color: var(--pen); }
   transform: rotate(-1deg);
 }
 .player-chip:nth-child(even) { transform: rotate(1.2deg); }
+.player-chip.is-ghost { border-style: dashed; color: var(--muted); box-shadow: none; }
+.chip-tag { font-size: var(--fs-caption); font-weight: 700; }
 .player-chip.chip-new { animation: chipSlideIn 0.25s ease; }
 @keyframes chipSlideIn {
   from { translate: 0 8px; opacity: 0; }
@@ -580,6 +593,9 @@ a.wordmark:hover { color: var(--pen); }
   font-weight: 800;
   cursor: pointer;
 }
+
+.join-form { max-width: 300px; }
+.join-form .btn-pen { margin-top: 18px; }
 
 /* ── Game code slots (js/code-entry.js) ──
    One real input lies over four die-shaped slots that mirror its value. */

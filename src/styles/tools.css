@@ -1,0 +1,20 @@
+/* styles/tools.css — internal pages (admin, debug, tests). Plain and dense. */
+.tool-page { max-width: 960px; margin: 0 auto; padding: 20px var(--gutter) 40px; width: 100%; }
+.tool-page h1 { font-size: var(--fs-h2); }
+.tool-section { margin-bottom: 28px; }
+.tool-section > h2 { font-size: var(--fs-lead); color: var(--ink-soft); margin-bottom: 10px; }
+.tool-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.field-sm { width: auto; min-height: 40px; padding: 6px 10px; font-size: var(--fs-small); }
+.tool-error { color: var(--margin); font-size: var(--fs-small); font-weight: 700; min-height: 1.2em; margin: 6px 0 0; }
+:root[data-theme="light"] .tool-error { color: #b3262b; }
+
+.stat-tile { background: var(--card); border: 1px solid var(--hairline); border-radius: 8px; padding: 12px 20px; min-width: 130px; }
+.stat-tile-value { font-size: var(--fs-h3); font-weight: 800; }
+.stat-tile-label { font-size: var(--fs-caption); color: var(--muted); }
+
+.data-table { width: 100%; border-collapse: collapse; font-size: var(--fs-small); }
+.data-table th { text-align: left; font-weight: 800; color: var(--ink-soft); border-bottom: 2px solid var(--rule); padding: 8px 10px; }
+.data-table td { border-bottom: 1px solid var(--hairline); padding: 8px 10px; vertical-align: middle; }
+.data-table .cell-actions { text-align: right; white-space: nowrap; }
+.data-table .cell-actions > * + * { margin-left: 6px; }
+.table-scroll { overflow-x: auto; }

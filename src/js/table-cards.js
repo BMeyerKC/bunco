@@ -31,17 +31,17 @@ export function renderTableCards(container, tables, tableScores = {}) {
     const themWin   = themScore > usScore;
 
     return `
-      <div data-table-card class="mb-3 p-3 rounded" style="background:var(--surface);border:1px solid var(--border);">
-        <div class="d-flex justify-content-between align-items-center mb-2">
-          <span class="text-muted" style="font-size:var(--fs-caption);text-transform:uppercase;letter-spacing:0.08em;">Table ${Number(tableId)}</span>
-          ${submitted ? '<span class="badge bg-success" style="font-size:var(--fs-caption);">Submitted</span>' : ''}
+      <div data-table-card class="table-card${submitted ? ' is-submitted' : ''}">
+        <div class="table-card-head">
+          <span class="table-card-name">Table ${Number(tableId)}</span>
+          ${submitted ? '<span class="table-card-badge">Submitted</span>' : ''}
         </div>
-        <div class="d-flex align-items-center gap-2">
-          <div class="flex-grow-1 text-start">${nameList(us)}</div>
-          <span data-score class="fw-bold fs-5" style="color:${usWin ? 'var(--ink)' : 'var(--muted)'}">${usScore}</span>
-          <span class="text-muted px-1">–</span>
-          <span data-score class="fw-bold fs-5" style="color:${themWin ? 'var(--ink)' : 'var(--muted)'}">${themScore}</span>
-          <div class="flex-grow-1 text-end">${nameList(them)}</div>
+        <div class="table-card-row">
+          <div class="table-card-side">${nameList(us)}</div>
+          <span data-score class="table-card-score${usWin ? ' is-ahead' : ''}">${usScore}</span>
+          <span class="table-card-vs" aria-hidden="true">–</span>
+          <span data-score class="table-card-score${themWin ? ' is-ahead' : ''}">${themScore}</span>
+          <div class="table-card-side">${nameList(them)}</div>
         </div>
       </div>`;
   }).join('');

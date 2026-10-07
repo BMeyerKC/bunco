@@ -18,7 +18,7 @@
 /* ── The pad: a score-pad sheet with a red margin and ruled lines ── */
 .pad {
   --pad-margin-x: 30px;
-  --pad-rule: color-mix(in srgb, var(--rule) 55%, transparent);
+  --pad-rule: var(--rule);
   position: relative;
   margin-bottom: 28px;
   padding: 20px 18px 24px calc(var(--pad-margin-x) + 16px);
@@ -38,6 +38,11 @@
   border-radius: 6px 6px 22px 10px / 6px 6px 10px 24px;
   box-shadow: var(--shadow);
 }
+/* Softer rules where supported; older Safari keeps the plain rule colour
+   (an unsupported color-mix() would void the whole background). */
+@supports (color: color-mix(in srgb, red, blue)) {
+  .pad { --pad-rule: color-mix(in srgb, var(--rule) 55%, transparent); }
+}
 .pad-title {
   font-size: var(--fs-h2);
   text-wrap: balance;
@@ -48,8 +53,6 @@
   margin-bottom: 18px;
 }
 
-.join-form { max-width: 300px; }
-.join-form .btn-pen { margin-top: 18px; }
 
 /* ── Paths: the two quieter ways in ── */
 .paths {
@@ -117,6 +120,11 @@
 }
 
 @media (min-width: 640px) {
-  .pad-title { font-size: var(--fs-h1); }
+  /* Softer rules where supported; older Safari keeps the plain rule colour
+   (an unsupported color-mix() would void the whole background). */
+@supports (color: color-mix(in srgb, red, blue)) {
+  .pad { --pad-rule: color-mix(in srgb, var(--rule) 55%, transparent); }
+}
+.pad-title { font-size: var(--fs-h1); }
   .pad { padding: 28px 28px 30px calc(var(--pad-margin-x) + 26px); --pad-margin-x: 44px; }
 }

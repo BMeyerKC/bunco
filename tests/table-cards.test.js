@@ -49,22 +49,22 @@ test('does not show submitted badge when not submitted', () => {
   expect(el.textContent).not.toContain('Submitted');
 });
 
-test('highlights winning side score with ink token, losing with muted token', () => {
+test('marks the side that is ahead', () => {
   const el = document.getElementById('root');
   const tables = [{ tableId: 1, us: [], them: [] }];
   renderTableCards(el, tables, { 1: { liveUs: 7, liveThem: 2, submitted: false } });
   const scores = el.querySelectorAll('[data-score]');
-  expect(scores[0].getAttribute('style')).toContain('var(--ink)');    // us winning
-  expect(scores[1].getAttribute('style')).toContain('var(--muted)');  // them losing
+  expect(scores[0].classList.contains('is-ahead')).toBe(true);   // us winning
+  expect(scores[1].classList.contains('is-ahead')).toBe(false);  // them losing
 });
 
-test('both scores use muted token when tied', () => {
+test('neither side is marked ahead when tied', () => {
   const el = document.getElementById('root');
   const tables = [{ tableId: 1, us: [], them: [] }];
   renderTableCards(el, tables, { 1: { liveUs: 4, liveThem: 4, submitted: false } });
   const scores = el.querySelectorAll('[data-score]');
-  expect(scores[0].getAttribute('style')).toContain('var(--muted)');
-  expect(scores[1].getAttribute('style')).toContain('var(--muted)');
+  expect(scores[0].classList.contains('is-ahead')).toBe(false);
+  expect(scores[1].classList.contains('is-ahead')).toBe(false);
 });
 
 test('shows 0–0 when no scores provided', () => {

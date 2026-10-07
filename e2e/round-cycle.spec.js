@@ -35,9 +35,9 @@ test("full round cycle: submitting scores advances through between-rounds to rou
       .waitFor({ state: "visible" });
 
     // Button is initially "Preparing…" while next-round Firebase writes complete,
-    // then flips to "Start Round 2" and enables.
+    // then flips to "Start round 2" and enables.
     await expect(session.hostPage.locator("#br-start-next-btn")).toHaveText(
-      "Start Round 2",
+      "Start round 2",
     );
     await expect(session.hostPage.locator("#br-start-next-btn")).toBeEnabled();
 

@@ -80,7 +80,7 @@ Everything else: feedback-only motion (score pop, sheet open). Respect
 
 1. Foundation: tokens, type, shared components, top bar, footer, a11y floor.
 2. Home + join.
-3. Quick Scorer + game screens.
-4. Host setup stepper, standings, admin/debug/tests restyle, remove Bootstrap.
+3. Quick Scorer + game screens, including the host setup stepper.
+4. Standings, admin/debug/tests restyle, remove Bootstrap.
 
 Each stage is its own PR, stacked; e2e selectors updated where markup changes.
