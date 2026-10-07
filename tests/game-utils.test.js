@@ -1,5 +1,5 @@
 // tests/game-utils.test.js
-import { getGhostOnlyTableIds, allTablesSubmitted } from '../src/js/game-utils.js';
+import { getGhostOnlyTableIds, allTablesSubmitted, seatPlan } from '../src/js/game-utils.js';
 
 describe('getGhostOnlyTableIds', () => {
   test('returns empty array when every table has at least one real player', () => {
@@ -117,5 +117,23 @@ describe('allTablesSubmitted', () => {
       2: { submitted: true, usScore: 0,  themScore: 0  }, // ghost table pre-submitted
     };
     expect(allTablesSubmitted(tables, 2)).toBe(true);
+  });
+});
+
+describe('seatPlan', () => {
+  test('a full house fills tables with no ghosts', () => {
+    expect(seatPlan(12)).toEqual({ players: 12, tables: 3, ghosts: 0 });
+  });
+  test('an odd count rounds up a table and fills the gaps with ghosts', () => {
+    expect(seatPlan(13)).toEqual({ players: 13, tables: 4, ghosts: 3 });
+  });
+  test('small groups still get two tables', () => {
+    expect(seatPlan(5)).toEqual({ players: 5, tables: 2, ghosts: 3 });
+    expect(seatPlan(1)).toEqual({ players: 1, tables: 2, ghosts: 7 });
+  });
+  test('clamps out-of-range and junk input', () => {
+    expect(seatPlan(40)).toEqual({ players: 24, tables: 6, ghosts: 0 });
+    expect(seatPlan(0).players).toBe(1);
+    expect(seatPlan('abc').players).toBe(1);
   });
 });

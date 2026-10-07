@@ -104,6 +104,10 @@
 *, *::before, *::after { box-sizing: border-box; }
 
 html { -webkit-text-size-adjust: 100%; }
+button, input, select, textarea { font: inherit; color: inherit; }
+img, svg, canvas { vertical-align: middle; }
+ul, ol { padding-left: 1.5em; }
+abbr[title] { text-decoration: none; }
 
 body {
   margin: 0;
@@ -317,6 +321,13 @@ a.wordmark:hover { color: var(--pen); }
   color: var(--ink);
   border-color: var(--stroke);
 }
+.btn-ink:disabled, .btn-quiet:disabled {
+  background: transparent;
+  color: var(--muted);
+  border-style: dashed;
+  border-color: var(--hairline);
+  cursor: not-allowed;
+}
 
 .btn-quiet, .btn-outline-secondary {
   background: transparent;
@@ -437,6 +448,8 @@ a.wordmark:hover { color: var(--pen); }
   transform: rotate(-1deg);
 }
 .player-chip:nth-child(even) { transform: rotate(1.2deg); }
+.player-chip.is-ghost { border-style: dashed; color: var(--muted); box-shadow: none; }
+.chip-tag { font-size: var(--fs-caption); font-weight: 700; }
 .player-chip.chip-new { animation: chipSlideIn 0.25s ease; }
 @keyframes chipSlideIn {
   from { translate: 0 8px; opacity: 0; }
@@ -580,3 +593,61 @@ a.wordmark:hover { color: var(--pen); }
   font-weight: 800;
   cursor: pointer;
 }
+
+.join-form { max-width: 300px; }
+.join-form .btn-pen { margin-top: 18px; }
+
+/* ── Game code slots (js/code-entry.js) ──
+   One real input lies over four die-shaped slots that mirror its value. */
+.code-slots {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  max-width: 300px;
+}
+.code-slots input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  border: 0;
+  font-size: 16px; /* keeps iOS from zooming on focus */
+  caret-color: transparent;
+  cursor: text;
+  z-index: 1;
+}
+.code-slot {
+  position: relative;
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--card);
+  border: 2.5px solid var(--stroke);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+  font-family: var(--font-body);
+  font-size: clamp(1.75rem, 9vw, 2.25rem);
+  font-weight: 900;
+  color: var(--pen);
+  transition: border-color 0.12s ease, transform 0.12s ease;
+}
+.code-slot:nth-child(odd)  { transform: rotate(-2deg); }
+.code-slot:nth-child(even) { transform: rotate(1.5deg); }
+.code-slot.is-filled { transform: none; }
+.code-slots:focus-within .code-slot.is-next {
+  border-color: var(--pen);
+  box-shadow: 0 0 0 3px var(--pen-soft), var(--shadow);
+}
+.code-slots:focus-within .code-slot.is-next:not(.is-filled)::after {
+  content: '';
+  width: 3px;
+  height: 45%;
+  background: var(--pen);
+  border-radius: 2px;
+  animation: caretBlink 1s steps(1) infinite;
+}
+@keyframes caretBlink { 50% { opacity: 0; } }
+.code-slots:has(input[aria-invalid="true"]) .code-slot { border-color: var(--margin); }

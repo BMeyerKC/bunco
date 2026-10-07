@@ -1,7 +1,9 @@
 ---
 import Layout from '../layouts/Layout.astro';
+import DieIcon from '../components/DieIcon.astro';
+import '../styles/home.css';
 ---
-<Layout title="Bunco Score Keeper — Free Online Bunco Game">
+<Layout title="Bunco Score Keeper — Free Online Bunco Game" isHome>
   <Fragment slot="head">
     <meta name="description" content="Free Bunco score keeper and live scoring app. Learn how to play Bunco with quick-start rules and a full reference guide." />
     <meta name="keywords" content="bunco score keeper, how to play bunco, bunco rules, bunco scoring app" />
@@ -32,7 +34,7 @@ import Layout from '../layouts/Layout.astro';
         {
           "@type": "HowToStep",
           "name": "Roll and score",
-          "text": "Teams roll all 3 dice and score 1 point per die matching the round number. Rolling all 3 matching dice is a Bunco — 21 points, round over at your table."
+          "text": "Teams roll all 3 dice and score 1 point per die matching the round number. Rolling all 3 matching dice is a Bunco: your team wins the table and the round is over there."
         },
         {
           "@type": "HowToStep",
@@ -58,7 +60,7 @@ import Layout from '../layouts/Layout.astro';
           "name": "What is a Bunco?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "A Bunco is when you roll all 3 dice and they all match the current round number. It scores 21 points instantly and ends the round at your table."
+            "text": "A Bunco is when you roll all 3 dice and they all match the current round number. Your team wins the table outright and the round ends there. Ghost players can't earn a Bunco."
           }
         },
         {
@@ -82,7 +84,7 @@ import Layout from '../layouts/Layout.astro';
           "name": "What is a ghost player in Bunco?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "A ghost player is a placeholder used when you don't have enough people for full tables of 4. The ghost rotates like a normal player. The team playing against the ghost scores against the ghost's previous round score."
+            "text": "A ghost player is a placeholder used when you don't have enough people for full tables of 4. The ghost rotates like a normal player. Ghosts don't roll: someone rolls for them, usually their human teammate, or anyone at the table if needed. Ghosts can't earn a Bunco; three of a kind rolled for a ghost only counts as points."
           }
         }
       ]
@@ -90,259 +92,167 @@ import Layout from '../layouts/Layout.astro';
     </script>
   </Fragment>
 
-  <div class="min-vh-100 d-flex flex-column align-items-center justify-content-center px-3 py-5">
+  <div class="page home">
 
-    <!-- Logo with glow -->
-    <div style="position:relative; text-align:center; margin-bottom: 8px;">
-      <div style="font-size:2.5rem; margin-bottom:4px;">🎲</div>
-      <h1 style="font-size:2.75rem; font-weight:900; letter-spacing:-1px; margin:0; color:var(--text);">Bunco</h1>
-    </div>
-    <p style="color:var(--muted); margin-bottom:2.5rem; font-size:var(--fs-body);">Live scoring for game night</p>
-
-    <!-- Resume banner — shown by resume-banner.js when a recent game is found in localStorage -->
-    <div id="resume-banner" style="display:none; width:100%; max-width:800px; margin-bottom:1.5rem;
-         background:var(--surface); border:1px solid var(--border); border-radius:12px;
-         padding:14px 18px; align-items:center; gap:12px; flex-wrap:wrap;">
-      <span id="resume-banner-text" style="flex:1; min-width:200px; font-weight:600;"></span>
-      <a id="resume-banner-link" href="#" class="btn btn-primary btn-sm"></a>
-      <button id="resume-banner-dismiss" type="button" aria-label="Dismiss"
-              class="btn btn-outline-light btn-sm" style="padding:0.25rem 0.6rem;">✕</button>
+    <!-- Resume note — shown by resume-banner.js when this device was recently in a game -->
+    <div id="resume-banner" class="resume-note" style="display:none;" role="status">
+      <span id="resume-banner-text" class="resume-note-text"></span>
+      <a id="resume-banner-link" href="#" class="btn-pen btn-sm"></a>
+      <button id="resume-banner-dismiss" type="button" class="dialog-close" aria-label="Dismiss">×</button>
     </div>
 
-    <div class="row g-3 w-100" style="max-width: 800px;">
-
-      <!-- Quick Scorer -->
-      <div class="col-12 col-md-4">
-        <div class="card h-100 text-center p-3">
-          <div class="card-body d-flex flex-column justify-content-between">
-            <div>
-              <h5 class="card-title mb-2">Quick Scorer</h5>
-              <p class="card-text">Score a single set — no setup needed.</p>
-            </div>
-            <a href="scorer.html" class="btn btn-outline-light mt-3">Open Scorer</a>
-          </div>
+    <!-- The join box is the front door: most people arriving tonight are joining. -->
+    <section class="pad" aria-labelledby="join-title">
+      <h1 id="join-title" class="pad-title">Join tonight's game</h1>
+      <p class="pad-lead">Type the code from the host's screen.</p>
+      <form id="join-form" class="join-form" novalidate>
+        <label for="join-code" class="visually-hidden">Game code</label>
+        <div class="code-slots">
+          <input id="join-code" name="code" type="text" maxlength="4"
+                 autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false"
+                 aria-describedby="join-error" />
+          <span class="code-slot" aria-hidden="true"></span>
+          <span class="code-slot" aria-hidden="true"></span>
+          <span class="code-slot" aria-hidden="true"></span>
+          <span class="code-slot" aria-hidden="true"></span>
         </div>
-      </div>
+        <p id="join-error" class="field-error" hidden></p>
+        <button type="submit" class="btn-pen btn-block">Join game</button>
+      </form>
+    </section>
 
-      <!-- Start a Game — highlighted -->
-      <div class="col-12 col-md-4">
-        <div class="card card-featured h-100 text-center p-3">
-          <div class="card-body d-flex flex-column justify-content-between">
-            <div>
-              <h5 class="card-title mb-2">Start a Game</h5>
-              <p class="card-text">Host a full game night — track all 6 rounds.</p>
-            </div>
-            <a href="game.html?host=true" class="btn btn-primary mt-3">Host Game</a>
-          </div>
-        </div>
-      </div>
+    <nav class="paths" aria-label="Other ways to play">
+      <a class="path" href="game.html?host=true">
+        <DieIcon face={6} class="path-die" />
+        <span class="path-text">
+          <strong>Host a game night</strong>
+          <span>Set up tables, seat everyone, and score all six rounds live.</span>
+        </span>
+        <span class="path-go" aria-hidden="true">›</span>
+      </a>
+      <a class="path" href="scorer.html">
+        <DieIcon face={2} class="path-die" />
+        <span class="path-text">
+          <strong>Just keep score</strong>
+          <span>A two-sided scoreboard for one table. No setup.</span>
+        </span>
+        <span class="path-go" aria-hidden="true">›</span>
+      </a>
+    </nav>
 
-      <!-- Join a Game -->
-      <div class="col-12 col-md-4">
-        <div class="card h-100 text-center p-3">
-          <div class="card-body d-flex flex-column justify-content-between">
-            <div>
-              <h5 class="card-title mb-2">Join a Game</h5>
-              <p class="card-text">Enter the code from your host to join.</p>
-            </div>
-            <form id="join-form" class="mt-3" onsubmit="handleJoin(event)">
-              <input
-                id="join-code"
-                type="text"
-                class="form-control text-center text-uppercase mb-2"
-                placeholder="Game code"
-                maxlength="4"
-                autocomplete="off"
-                style="letter-spacing:0.2em; font-weight:800; font-size:1.1rem;"
-              />
-              <button type="submit" class="btn btn-outline-light w-100">Join →</button>
-            </form>
-          </div>
-        </div>
-      </div>
-
-    </div>
-
-    <!-- AdSense placeholder — replace with actual ad unit after approval -->
-    <div class="mt-5 text-center text-muted small" id="ad-slot" style="min-height: 90px; width: 100%; max-width: 728px;">
-      <!-- Google AdSense ad unit goes here -->
-    </div>
-
-    <!-- How to Play Bunco: Quick-Start -->
-    <section class="mt-5 w-100" style="max-width: 800px;">
-      <h2 class="h4 fw-bold mb-3 ruled-heading">How to Play Bunco</h2>
-      <ol class="ps-3">
-        <li class="mb-3"><strong>Set up your tables.</strong> Seat 4 players per table (2 vs 2). You need 3 dice per table. Designate one table as the head table (Table 1).</li>
-        <li class="mb-3"><strong>Know your target number.</strong> Each of the 6 rounds has a target number matching the round (round 1 = 1s, round 2 = 2s, etc.).</li>
-        <li class="mb-3"><strong>Roll and score.</strong> Teams take turns rolling all 3 dice. Score 1 point for each die matching the round number. Rolling all 3 matching dice is a <strong>Bunco</strong> — your table scores 21 points and the round ends immediately at your table.</li>
-        <li class="mb-3"><strong>Call game.</strong> The first table to reach 21 points calls "Game!" — all other tables finish their current roll, then stop and tally scores.</li>
-        <li class="mb-3"><strong>Rotate and repeat.</strong> Losing teams stay at their table. Winning teams (except at Table 1) advance up toward Table 1. The losing team at Table 1 drops all the way down to the last table. Play 6 rounds total.</li>
+    <!-- A real sequence, so the steps are numbered — in the sheet's margin -->
+    <section class="rules" aria-labelledby="how-title">
+      <h2 id="how-title" class="ruled-heading">How to play Bunco</h2>
+      <ol class="steps">
+        <li><strong>Set up your tables.</strong> Seat 4 players per table (2 vs 2). You need 3 dice per table. Designate one table as the head table (Table 1).</li>
+        <li><strong>Know your target number.</strong> Each of the 6 rounds has a target number matching the round (round 1 = 1s, round 2 = 2s, etc.).</li>
+        <li><strong>Roll and score.</strong> Teams take turns rolling all 3 dice. Score 1 point for each die matching the round number. Rolling all 3 matching dice is a <strong>Bunco</strong>: your team wins the table and the round ends immediately at your table.</li>
+        <li><strong>Call game.</strong> The first table to reach 21 points calls "Game!" All other tables finish their current roll, then stop and tally scores.</li>
+        <li><strong>Rotate and repeat.</strong> Losing teams stay at their table. Winning teams (except at Table 1) advance up toward Table 1. The losing team at Table 1 drops all the way down to the last table. Play 6 rounds total.</li>
       </ol>
     </section>
 
-    <!-- Full Bunco Reference Accordion -->
-    <section class="mt-4 mb-5 w-100" style="max-width: 800px;">
-      <h2 class="h4 fw-bold mb-3 ruled-heading">Full Bunco Reference</h2>
-      <div class="accordion" id="accordion-reference">
-
-        <div class="accordion-item">
-          <h3 class="accordion-header">
-            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#ref-objective" aria-expanded="false" aria-controls="ref-objective">
-              Objective
-            </button>
-          </h3>
-          <div id="ref-objective" class="accordion-collapse collapse" data-bs-parent="#accordion-reference">
-            <div class="accordion-body">
-              Score the most wins across 6 rounds. Bonus points for Buncos. The player with the most wins at the end of the night takes the prize.
-            </div>
+    <section class="rules" aria-labelledby="ref-title">
+      <h2 id="ref-title" class="ruled-heading">Rules reference</h2>
+      <div class="ref-list">
+        <details class="ref-item">
+          <summary>Objective</summary>
+          <div class="ref-body">
+            Score the most wins across 6 rounds. Bonus points for Buncos. The player with the most wins at the end of the night takes the prize.
           </div>
-        </div>
-
-        <div class="accordion-item">
-          <h3 class="accordion-header">
-            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#ref-setup" aria-expanded="false" aria-controls="ref-setup">
-              Setup &amp; Tables
-            </button>
-          </h3>
-          <div id="ref-setup" class="accordion-collapse collapse" data-bs-parent="#accordion-reference">
-            <div class="accordion-body">
-              <ul class="mb-0">
-                <li>Minimum 2 tables (8 players), typically 3 tables (12 players)</li>
-                <li>4 players per table, seated 2 vs 2</li>
-                <li>Tables are numbered 1 through N — Table 1 is the head table</li>
-                <li>Each table needs 3 dice</li>
-                <li>Ghost players fill empty seats when player count doesn't divide evenly by 4</li>
-              </ul>
-            </div>
+        </details>
+        <details class="ref-item">
+          <summary>Setup and tables</summary>
+          <div class="ref-body">
+            <ul>
+              <li>Minimum 2 tables (8 players), typically 3 tables (12 players)</li>
+              <li>4 players per table, seated 2 vs 2</li>
+              <li>Tables are numbered 1 through N. Table 1 is the head table</li>
+              <li>Each table needs 3 dice</li>
+              <li>Ghost players fill empty seats when player count doesn't divide evenly by 4</li>
+            </ul>
           </div>
-        </div>
-
-        <div class="accordion-item">
-          <h3 class="accordion-header">
-            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#ref-rolling" aria-expanded="false" aria-controls="ref-rolling">
-              Rolling &amp; Scoring
-            </button>
-          </h3>
-          <div id="ref-rolling" class="accordion-collapse collapse" data-bs-parent="#accordion-reference">
-            <div class="accordion-body">
-              <ul class="mb-0">
-                <li>Teams alternate rolling all 3 dice as fast as possible — there is no turn limit</li>
-                <li>Score 1 point per die matching the current round number</li>
-                <li>Keep a running tally — first team to 21 wins the round at that table</li>
-                <li>A <strong>Bunco</strong> (all 3 dice matching the round number) scores 21 points instantly and ends the round at that table</li>
-              </ul>
-            </div>
+        </details>
+        <details class="ref-item">
+          <summary>Rolling and scoring</summary>
+          <div class="ref-body">
+            <ul>
+              <li>Teams alternate rolling all 3 dice as fast as possible. There is no turn limit</li>
+              <li>Score 1 point per die matching the current round number</li>
+              <li>Keep a running tally. First team to 21 wins the round at that table</li>
+              <li>A <strong>Bunco</strong> (all 3 dice matching the round number) wins the table for your team and ends the round there, whatever the score</li>
+            </ul>
           </div>
-        </div>
-
-        <div class="accordion-item">
-          <h3 class="accordion-header">
-            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#ref-calling" aria-expanded="false" aria-controls="ref-calling">
-              Calling Game
-            </button>
-          </h3>
-          <div id="ref-calling" class="accordion-collapse collapse" data-bs-parent="#accordion-reference">
-            <div class="accordion-body">
-              <ul class="mb-0">
-                <li>When any team reaches 21, they call "Game!" loudly</li>
-                <li>All other tables finish their current roll, then stop</li>
-                <li>Each table reports their score — higher score wins that table's round</li>
-                <li>In a tie, the team that was winning most recently wins (or flip a coin)</li>
-              </ul>
-            </div>
+        </details>
+        <details class="ref-item">
+          <summary>Calling game</summary>
+          <div class="ref-body">
+            <ul>
+              <li>When any team reaches 21, they call "Game!" loudly</li>
+              <li>All other tables finish their current roll, then stop</li>
+              <li>Each table reports their score. Higher score wins that table's round</li>
+              <li>In a tie, the team that was winning most recently wins (or flip a coin)</li>
+            </ul>
           </div>
-        </div>
-
-        <div class="accordion-item">
-          <h3 class="accordion-header">
-            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#ref-rotation" aria-expanded="false" aria-controls="ref-rotation">
-              Player Rotation &amp; Partners
-            </button>
-          </h3>
-          <div id="ref-rotation" class="accordion-collapse collapse" data-bs-parent="#accordion-reference">
-            <div class="accordion-body">
-              <ul class="mb-0">
-                <li>After each round, <strong>losing teams stay at their table</strong></li>
-                <li><strong>Winning teams (Tables 2 through N) move up one table</strong> toward Table 1</li>
-                <li><strong>The losing team at Table 1 drops all the way to the last table</strong></li>
-                <li>Winners and incoming players split up — you never keep the same partner twice in a row</li>
-                <li>This ensures everyone plays with different partners throughout the night</li>
-              </ul>
-            </div>
+        </details>
+        <details class="ref-item">
+          <summary>Player rotation and partners</summary>
+          <div class="ref-body">
+            <ul>
+              <li>After each round, <strong>losing teams stay at their table</strong></li>
+              <li><strong>Winning teams (Tables 2 through N) move up one table</strong> toward Table 1</li>
+              <li><strong>The losing team at Table 1 drops all the way to the last table</strong></li>
+              <li>Winners and incoming players split up, so you never keep the same partner twice in a row</li>
+              <li>This ensures everyone plays with different partners throughout the night</li>
+            </ul>
           </div>
-        </div>
-
-        <div class="accordion-item">
-          <h3 class="accordion-header">
-            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#ref-ghost" aria-expanded="false" aria-controls="ref-ghost">
-              Ghost Players
-            </button>
-          </h3>
-          <div id="ref-ghost" class="accordion-collapse collapse" data-bs-parent="#accordion-reference">
-            <div class="accordion-body">
-              <ul class="mb-0">
-                <li>A ghost player fills a seat when there aren't enough real players for full tables</li>
-                <li>Ghost players rotate normally — they move with their team like a real player</li>
-                <li>The team playing against a ghost scores against the ghost's score from the previous round</li>
-              </ul>
-            </div>
+        </details>
+        <details class="ref-item">
+          <summary>Ghost players</summary>
+          <div class="ref-body">
+            <ul>
+              <li>A ghost player fills a seat when there aren't enough real players for full tables</li>
+              <li>Ghost players rotate normally and move with their team like a real player</li>
+              <li>Ghosts don't roll. Someone rolls for them, usually their human teammate, or anyone at the table if that isn't possible</li>
+              <li>Ghosts can't earn a Bunco. Three of a kind rolled for a ghost only counts as points</li>
+            </ul>
           </div>
-        </div>
-
-        <div class="accordion-item">
-          <h3 class="accordion-header">
-            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#ref-buncos" aria-expanded="false" aria-controls="ref-buncos">
-              Buncos
-            </button>
-          </h3>
-          <div id="ref-buncos" class="accordion-collapse collapse" data-bs-parent="#accordion-reference">
-            <div class="accordion-body">
-              <ul class="mb-0">
-                <li>A Bunco occurs when all 3 dice show the current round number on a single roll</li>
-                <li>It scores 21 points instantly and ends the round at that table</li>
-                <li>Buncos are tracked individually — they contribute to final tiebreaking</li>
-                <li>Multiple Buncos can occur in the same round at different tables</li>
-              </ul>
-            </div>
+        </details>
+        <details class="ref-item">
+          <summary>Buncos</summary>
+          <div class="ref-body">
+            <ul>
+              <li>A Bunco occurs when all 3 dice show the current round number on a single roll</li>
+              <li>The roller's team wins the table, counted as a win, and the round ends there</li>
+              <li>Only real players can earn a Bunco, not ghosts</li>
+              <li>Buncos are tracked individually and count toward final tiebreaking</li>
+              <li>Multiple Buncos can occur in the same round at different tables</li>
+            </ul>
           </div>
-        </div>
-
-        <div class="accordion-item">
-          <h3 class="accordion-header">
-            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#ref-winning" aria-expanded="false" aria-controls="ref-winning">
-              Winning the Game
-            </button>
-          </h3>
-          <div id="ref-winning" class="accordion-collapse collapse" data-bs-parent="#accordion-reference">
-            <div class="accordion-body">
-              After 6 rounds, tally each player's wins, losses, and Buncos. Rankings:
-              <ol class="mt-2 mb-0">
-                <li>Most wins</li>
-                <li>Most Buncos (tiebreaker)</li>
-                <li>Most total points (second tiebreaker)</li>
-              </ol>
-            </div>
+        </details>
+        <details class="ref-item">
+          <summary>Winning the game</summary>
+          <div class="ref-body">
+            After 6 rounds, tally each player's wins, losses, and Buncos. Rankings:
+            <ol>
+              <li>Most wins</li>
+              <li>Most Buncos (tiebreaker)</li>
+              <li>Most total points (second tiebreaker)</li>
+            </ol>
           </div>
-        </div>
-
+        </details>
       </div>
     </section>
 
+    <!-- AdSense: place the ad unit here after approval (no empty placeholder box). -->
   </div>
 
-  <script is:inline>
-    function handleJoin(e) {
-      e.preventDefault();
-      const code = document.getElementById('join-code').value.trim().toUpperCase();
-      if (code.length !== 4) {
-        alert('Please enter a 4-character game code.');
-        return;
-      }
-      window.location.href = `game.html?code=${code}`;
-    }
-  </script>
-
   <script>
+    import { initCodeEntry } from '../js/code-entry.js';
     import '../js/resume-banner.js';
+
+    initCodeEntry(document.getElementById('join-form'), (code) => {
+      window.location.href = `game.html?code=${code}`;
+    });
   </script>
 </Layout>

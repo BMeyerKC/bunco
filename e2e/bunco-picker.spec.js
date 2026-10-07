@@ -97,12 +97,20 @@ test("bunco picker: player select, per-table lockout, round call, re-enable next
     await expect(pageA.locator("#view-scoring")).toBeVisible();
     await expect(pageB.locator("#view-scoring")).toBeVisible();
 
-    // Open picker: 4 players at the table, Cancel is free
+    // Open picker: the table's real players, Cancel is free
     await pageA.click("#bunco-btn", { timeout: 10000 });
     await expect(pageA.locator("#bunco-picker")).toBeVisible();
+    // Only real people at the table are offered — ghosts can't earn a Bunco.
     await expect(
-      pageA.locator("#bunco-picker-list .bunco-picker-player"),
-    ).toHaveCount(4);
+      pageA.locator("#bunco-picker-list .bunco-picker-player").first(),
+    ).toBeVisible();
+    const pickerNames = await pageA
+      .locator("#bunco-picker-list .bunco-picker-player")
+      .allTextContents();
+    expect(pickerNames).toContain(deviceA.name);
+    expect(pickerNames).toContain(deviceB.name);
+    const humans = new Set(devices.map((d) => d.name));
+    expect(pickerNames.every((n) => humans.has(n))).toBe(true);
     await pageA.click("#bunco-picker-cancel", { timeout: 10000 });
     await expect(pageA.locator("#bunco-picker")).toBeHidden();
     await expect(pageA.locator("#bunco-btn")).toBeEnabled();
@@ -149,7 +157,7 @@ test("bunco picker: player select, per-table lockout, round call, re-enable next
     // hostPage is guaranteed to have it, regardless of which two devices
     // pageA/pageB turned out to be.
     await expect(hostPage.locator("#br-start-next-btn")).toHaveText(
-      "Start Round 2",
+      "Start round 2",
     );
     await expect(hostPage.locator("#br-start-next-btn")).toBeEnabled();
     await hostPage.click("#br-start-next-btn", { timeout: 10000 });

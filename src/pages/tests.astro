@@ -1,30 +1,29 @@
 ---
 import Layout from '../layouts/Layout.astro';
+import '../styles/tools.css';
 ---
 
 <Layout title="Bunco — Test Results" showFeedback={false}>
   <style is:global>
-    body { font-family: monospace; }
-    .test-result { margin-bottom: 12px; padding: 12px; border-radius: 4px; }
-    .test-pass { background-color: #1e4620; border-left: 4px solid #198754; }
-    .test-fail { background-color: #4d1f1f; border-left: 4px solid #dc3545; }
-    .test-name { color: #aaa; margin-bottom: 4px; }
-    .test-error { color: #ff6b6b; font-size: 0.9rem; }
-    .stats { margin-bottom: 20px; padding: 16px; background: #2a2a2a; border-radius: 4px; }
-    .stats h3 { margin: 0 0 12px 0; }
+    .test-result { margin-bottom: 8px; padding: 10px 12px; border-radius: 6px; background: var(--card); border: 1px solid var(--hairline); font-size: var(--fs-small); }
+    .test-pass { border-left: 4px solid var(--pen); }
+    .test-fail { border-left: 4px solid var(--margin); background: var(--margin-soft); }
+    .test-name { color: var(--ink); }
+    .test-error { color: var(--margin); margin-top: 4px; font-family: ui-monospace, monospace; }
+    .stats { margin-bottom: 20px; padding: 16px; background: var(--card); border: 1px solid var(--hairline); border-radius: 8px; }
+    .stats h3 { margin: 0 0 8px 0; font-size: var(--fs-lead); }
     .stat-line { display: flex; justify-content: space-between; padding: 4px 0; }
-    .stat-pass { color: #198754; }
-    .stat-fail { color: #dc3545; }
+    .stat-pass { color: var(--pen); }
+    .stat-fail { color: var(--margin); }
+    .test-group-title { font-size: var(--fs-lead); color: var(--ink-soft); margin: 28px 0 10px; }
+    .test-subgroup-title { font-family: var(--font-body); font-size: var(--fs-body); font-weight: 800; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px solid var(--rule); }
+    .test-subgroup-count { color: var(--muted); font-weight: 600; }
   </style>
 
-  <div class="container p-4" style="max-width: 700px;">
-    <div class="mb-4">
-      <a href="index.html" class="btn btn-sm btn-outline-secondary">← Home</a>
-    </div>
-
-    <div class="d-flex align-items-center justify-content-between mb-4">
-      <h1 class="mb-0">Unit Tests</h1>
-      <a href="/playwright-report/index.html" class="btn btn-sm btn-outline-secondary" target="_blank">E2E Report →</a>
+  <div class="tool-page" style="max-width: 720px;">
+    <div class="tool-row" style="justify-content:space-between; margin-bottom:16px;">
+      <h1 style="margin:0;">Unit tests</h1>
+      <a href="/playwright-report/index.html" class="btn-ink btn-sm" target="_blank">Open E2E report</a>
     </div>
 
     <div id="stats" class="stats"></div>
@@ -98,14 +97,14 @@ import Layout from '../layouts/Layout.astro';
         const entries = Object.entries(groups).filter(([, g]) => g.length > 0);
         if (entries.length === 0) return '';
         return `
-          <h3 style="color: #666; margin: 2rem 0 1rem; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em;">${title}</h3>
+          <h2 class="test-group-title">${title}</h2>
           ${entries.map(([groupName, groupResults]) => {
             const groupPassed = groupResults.filter(r => r.status === 'PASS').length;
             return `
               <div style="margin-bottom: 24px;">
-                <h4 style="color: #aaa; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #444;">
-                  ${groupName} <span style="color: #666; font-size: 0.85rem;">(${groupPassed}/${groupResults.length})</span>
-                </h4>
+                <h3 class="test-subgroup-title">
+                  ${groupName} <span class="test-subgroup-count">(${groupPassed}/${groupResults.length})</span>
+                </h3>
                 ${groupResults.map(r => `
                   <div class="test-result ${r.status === 'PASS' ? 'test-pass' : 'test-fail'}">
                     <div class="test-name">${r.status === 'PASS' ? '✓' : '✗'} ${r.name}</div>

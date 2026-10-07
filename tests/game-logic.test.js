@@ -11,6 +11,7 @@ import {
   buncoClaimUpdate,
   describeResumableGame,
   uncallGameUpdate,
+  roundWinners,
 } from '../src/js/game-logic.js';
 
 describe('generateGameCode', () => {
@@ -379,8 +380,8 @@ describe('describeResumableGame', () => {
     expect(describeResumableGame('ABCD', game)).toEqual({
       code: 'ABCD',
       ended: false,
-      text: 'You have a game in progress — code ABCD.',
-      linkText: 'Rejoin Game',
+      text: "You're still in game ABCD.",
+      linkText: 'Rejoin game',
       href: 'game.html?code=ABCD',
     });
   });
@@ -398,13 +399,43 @@ describe('describeResumableGame', () => {
     expect(describeResumableGame('WXYZ', game)).toEqual({
       code: 'WXYZ',
       ended: true,
-      text: 'Game WXYZ is over.',
-      linkText: 'View Final Standings',
+      text: 'Game WXYZ has finished.',
+      linkText: 'See final standings',
       href: 'standings.html?code=WXYZ&final=true',
     });
   });
 
   test('missing meta is treated as round 0 (waiting)', () => {
     expect(describeResumableGame('ABCD', {})).toMatchObject({ ended: false });
+  });
+});
+
+describe('roundWinners', () => {
+  const assignments = {
+    a: { tableId: 1, side: 'us' },   b: { tableId: 1, side: 'us' },
+    c: { tableId: 1, side: 'them' }, d: { tableId: 1, side: 'them' },
+    e: { tableId: 2, side: 'us' },   f: { tableId: 2, side: 'them' },
+  };
+
+  test('without a Bunco the higher score wins', () => {
+    const r = roundWinners({ 1: { usScore: 21, themScore: 9 }, 2: { usScore: 4, themScore: 21 } }, assignments, {}, 2);
+    expect(r[1]).toEqual({ winner: 'us', bunco: false });
+    expect(r[2]).toEqual({ winner: 'them', bunco: false });
+  });
+
+  test("a Bunco wins the table for the roller's team even when they're behind", () => {
+    const r = roundWinners({ 1: { usScore: 18, themScore: 6 }, 2: { usScore: 21, themScore: 3 } }, assignments, { c: 1 }, 2);
+    expect(r[1]).toEqual({ winner: 'them', bunco: true });
+    expect(r[2]).toEqual({ winner: 'us', bunco: false }); // other tables unaffected
+  });
+
+  test('the Bunco win flows into standings as a win', () => {
+    const tables = { 1: { usScore: 18, themScore: 6 }, 2: { usScore: 21, themScore: 3 } };
+    const buncos = { c: 1 };
+    const results = roundWinners(tables, assignments, buncos, 2);
+    const next = updateStandings({}, tables, results, assignments, buncos);
+    expect(next.c).toMatchObject({ wins: 1, losses: 0, buncos: 1 });
+    expect(next.d).toMatchObject({ wins: 1, losses: 0 });
+    expect(next.a).toMatchObject({ wins: 0, losses: 1 });
   });
 });
