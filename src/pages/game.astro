@@ -19,8 +19,8 @@ import GameLayout from '../layouts/GameLayout.astro';
       <div id="setup-tables-diagram" class="table-diagram" aria-hidden="true"></div>
       <p id="setup-plan-text" class="setup-plan-text"></p>
       <p id="setup-ghost-note" class="helper" hidden>
-        A ghost fills each empty seat so every table has four. Ghosts move with their team
-        like anyone else.
+        A ghost fills each empty seat so every table has four. Their teammate rolls for
+        them, and they move tables like anyone else.
       </p>
     </div>
 
@@ -33,6 +33,18 @@ import GameLayout from '../layouts/GameLayout.astro';
 
   <!-- VIEW: Waiting room -->
   <div id="view-waiting" data-view style="display:none;" class="page">
+    <!-- Seat card first: once seated, it's the thing a player needs -->
+    <!-- Shown to players once seats are assigned -->
+    <div id="waiting-seat-info" style="display:none;" class="index-card seat-card">
+      <p class="seat-card-label">Your seat</p>
+      <h2 id="waiting-seat-table" class="seat-card-table"></h2>
+      <dl class="seat-card-people">
+        <dt>Partner</dt><dd id="waiting-seat-teammate"></dd>
+        <dt>Against</dt><dd id="waiting-seat-opponents"></dd>
+      </dl>
+      <p class="helper" style="margin:0;">The host will start round 1 shortly.</p>
+    </div>
+
     <section class="code-card">
       <p class="code-card-label">Game code</p>
       <h1 class="waiting-code-display" id="waiting-code">----</h1>
@@ -44,17 +56,6 @@ import GameLayout from '../layouts/GameLayout.astro';
       <strong id="waiting-count">0</strong> of <span id="waiting-total">0</span> players are here
     </p>
     <div id="waiting-player-list" class="chips"></div>
-
-    <!-- Shown to players once seats are assigned -->
-    <div id="waiting-seat-info" style="display:none;" class="index-card seat-card">
-      <p class="seat-card-label">Your seat</p>
-      <h2 id="waiting-seat-table" class="seat-card-table"></h2>
-      <dl class="seat-card-people">
-        <dt>Partner</dt><dd id="waiting-seat-teammate"></dd>
-        <dt>Against</dt><dd id="waiting-seat-opponents"></dd>
-      </dl>
-      <p class="helper" style="margin:0;">The host will start round 1 shortly.</p>
-    </div>
 
     <div id="host-seat-layout" style="display:none;" class="seat-layout"></div>
 
@@ -129,7 +130,7 @@ import GameLayout from '../layouts/GameLayout.astro';
           <div class="bunco-die" id="bunco-d2">⚄</div>
           <div class="bunco-die" id="bunco-d3">⚄</div>
         </div>
-        <div id="bunco-pts">+21 points. Round over!</div>
+        <div id="bunco-pts">Your team wins this table!</div>
       </div>
     </div>
 
@@ -168,6 +169,9 @@ import GameLayout from '../layouts/GameLayout.astro';
       <div class="bunco-picker-card" role="dialog" aria-modal="true" aria-labelledby="bunco-picker-title">
         <h2 id="bunco-picker-title" class="bunco-picker-title">Who rolled the Bunco?</h2>
         <div id="bunco-picker-list" class="bunco-picker-list"></div>
+        <p id="bunco-picker-ghost-note" class="helper" hidden>
+          Ghosts can't earn a Bunco. If you rolled one for a ghost, add it to their team's points instead.
+        </p>
         <button id="bunco-picker-cancel" class="btn-quiet btn-block">Cancel</button>
       </div>
     </div>

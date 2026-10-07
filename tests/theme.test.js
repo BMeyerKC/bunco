@@ -11,7 +11,6 @@ import {
 beforeEach(() => {
   localStorage.clear();
   document.documentElement.removeAttribute('data-theme');
-  document.documentElement.removeAttribute('data-bs-theme');
 });
 
 describe('resolveTheme', () => {
@@ -33,10 +32,9 @@ describe('resolveTheme', () => {
 });
 
 describe('applyTheme', () => {
-  test('sets both data-theme and data-bs-theme on <html>', () => {
+  test('sets data-theme on <html>', () => {
     applyTheme('dark');
     expect(document.documentElement.getAttribute('data-theme')).toBe('dark');
-    expect(document.documentElement.getAttribute('data-bs-theme')).toBe('dark');
   });
 });
 

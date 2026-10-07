@@ -6,7 +6,7 @@ import { createGame, addPlayer, claimGhostSeat, watchGame, getGame, saveRoundAss
          EVENT, logEvent, logGameOrigin } from './firebase.js';
 import { captureOrigin } from './geo.js';
 import { generateGameCode, assignRandomSeats,
-         calculateNextRoundSeating, determineWinner, updateStandings, buildTableLayout } from './game-logic.js';
+         calculateNextRoundSeating, roundWinners, updateStandings, buildTableLayout } from './game-logic.js';
 import { showView, showToast, getParam, getDeviceId, rememberActiveGame } from './ui.js';
 import { renderTableCards } from './table-cards.js';
 import { renderTally, TARGET } from './tally.js';
@@ -242,12 +242,21 @@ export function onGameUpdate(data) {
 
     const list = document.getElementById('waiting-player-list');
     if (list) {
-      const existing = new Set([...list.querySelectorAll('.player-chip')].map(el => el.textContent));
+      const existing = new Set([...list.querySelectorAll('.player-chip')].map(el => el.dataset.name));
       list.innerHTML = '';
-      Object.values(players).forEach(p => {
+      // Real people first; ghosts after, marked so nobody goes looking for them.
+      const ordered = [...Object.values(players)].sort((a, b) => Number(!!a.isGhost) - Number(!!b.isGhost));
+      ordered.forEach(p => {
         const chip = document.createElement('span');
-        chip.className = 'player-chip' + (existing.has(p.name) ? '' : ' chip-new');
+        chip.className = 'player-chip' + (p.isGhost ? ' is-ghost' : '') + (existing.has(p.name) ? '' : ' chip-new');
+        chip.dataset.name = p.name;
         chip.textContent = p.name;
+        if (p.isGhost) {
+          const tag = document.createElement('span');
+          tag.className = 'chip-tag';
+          tag.textContent = 'ghost';
+          chip.append(' ', tag);
+        }
         list.appendChild(chip);
       });
     }
@@ -447,6 +456,18 @@ function navigateToScoring(data) {
     .filter(Boolean)
     .join(' & ');
 
+  // Sides are the table's, shared by every phone at it; the labels are this
+  // phone's, so each player sees their own team called "Your team".
+  const mySide = assignments[myPlayerId]?.side;
+  const sideLabel = side => !mySide ? (side === 'us' ? 'Us' : 'Them')
+    : side === mySide ? 'Your team' : 'Opponents';
+  for (const side of ['us', 'them']) {
+    const half = document.getElementById(`sc-${side}`);
+    half.querySelector('.half-team-label').textContent = sideLabel(side);
+    half.querySelector('.side-add')?.setAttribute('aria-label', `Add a point for ${sideLabel(side).toLowerCase()}`);
+    document.getElementById(`sc-${side}-dec`).setAttribute('aria-label', `Take a point from ${sideLabel(side).toLowerCase()}`);
+  }
+
   const usNameEl = document.getElementById('sc-us-names');
   const themNameEl = document.getElementById('sc-them-names');
   if (usNameEl) usNameEl.textContent = usPlayers;
@@ -523,8 +544,11 @@ function openBuncoPicker(roundNumber) {
   const assignments = gameData?.rounds?.[roundNumber]?.assignments || {};
   const table = buildTableLayout(players, assignments, gameData.meta.tables)
     .find(t => t.tableId === myTableId);
-  const seated = table ? [...table.us, ...table.them] : [];
+  // Ghosts can't earn a Bunco: their three-of-a-kind just counts as points.
+  const seated = table ? [...table.us, ...table.them].filter(p => !p.isGhost) : [];
   if (seated.length === 0) return;
+  const hasGhost = table && [...table.us, ...table.them].some(p => p.isGhost);
+  document.getElementById('bunco-picker-ghost-note').hidden = !hasGhost;
 
   const list = document.getElementById('bunco-picker-list');
   list.innerHTML = '';
@@ -760,11 +784,7 @@ function showBetweenRoundsView(data) {
   const buncos     = data.rounds?.[round]?.buncos       || {};
   const numTables  = data.meta.tables;
 
-  const roundResults = {};
-  for (let t = 1; t <= numTables; t++) {
-    const tb = tables[t] || {};
-    roundResults[t] = { winner: determineWinner(tb.usScore || 0, tb.themScore || 0) };
-  }
+  const roundResults = roundWinners(tables, assignments, buncos, numTables);
 
   const newStandings = updateStandings(data.standings || {}, tables, roundResults, assignments, buncos);
 
@@ -830,10 +850,18 @@ function showBetweenRoundsView(data) {
     startBtn.textContent   = round === 6 ? 'See final standings' : `Start round ${round + 1}`;
     startBtn.disabled      = false;
   }
-  if (waitMsg) waitMsg.style.display = (!amHost && round < 6) ? '' : 'none';
+  if (waitMsg) {
+    waitMsg.style.display = amHost ? 'none' : '';
+    waitMsg.textContent = round === 6
+      ? 'The host will open the final standings.'
+      : 'The host will start the next round.';
+  }
 
   const brLink = document.getElementById('br-standings-link');
-  if (brLink) brLink.href = `standings.html?code=${gameCode}`;
+  if (brLink) {
+    brLink.href = `standings.html?code=${gameCode}`;
+    brLink.style.display = amHost && round === 6 ? 'none' : '';
+  }
 
   showView('view-between-rounds');
 
@@ -869,11 +897,7 @@ async function prepareNextRound(round, tables, assignments, buncos, players, num
   logEvent(gameCode, EVENT.STANDINGS_SAVED, { round, source: 'game' }).catch(() => {});
   if (round >= 6) return;
 
-  const roundResults = {};
-  for (let t = 1; t <= numTables; t++) {
-    const tb = tables[t] || {};
-    roundResults[t] = { winner: determineWinner(tb.usScore || 0, tb.themScore || 0) };
-  }
+  const roundResults = roundWinners(tables, assignments, buncos, numTables);
 
   const nextAssignments = calculateNextRoundSeating(assignments, roundResults, numTables);
   await saveRoundAssignments(gameCode, round + 1, nextAssignments);

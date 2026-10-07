@@ -73,7 +73,7 @@ test.describe('standings page host advance', () => {
 
     await btn.click();
 
-    await expect(page.locator('#round-indicator')).toHaveText('Game complete!');
+    await expect(page.locator('#round-indicator')).toHaveText('Game over. Thanks for playing!');
     await expect(page.locator('#advance-round-section')).toBeHidden();
     await expect.poll(async () => {
       const res = await request.get(`${DB}/games/${code}/meta/currentRound.json`);
@@ -173,7 +173,7 @@ test.describe('standings page returns a seated player to scoring', () => {
     );
 
     await page.goto(`/standings.html?code=${code}`);
-    await expect(page.locator('#round-indicator')).toHaveText('Round 1 of 6 — Live');
+    await expect(page.locator('#round-indicator')).toHaveText('Round 1 of 6, updating live');
 
     // Host advances the round from elsewhere (their own device/tab).
     await request.put(`${DB}/games/${code}/meta/currentRound.json`, { data: 2 });
@@ -192,11 +192,11 @@ test.describe('standings page returns a seated player to scoring', () => {
     );
 
     await page.goto(`/standings.html?code=${code}`);
-    await expect(page.locator('#round-indicator')).toHaveText('Round 1 of 6 — Live');
+    await expect(page.locator('#round-indicator')).toHaveText('Round 1 of 6, updating live');
 
     await request.put(`${DB}/games/${code}/meta/currentRound.json`, { data: 2 });
 
-    await expect(page.locator('#round-indicator')).toHaveText('Round 2 of 6 — Live');
+    await expect(page.locator('#round-indicator')).toHaveText('Round 2 of 6, updating live');
     await expect(page).toHaveURL(/\/standings\.html\?code=/);
   });
 });
