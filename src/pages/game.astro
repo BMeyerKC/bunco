@@ -33,6 +33,18 @@ import GameLayout from '../layouts/GameLayout.astro';
 
   <!-- VIEW: Waiting room -->
   <div id="view-waiting" data-view style="display:none;" class="page">
+    <!-- Seat card first: once seated, it's the thing a player needs -->
+    <!-- Shown to players once seats are assigned -->
+    <div id="waiting-seat-info" style="display:none;" class="index-card seat-card">
+      <p class="seat-card-label">Your seat</p>
+      <h2 id="waiting-seat-table" class="seat-card-table"></h2>
+      <dl class="seat-card-people">
+        <dt>Partner</dt><dd id="waiting-seat-teammate"></dd>
+        <dt>Against</dt><dd id="waiting-seat-opponents"></dd>
+      </dl>
+      <p class="helper" style="margin:0;">The host will start round 1 shortly.</p>
+    </div>
+
     <section class="code-card">
       <p class="code-card-label">Game code</p>
       <h1 class="waiting-code-display" id="waiting-code">----</h1>
@@ -44,17 +56,6 @@ import GameLayout from '../layouts/GameLayout.astro';
       <strong id="waiting-count">0</strong> of <span id="waiting-total">0</span> players are here
     </p>
     <div id="waiting-player-list" class="chips"></div>
-
-    <!-- Shown to players once seats are assigned -->
-    <div id="waiting-seat-info" style="display:none;" class="index-card seat-card">
-      <p class="seat-card-label">Your seat</p>
-      <h2 id="waiting-seat-table" class="seat-card-table"></h2>
-      <dl class="seat-card-people">
-        <dt>Partner</dt><dd id="waiting-seat-teammate"></dd>
-        <dt>Against</dt><dd id="waiting-seat-opponents"></dd>
-      </dl>
-      <p class="helper" style="margin:0;">The host will start round 1 shortly.</p>
-    </div>
 
     <div id="host-seat-layout" style="display:none;" class="seat-layout"></div>
 

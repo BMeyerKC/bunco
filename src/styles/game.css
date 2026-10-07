@@ -233,7 +233,7 @@
   box-shadow: var(--shadow);
   transform: rotate(-1.5deg);
 }
-:root[data-theme="dark"] #bunco-btn { color: #2a1615; }
+:root[data-theme="dark"] #bunco-btn:not([data-claimed="true"]) { color: #2a1615; }
 #bunco-btn:hover { filter: brightness(1.06); }
 #bunco-btn[data-claimed="true"] {
   background: var(--card);

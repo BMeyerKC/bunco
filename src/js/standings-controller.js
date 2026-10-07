@@ -72,8 +72,11 @@ if (!code) {
 
     // Live table cards
     const tableCardsEl = document.getElementById('table-cards');
-    if (data.rounds?.[1]?.assignments && tableCardsEl) {
-      latestTables = buildTableLayout(data.players || {}, data.rounds[1].assignments, data.meta.tables);
+    const finished = isFinal || round >= 7;
+    if (tableCardsEl) tableCardsEl.hidden = finished;
+    const seating = data.rounds?.[round]?.assignments || data.rounds?.[1]?.assignments;
+    if (seating && tableCardsEl && !finished) {
+      latestTables = buildTableLayout(data.players || {}, seating, data.meta.tables);
 
       if (round >= 1 && round !== watchedRound) {
         if (tableScoreUnsub) tableScoreUnsub();

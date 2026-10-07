@@ -242,12 +242,21 @@ export function onGameUpdate(data) {
 
     const list = document.getElementById('waiting-player-list');
     if (list) {
-      const existing = new Set([...list.querySelectorAll('.player-chip')].map(el => el.textContent));
+      const existing = new Set([...list.querySelectorAll('.player-chip')].map(el => el.dataset.name));
       list.innerHTML = '';
-      Object.values(players).forEach(p => {
+      // Real people first; ghosts after, marked so nobody goes looking for them.
+      const ordered = [...Object.values(players)].sort((a, b) => Number(!!a.isGhost) - Number(!!b.isGhost));
+      ordered.forEach(p => {
         const chip = document.createElement('span');
-        chip.className = 'player-chip' + (existing.has(p.name) ? '' : ' chip-new');
+        chip.className = 'player-chip' + (p.isGhost ? ' is-ghost' : '') + (existing.has(p.name) ? '' : ' chip-new');
+        chip.dataset.name = p.name;
         chip.textContent = p.name;
+        if (p.isGhost) {
+          const tag = document.createElement('span');
+          tag.className = 'chip-tag';
+          tag.textContent = 'ghost';
+          chip.append(' ', tag);
+        }
         list.appendChild(chip);
       });
     }
@@ -446,6 +455,18 @@ function navigateToScoring(data) {
     .map(([id]) => players[id]?.name)
     .filter(Boolean)
     .join(' & ');
+
+  // Sides are the table's, shared by every phone at it; the labels are this
+  // phone's, so each player sees their own team called "Your team".
+  const mySide = assignments[myPlayerId]?.side;
+  const sideLabel = side => !mySide ? (side === 'us' ? 'Us' : 'Them')
+    : side === mySide ? 'Your team' : 'Opponents';
+  for (const side of ['us', 'them']) {
+    const half = document.getElementById(`sc-${side}`);
+    half.querySelector('.half-team-label').textContent = sideLabel(side);
+    half.querySelector('.side-add')?.setAttribute('aria-label', `Add a point for ${sideLabel(side).toLowerCase()}`);
+    document.getElementById(`sc-${side}-dec`).setAttribute('aria-label', `Take a point from ${sideLabel(side).toLowerCase()}`);
+  }
 
   const usNameEl = document.getElementById('sc-us-names');
   const themNameEl = document.getElementById('sc-them-names');
@@ -830,10 +851,18 @@ function showBetweenRoundsView(data) {
     startBtn.textContent   = round === 6 ? 'See final standings' : `Start round ${round + 1}`;
     startBtn.disabled      = false;
   }
-  if (waitMsg) waitMsg.style.display = (!amHost && round < 6) ? '' : 'none';
+  if (waitMsg) {
+    waitMsg.style.display = amHost ? 'none' : '';
+    waitMsg.textContent = round === 6
+      ? 'The host will open the final standings.'
+      : 'The host will start the next round.';
+  }
 
   const brLink = document.getElementById('br-standings-link');
-  if (brLink) brLink.href = `standings.html?code=${gameCode}`;
+  if (brLink) {
+    brLink.href = `standings.html?code=${gameCode}`;
+    brLink.style.display = amHost && round === 6 ? 'none' : '';
+  }
 
   showView('view-between-rounds');
 

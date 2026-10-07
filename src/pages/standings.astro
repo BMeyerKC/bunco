@@ -27,10 +27,7 @@ import '../styles/game.css';
 
     <!-- Shown when ?code= param is present -->
     <div id="standings-section">
-      <div class="standings-head">
-        <h1 id="standings-title">Standings</h1>
-        <button id="leave-game-btn" class="btn-quiet btn-sm" style="display:none;">Leave game</button>
-      </div>
+      <h1 id="standings-title">Standings</h1>
       <p id="round-indicator" class="lead"></p>
 
       <!-- Live table cards — shown once seats are assigned -->
@@ -66,6 +63,8 @@ import '../styles/game.css';
         </div>
         <p class="helper standings-key">Ranked by wins, then Buncos, then total points.</p>
       </section>
+
+      <button id="leave-game-btn" class="btn-quiet" style="display:none; margin-top:20px;">Leave this game</button>
 
       <!-- AdSense — shown only on final standings; place the ad unit here after approval -->
       <div id="ad-slot" style="display:none;"></div>

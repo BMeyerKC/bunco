@@ -448,6 +448,8 @@ a.wordmark:hover { color: var(--pen); }
   transform: rotate(-1deg);
 }
 .player-chip:nth-child(even) { transform: rotate(1.2deg); }
+.player-chip.is-ghost { border-style: dashed; color: var(--muted); box-shadow: none; }
+.chip-tag { font-size: var(--fs-caption); font-weight: 700; }
 .player-chip.chip-new { animation: chipSlideIn 0.25s ease; }
 @keyframes chipSlideIn {
   from { translate: 0 8px; opacity: 0; }
