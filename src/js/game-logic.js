@@ -93,6 +93,33 @@ export function determineWinner(usScore, themScore) {
 }
 
 /**
+ * Decides each table's winner for a round. A Bunco wins the table outright
+ * for the roller's team, whatever the tapped score; otherwise the higher
+ * score wins (see determineWinner).
+ *
+ * @param {{ [tableId: number]: { usScore?, themScore? } }} tables
+ * @param {{ [id: string]: { tableId, side } }} assignments
+ * @param {{ [id: string]: number }} buncos  player → bunco count this round
+ * @param {number} numTables
+ * @returns {{ [tableId: number]: { winner: 'us'|'them', bunco: boolean } }}
+ */
+export function roundWinners(tables, assignments, buncos, numTables) {
+  const buncoSide = {};
+  for (const [id, count] of Object.entries(buncos || {})) {
+    const a = assignments?.[id];
+    if (count && a) buncoSide[a.tableId] = a.side;
+  }
+  const results = {};
+  for (let t = 1; t <= numTables; t++) {
+    const tb = tables?.[t] || {};
+    results[t] = buncoSide[t]
+      ? { winner: buncoSide[t], bunco: true }
+      : { winner: determineWinner(tb.usScore || 0, tb.themScore || 0), bunco: false };
+  }
+  return results;
+}
+
+/**
  * Merges round results into cumulative standings.
  *
  * @param {{ [id: string]: { wins, losses, buncos, totalPoints } }} currentStandings

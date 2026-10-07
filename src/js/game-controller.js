@@ -6,7 +6,7 @@ import { createGame, addPlayer, claimGhostSeat, watchGame, getGame, saveRoundAss
          EVENT, logEvent, logGameOrigin } from './firebase.js';
 import { captureOrigin } from './geo.js';
 import { generateGameCode, assignRandomSeats,
-         calculateNextRoundSeating, determineWinner, updateStandings, buildTableLayout } from './game-logic.js';
+         calculateNextRoundSeating, roundWinners, updateStandings, buildTableLayout } from './game-logic.js';
 import { showView, showToast, getParam, getDeviceId, rememberActiveGame } from './ui.js';
 import { renderTableCards } from './table-cards.js';
 import { renderTally, TARGET } from './tally.js';
@@ -544,8 +544,11 @@ function openBuncoPicker(roundNumber) {
   const assignments = gameData?.rounds?.[roundNumber]?.assignments || {};
   const table = buildTableLayout(players, assignments, gameData.meta.tables)
     .find(t => t.tableId === myTableId);
-  const seated = table ? [...table.us, ...table.them] : [];
+  // Ghosts can't earn a Bunco: their three-of-a-kind just counts as points.
+  const seated = table ? [...table.us, ...table.them].filter(p => !p.isGhost) : [];
   if (seated.length === 0) return;
+  const hasGhost = table && [...table.us, ...table.them].some(p => p.isGhost);
+  document.getElementById('bunco-picker-ghost-note').hidden = !hasGhost;
 
   const list = document.getElementById('bunco-picker-list');
   list.innerHTML = '';
@@ -781,11 +784,7 @@ function showBetweenRoundsView(data) {
   const buncos     = data.rounds?.[round]?.buncos       || {};
   const numTables  = data.meta.tables;
 
-  const roundResults = {};
-  for (let t = 1; t <= numTables; t++) {
-    const tb = tables[t] || {};
-    roundResults[t] = { winner: determineWinner(tb.usScore || 0, tb.themScore || 0) };
-  }
+  const roundResults = roundWinners(tables, assignments, buncos, numTables);
 
   const newStandings = updateStandings(data.standings || {}, tables, roundResults, assignments, buncos);
 
@@ -898,11 +897,7 @@ async function prepareNextRound(round, tables, assignments, buncos, players, num
   logEvent(gameCode, EVENT.STANDINGS_SAVED, { round, source: 'game' }).catch(() => {});
   if (round >= 6) return;
 
-  const roundResults = {};
-  for (let t = 1; t <= numTables; t++) {
-    const tb = tables[t] || {};
-    roundResults[t] = { winner: determineWinner(tb.usScore || 0, tb.themScore || 0) };
-  }
+  const roundResults = roundWinners(tables, assignments, buncos, numTables);
 
   const nextAssignments = calculateNextRoundSeating(assignments, roundResults, numTables);
   await saveRoundAssignments(gameCode, round + 1, nextAssignments);

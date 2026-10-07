@@ -1,6 +1,6 @@
 import { watchGame, watchAllTableScores, submitTableScore, startRound, getRoundAssignments, saveStandings, saveRoundAssignments, EVENT, logEvent } from './firebase.js';
 import { getParam, getDeviceId, forgetActiveGame } from './ui.js';
-import { buildTableLayout, calculateNextRoundSeating, determineWinner, updateStandings } from './game-logic.js';
+import { buildTableLayout, calculateNextRoundSeating, roundWinners, updateStandings } from './game-logic.js';
 import { renderTableCards } from './table-cards.js';
 import { initCodeEntry } from './code-entry.js';
 
@@ -191,15 +191,10 @@ if (!code) {
 
     // All tables submitted — advance round
     try {
-      const roundResults = {};
-      for (let t = 1; t <= numTables; t++) {
-        const { usScore, themScore } = tables[t];
-        roundResults[t] = { winner: determineWinner(usScore, themScore) };
-      }
-
       // Update standings
       const assignments = await getRoundAssignments(code, roundNumber);
       const buncos = data.rounds?.[roundNumber]?.buncos || {};
+      const roundResults = roundWinners(tables, assignments, buncos, numTables);
       const current = data.standings || {};
       const next = updateStandings(current, tables, roundResults, assignments, buncos);
       await saveStandings(code, next);
