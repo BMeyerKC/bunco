@@ -44,7 +44,7 @@ test.describe('home page resume banner', () => {
     await expect(banner).toBeVisible();
     await expect(page.locator('#resume-banner-text')).toContainText(code);
     const link = page.locator('#resume-banner-link');
-    await expect(link).toHaveText('Rejoin Game');
+    await expect(link).toHaveText('Rejoin game');
     await expect(link).toHaveAttribute('href', `game.html?code=${code}`);
   });
 
@@ -55,7 +55,7 @@ test.describe('home page resume banner', () => {
     await page.goto('/');
 
     const link = page.locator('#resume-banner-link');
-    await expect(link).toHaveText('View Final Standings');
+    await expect(link).toHaveText('See final standings');
     await expect(link).toHaveAttribute('href', `standings.html?code=${code}&final=true`);
   });
 

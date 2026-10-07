@@ -20,17 +20,33 @@ export function showView(viewId) {
  * Shows a toast notification styled by .app-toast classes in base.css.
  * @param {string} message
  * @param {'info'|'success'|'warning'} type
+ * @param {{ actionLabel?: string, onAction?: () => void, duration?: number }} [opts]
+ *   optional single action (e.g. Undo) shown as a button in the toast
  */
-export function showToast(message, type = 'info') {
+export function showToast(message, type = 'info', opts = {}) {
   const existing = document.getElementById('bunco-toast');
   if (existing) existing.remove();
 
   const toast = document.createElement('div');
   toast.id = 'bunco-toast';
   toast.className = `app-toast app-toast-${type}`;
-  toast.textContent = message;
+  toast.setAttribute('role', 'status');
+
+  const text = document.createElement('span');
+  text.textContent = message;
+  toast.appendChild(text);
+
+  if (opts.actionLabel && opts.onAction) {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'app-toast-action';
+    btn.textContent = opts.actionLabel;
+    btn.addEventListener('click', () => { toast.remove(); opts.onAction(); });
+    toast.appendChild(btn);
+  }
+
   document.body.appendChild(toast);
-  setTimeout(() => toast.remove(), 3500);
+  setTimeout(() => toast.remove(), opts.duration ?? (opts.onAction ? 6000 : 3500));
 }
 
 /**

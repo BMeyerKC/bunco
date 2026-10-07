@@ -13,7 +13,7 @@ test("host join form appears and submitting adds host to player list", async ({
 
   try {
     await hostPage.goto(`${baseURL}/index.html`);
-    await hostPage.click('a:has-text("Host Game")');
+    await hostPage.click('a:has-text("Host a game night")');
     await hostPage.locator("#view-setup").waitFor({ state: "visible" });
     await hostPage.click("#create-game-btn");
     await hostPage.locator("#view-waiting").waitFor({ state: "visible" });

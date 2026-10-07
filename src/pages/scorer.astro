@@ -2,92 +2,38 @@
 import Layout from '../layouts/Layout.astro';
 import '../styles/game.css';
 ---
-<Layout title="Bunco Scorer">
-  <Fragment slot="head">
-    <style is:global>
-      html, body {
-        width: 100%;
-        background: var(--bg);
-      }
+<Layout title="Quick Scorer — Bunco">
+  <div id="app" class="scoreboard quick-board">
+    <div class="score-halves">
+      <div class="score-half" id="us-half">
+        <button type="button" class="side-add" aria-label="Add a point for Us"></button>
+        <div class="half-team-label">Us</div>
+        <div class="half-score-num" id="us-score" aria-live="polite">0</div>
+        <div class="tally" id="us-tally"></div>
+        <p class="tap-hint">Tap here to add a point</p>
+        <button type="button" class="half-dec-btn" id="us-dec" aria-label="Take a point from Us">−1</button>
+      </div>
 
-      /* Reuses .score-half / .half-team-label / .half-score-num /
-         .half-dec-btn / .score-half-divider from game.css so the quick
-         scorer matches the game scorer's look — including how it just
-         reflows in portrait instead of forcing a rotated layout. */
-      #app {
-        display: flex;
-        width: 100%;
-        height: 100vh;
-        position: relative;
-      }
+      <div class="score-half-divider" aria-hidden="true"></div>
 
-      #app .score-half-divider {
-        margin: 0;
-      }
-    </style>
-  </Fragment>
-
-  <a href="index.html" class="btn btn-sm btn-outline-secondary m-3 position-fixed top-0 start-0" style="z-index:100;">← Home</a>
-
-  <div id="app">
-    <div class="score-half" id="us-half">
-      <div class="half-team-label">Us</div>
-      <div class="half-score-num" id="us-score">0</div>
-      <button class="half-dec-btn" id="us-dec" aria-label="Decrease Us score">−</button>
+      <div class="score-half" id="them-half">
+        <button type="button" class="side-add" aria-label="Add a point for Them"></button>
+        <div class="half-team-label">Them</div>
+        <div class="half-score-num" id="them-score" aria-live="polite">0</div>
+        <div class="tally" id="them-tally"></div>
+        <p class="tap-hint">Tap here to add a point</p>
+        <button type="button" class="half-dec-btn" id="them-dec" aria-label="Take a point from Them">−1</button>
+      </div>
     </div>
 
-    <div class="score-half-divider"></div>
-
-    <div class="score-half" id="them-half">
-      <div class="half-team-label">Them</div>
-      <div class="half-score-num" id="them-score">0</div>
-      <button class="half-dec-btn" id="them-dec" aria-label="Decrease Them score">−</button>
+    <div class="score-footer">
+      <span class="score-goal">First to 21 wins the set</span>
+      <button type="button" id="new-set-btn" class="btn-ink btn-sm" disabled>New set</button>
     </div>
   </div>
 
   <script>
+    import '../js/quick-scorer.js';
     import '../js/quick-scorer-tracking.js';
-  </script>
-
-  <script is:inline>
-    let usScore = 0, themScore = 0;
-
-    function triggerScorePop(el) {
-      el.classList.remove('score-pop');
-      void el.offsetWidth; // force reflow to restart animation
-      el.classList.add('score-pop');
-    }
-
-    function render() {
-      document.getElementById('us-score').textContent = usScore;
-      document.getElementById('them-score').textContent = themScore;
-      document.getElementById('us-half').style.background =
-        usScore >= 21 ? 'var(--accent-soft)' : 'transparent';
-      document.getElementById('them-half').style.background =
-        themScore >= 21 ? 'var(--highlight-soft)' : 'transparent';
-    }
-
-    document.getElementById('us-half').addEventListener('click', e => {
-      if (e.target.closest('.half-dec-btn')) return;
-      usScore++;
-      triggerScorePop(document.getElementById('us-score'));
-      render();
-    });
-    document.getElementById('them-half').addEventListener('click', e => {
-      if (e.target.closest('.half-dec-btn')) return;
-      themScore++;
-      triggerScorePop(document.getElementById('them-score'));
-      render();
-    });
-    document.getElementById('us-dec').addEventListener('click', e => {
-      e.stopPropagation();
-      if (usScore > 0) usScore--;
-      render();
-    });
-    document.getElementById('them-dec').addEventListener('click', e => {
-      e.stopPropagation();
-      if (themScore > 0) themScore--;
-      render();
-    });
   </script>
 </Layout>

@@ -1,0 +1,21 @@
+---
+// src/components/DieIcon.astro — hand-drawn die face, pips in currentColor.
+type Props = { face?: 1 | 2 | 3 | 4 | 5 | 6; class?: string };
+const { face = 5, class: className = 'die-icon' } = Astro.props;
+
+const P = { tl: [9, 9], tr: [23, 9], ml: [9, 16], c: [16, 16], mr: [23, 16], bl: [9, 23], br: [23, 23] };
+const faces = {
+  1: ['c'],
+  2: ['tr', 'bl'],
+  3: ['tr', 'c', 'bl'],
+  4: ['tl', 'tr', 'bl', 'br'],
+  5: ['tl', 'tr', 'c', 'bl', 'br'],
+  6: ['tl', 'tr', 'ml', 'mr', 'bl', 'br'],
+};
+const pips = faces[face].map(k => P[k]);
+---
+<svg class={className} viewBox="0 0 32 32" aria-hidden="true" focusable="false">
+  <path d="M7 3.5 C 15 2.6, 20 2.8, 25.2 3.4 C 28 3.8, 28.7 5.4, 28.6 8 C 28.9 15, 28.8 20, 28.4 25 C 28.2 27.6, 26.8 28.6, 24.4 28.6 C 17 29, 12 28.9, 7.4 28.5 C 4.8 28.3, 3.5 27, 3.5 24.5 C 3.2 17, 3.3 12, 3.6 7.6 C 3.8 4.9, 5 3.7, 7 3.5 Z"
+        fill="var(--card)" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
+  {pips.map(([x, y]) => <circle cx={x} cy={y} r="2.4" fill="currentColor" />)}
+</svg>

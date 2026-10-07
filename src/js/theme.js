@@ -15,10 +15,9 @@ export function resolveTheme(stored, systemPrefersDark) {
   return systemPrefersDark ? 'dark' : 'light';
 }
 
-/** Sets the theme on <html> for both our tokens and Bootstrap. */
+/** Sets the theme on <html>; base.css tokens key off data-theme. */
 export function applyTheme(theme) {
   document.documentElement.setAttribute('data-theme', theme);
-  document.documentElement.setAttribute('data-bs-theme', theme);
 }
 
 /** @returns {string|null} stored override, or null (also when storage is unavailable) */

@@ -26,11 +26,6 @@ test.describe('feedback widget', () => {
     await page.goto('/');
     await page.click('#feedback-fab');
     await expect(page.locator('#feedback-modal')).toBeVisible();
-    // Bootstrap moves focus onto the modal only once its fade-in transition
-    // finishes; Escape is a one-shot key press with no retry, so it must be
-    // sent after that focus transfer or the keydown listener (bound to the
-    // modal element, not document) never sees it.
-    await expect(page.locator('#feedback-modal')).toBeFocused();
     await page.keyboard.press('Escape');
     await expect(page.locator('#feedback-modal')).not.toBeVisible();
   });
@@ -41,7 +36,7 @@ test.describe('feedback widget', () => {
     await page.fill('#feedback-message', `[e2e] automated check ${Date.now()}`);
     await page.click('#feedback-send');
 
-    await expect(page.locator('#bunco-toast')).toHaveText('Thanks — we got it!');
+    await expect(page.locator('#bunco-toast')).toHaveText('Feedback sent. Thank you!');
     await expect(page.locator('#feedback-modal')).not.toBeVisible();
   });
 

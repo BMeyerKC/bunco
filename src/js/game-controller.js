@@ -6,9 +6,11 @@ import { createGame, addPlayer, claimGhostSeat, watchGame, getGame, saveRoundAss
          EVENT, logEvent, logGameOrigin } from './firebase.js';
 import { captureOrigin } from './geo.js';
 import { generateGameCode, assignRandomSeats,
-         calculateNextRoundSeating, determineWinner, updateStandings, buildTableLayout } from './game-logic.js';
+         calculateNextRoundSeating, roundWinners, updateStandings, buildTableLayout } from './game-logic.js';
 import { showView, showToast, getParam, getDeviceId, rememberActiveGame } from './ui.js';
 import { renderTableCards } from './table-cards.js';
+import { renderTally, TARGET } from './tally.js';
+import { keepScreenAwake } from './wake-lock.js';
 import { isNameTaken, getAvailableGhostSeats, allTablesSubmitted, pickGhostNames, getGhostOnlyTableIds } from './game-utils.js';
 
 const deviceId = getDeviceId();
@@ -101,9 +103,9 @@ async function handleCreateGame() {
     subscribeToGame();
   } catch (err) {
     console.error('Failed to create game:', err);
-    showToast('Failed to create game — check console for details.', 'warning');
+    showToast("The game wasn't created. Check your connection and try again.", 'warning');
     btn.disabled = false;
-    btn.textContent = 'Create Game';
+    btn.textContent = 'Create game';
   }
 }
 
@@ -112,23 +114,23 @@ async function handleCreateGame() {
 async function handleJoin() {
   const btn  = document.getElementById('join-btn');
   const name = document.getElementById('join-name').value.trim();
-  if (!name) { showToast('Please enter your name.', 'warning'); return; }
+  if (!name) { showToast('Enter your name to join.', 'warning'); return; }
 
   btn.disabled = true;
   btn.textContent = 'Joining…';
 
   const game = await getGame(gameCode);
   if (!game) {
-    showToast('Game not found. Check your code.', 'warning');
+    showToast('No game uses that code. Check it with your host.', 'warning');
     btn.disabled = false;
-    btn.textContent = 'Join';
+    btn.textContent = 'Join game';
     return;
   }
 
   if (isNameTaken(game.players || {}, name)) {
-    showToast('That name is taken — try adding an initial.', 'warning');
+    showToast('Someone already has that name. Add an initial.', 'warning');
     btn.disabled = false;
-    btn.textContent = 'Join';
+    btn.textContent = 'Join game';
     return;
   }
 
@@ -173,7 +175,7 @@ function showWaitingRoom(isHostView) {
 async function handleHostJoinAsPlayer() {
   const btn  = document.getElementById('host-join-btn');
   const name = document.getElementById('host-join-name').value.trim();
-  if (!name) { showToast('Please enter your name.', 'warning'); return; }
+  if (!name) { showToast('Enter your name to join.', 'warning'); return; }
 
   btn.disabled = true;
   btn.textContent = 'Joining…';
@@ -240,12 +242,21 @@ export function onGameUpdate(data) {
 
     const list = document.getElementById('waiting-player-list');
     if (list) {
-      const existing = new Set([...list.querySelectorAll('.player-chip')].map(el => el.textContent));
+      const existing = new Set([...list.querySelectorAll('.player-chip')].map(el => el.dataset.name));
       list.innerHTML = '';
-      Object.values(players).forEach(p => {
+      // Real people first; ghosts after, marked so nobody goes looking for them.
+      const ordered = [...Object.values(players)].sort((a, b) => Number(!!a.isGhost) - Number(!!b.isGhost));
+      ordered.forEach(p => {
         const chip = document.createElement('span');
-        chip.className = 'player-chip' + (existing.has(p.name) ? '' : ' chip-new');
+        chip.className = 'player-chip' + (p.isGhost ? ' is-ghost' : '') + (existing.has(p.name) ? '' : ' chip-new');
+        chip.dataset.name = p.name;
         chip.textContent = p.name;
+        if (p.isGhost) {
+          const tag = document.createElement('span');
+          tag.className = 'chip-tag';
+          tag.textContent = 'ghost';
+          chip.append(' ', tag);
+        }
         list.appendChild(chip);
       });
     }
@@ -327,12 +338,12 @@ function renderSubmittedDots(tables, numTables) {
   for (let t = 1; t <= numTables; t++) {
     const done = !!tables[t]?.submitted;
     const wrap = document.createElement('div');
-    wrap.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:4px;';
+    wrap.className = `table-progress ${done ? 'is-done' : ''}`;
     const dot = document.createElement('div');
     dot.className = `table-dot ${done ? 'submitted' : 'waiting'}`;
     const label = document.createElement('div');
-    label.style.cssText = `font-size:var(--fs-caption);font-weight:700;color:${done ? 'var(--accent)' : 'var(--very-muted)'};`;
-    label.textContent = `T${t}`;
+    label.className = 'table-progress-label';
+    label.textContent = `Table ${t}`;
     wrap.appendChild(dot);
     wrap.appendChild(label);
     container.appendChild(wrap);
@@ -445,6 +456,18 @@ function navigateToScoring(data) {
     .filter(Boolean)
     .join(' & ');
 
+  // Sides are the table's, shared by every phone at it; the labels are this
+  // phone's, so each player sees their own team called "Your team".
+  const mySide = assignments[myPlayerId]?.side;
+  const sideLabel = side => !mySide ? (side === 'us' ? 'Us' : 'Them')
+    : side === mySide ? 'Your team' : 'Opponents';
+  for (const side of ['us', 'them']) {
+    const half = document.getElementById(`sc-${side}`);
+    half.querySelector('.half-team-label').textContent = sideLabel(side);
+    half.querySelector('.side-add')?.setAttribute('aria-label', `Add a point for ${sideLabel(side).toLowerCase()}`);
+    document.getElementById(`sc-${side}-dec`).setAttribute('aria-label', `Take a point from ${sideLabel(side).toLowerCase()}`);
+  }
+
   const usNameEl = document.getElementById('sc-us-names');
   const themNameEl = document.getElementById('sc-them-names');
   if (usNameEl) usNameEl.textContent = usPlayers;
@@ -466,10 +489,11 @@ function renderScores() {
     triggerScorePop(themEl);
   }
 
-  document.getElementById('sc-us').style.background =
-    usScore >= 21 ? 'var(--accent-soft)' : 'transparent';
-  document.getElementById('sc-them').style.background =
-    themScore >= 21 ? 'var(--highlight-soft)' : 'transparent';
+  renderTally(document.getElementById('sc-us-tally'), usScore);
+  renderTally(document.getElementById('sc-them-tally'), themScore);
+  document.getElementById('sc-us').classList.toggle('is-winning', usScore >= TARGET);
+  document.getElementById('sc-them').classList.toggle('is-winning', themScore >= TARGET);
+  document.getElementById('view-scoring').classList.toggle('has-started', usScore + themScore > 0);
 }
 
 function triggerScorePop(el) {
@@ -483,23 +507,25 @@ function attachScoringListeners(roundNumber) {
 
   document.getElementById('sc-us').addEventListener('click', e => {
     if (e.target.closest('#sc-us-dec')) return;
+    keepScreenAwake();
     incrementTableScore(gameCode, roundNumber, myTableId, 'us')
-      .catch(() => showToast('Tap not saved — check connection.', 'warning'));
+      .catch(() => showToast("That point didn't save. Check your connection.", 'warning'));
   }, { signal });
   document.getElementById('sc-them').addEventListener('click', e => {
     if (e.target.closest('#sc-them-dec')) return;
+    keepScreenAwake();
     incrementTableScore(gameCode, roundNumber, myTableId, 'them')
-      .catch(() => showToast('Tap not saved — check connection.', 'warning'));
+      .catch(() => showToast("That point didn't save. Check your connection.", 'warning'));
   }, { signal });
   document.getElementById('sc-us-dec').addEventListener('click', e => {
     e.stopPropagation();
     decrementTableScore(gameCode, roundNumber, myTableId, 'us')
-      .catch(() => showToast('Tap not saved — check connection.', 'warning'));
+      .catch(() => showToast("That point didn't save. Check your connection.", 'warning'));
   }, { signal });
   document.getElementById('sc-them-dec').addEventListener('click', e => {
     e.stopPropagation();
     decrementTableScore(gameCode, roundNumber, myTableId, 'them')
-      .catch(() => showToast('Tap not saved — check connection.', 'warning'));
+      .catch(() => showToast("That point didn't save. Check your connection.", 'warning'));
   }, { signal });
   document.getElementById('bunco-btn').addEventListener('click', e => {
     if (e.currentTarget.dataset.claimed === 'true') {
@@ -518,8 +544,11 @@ function openBuncoPicker(roundNumber) {
   const assignments = gameData?.rounds?.[roundNumber]?.assignments || {};
   const table = buildTableLayout(players, assignments, gameData.meta.tables)
     .find(t => t.tableId === myTableId);
-  const seated = table ? [...table.us, ...table.them] : [];
+  // Ghosts can't earn a Bunco: their three-of-a-kind just counts as points.
+  const seated = table ? [...table.us, ...table.them].filter(p => !p.isGhost) : [];
   if (seated.length === 0) return;
+  const hasGhost = table && [...table.us, ...table.them].some(p => p.isGhost);
+  document.getElementById('bunco-picker-ghost-note').hidden = !hasGhost;
 
   const list = document.getElementById('bunco-picker-list');
   list.innerHTML = '';
@@ -675,7 +704,7 @@ function updateJoinView(data) {
           ghostList.innerHTML = '';
           ghosts.forEach(({ ghostId, tableId, teammateName }) => {
             const btn = document.createElement('button');
-            btn.className = 'btn btn-outline-secondary w-100';
+            btn.className = 'btn-ink btn-block';
             btn.textContent = teammateName
               ? `Table ${tableId} — with ${teammateName}`
               : `Table ${tableId}`;
@@ -710,7 +739,7 @@ function handleClaimGhost(ghostId) {
 
   confirmBtn.onclick = async () => {
     const name = nameInput.value.trim();
-    if (!name) { showToast('Please enter your name.', 'warning'); return; }
+    if (!name) { showToast('Enter your name to join.', 'warning'); return; }
     confirmBtn.disabled = true;
     confirmBtn.textContent = 'Joining…';
     try {
@@ -755,17 +784,13 @@ function showBetweenRoundsView(data) {
   const buncos     = data.rounds?.[round]?.buncos       || {};
   const numTables  = data.meta.tables;
 
-  const roundResults = {};
-  for (let t = 1; t <= numTables; t++) {
-    const tb = tables[t] || {};
-    roundResults[t] = { winner: determineWinner(tb.usScore || 0, tb.themScore || 0) };
-  }
+  const roundResults = roundWinners(tables, assignments, buncos, numTables);
 
   const newStandings = updateStandings(data.standings || {}, tables, roundResults, assignments, buncos);
 
   // Header
   document.getElementById('br-round-title').textContent =
-    round === 6 ? 'Game Over!' : `Round ${round} Complete!`;
+    round === 6 ? 'That was round 6!' : `Round ${round} is done`;
 
   // Standings list
   const standingsList = document.getElementById('br-standings-list');
@@ -779,12 +804,12 @@ function showBetweenRoundsView(data) {
       .sort((a, b) => b.wins - a.wins || b.buncos - a.buncos || b.points - a.points);
 
     standingsList.innerHTML = rows.map((r, i) => `
-      <div style="display:flex;align-items:center;gap:8px;padding:6px 0;${i < rows.length - 1 ? 'border-bottom:1px solid var(--border);' : ''}">
-        <span style="color:var(--very-muted);min-width:18px;font-size:var(--fs-small);">${i + 1}</span>
-        <span style="flex:1;font-weight:600;font-size:var(--fs-body);">${esc(r.name)}</span>
-        <span style="color:var(--accent);font-weight:700;">${r.wins}W</span>
-        <span style="color:var(--muted);font-size:var(--fs-small);">${r.losses}L</span>
-        ${r.buncos > 0 ? `<span style="font-size:var(--fs-small);margin-left:2px;">🎲${r.buncos}</span>` : '<span style="min-width:24px;"></span>'}
+      <div class="mini-standing${i === 0 ? ' is-leader' : ''}">
+        <span class="mini-rank">${i + 1}</span>
+        <span class="mini-name">${esc(r.name)}</span>
+        <span class="mini-wins">${r.wins}W</span>
+        <span class="mini-losses">${r.losses}L</span>
+        <span class="mini-buncos">${r.buncos > 0 ? `🎲${r.buncos}` : ''}</span>
       </div>
     `).join('');
   }
@@ -822,13 +847,21 @@ function showBetweenRoundsView(data) {
   const waitMsg  = document.getElementById('br-waiting-msg');
   if (startBtn) {
     startBtn.style.display = amHost ? '' : 'none';
-    startBtn.textContent   = round === 6 ? 'View Final Standings' : `Start Round ${round + 1}`;
+    startBtn.textContent   = round === 6 ? 'See final standings' : `Start round ${round + 1}`;
     startBtn.disabled      = false;
   }
-  if (waitMsg) waitMsg.style.display = (!amHost && round < 6) ? '' : 'none';
+  if (waitMsg) {
+    waitMsg.style.display = amHost ? 'none' : '';
+    waitMsg.textContent = round === 6
+      ? 'The host will open the final standings.'
+      : 'The host will start the next round.';
+  }
 
   const brLink = document.getElementById('br-standings-link');
-  if (brLink) brLink.href = `standings.html?code=${gameCode}`;
+  if (brLink) {
+    brLink.href = `standings.html?code=${gameCode}`;
+    brLink.style.display = amHost && round === 6 ? 'none' : '';
+  }
 
   showView('view-between-rounds');
 
@@ -843,7 +876,7 @@ function showBetweenRoundsView(data) {
     prepareNextRound(round, tables, assignments, buncos, players, numTables, newStandings)
       .then(() => {
         if (startBtn && round < 6) {
-          startBtn.textContent = `Start Round ${round + 1}`;
+          startBtn.textContent = `Start round ${round + 1}`;
           startBtn.disabled    = false;
         }
       })
@@ -851,7 +884,7 @@ function showBetweenRoundsView(data) {
         console.error('Failed to prep next round:', err);
         betweenRoundsPrepForRound = 0;
         if (startBtn && round < 6) {
-          startBtn.textContent = `Start Round ${round + 1}`;
+          startBtn.textContent = `Start round ${round + 1}`;
           startBtn.disabled    = false;
         }
         showToast('Failed to prepare next round — please try again.', 'warning');
@@ -864,11 +897,7 @@ async function prepareNextRound(round, tables, assignments, buncos, players, num
   logEvent(gameCode, EVENT.STANDINGS_SAVED, { round, source: 'game' }).catch(() => {});
   if (round >= 6) return;
 
-  const roundResults = {};
-  for (let t = 1; t <= numTables; t++) {
-    const tb = tables[t] || {};
-    roundResults[t] = { winner: determineWinner(tb.usScore || 0, tb.themScore || 0) };
-  }
+  const roundResults = roundWinners(tables, assignments, buncos, numTables);
 
   const nextAssignments = calculateNextRoundSeating(assignments, roundResults, numTables);
   await saveRoundAssignments(gameCode, round + 1, nextAssignments);
@@ -905,6 +934,6 @@ document.getElementById('br-start-next-btn')?.addEventListener('click', async (e
   } catch {
     showToast('Error starting round — please try again.', 'warning');
     btn.disabled = false;
-    btn.textContent = `Start Round ${round + 1}`;
+    btn.textContent = `Start round ${round + 1}`;
   }
 });

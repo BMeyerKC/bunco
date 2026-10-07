@@ -1,8 +1,9 @@
 import { expect } from "@playwright/test";
 
 const selectors = {
-  hostLink: 'a:has-text("Host Game")',
+  hostLink: 'a:has-text("Host a game night")',
   setupView: "#view-setup",
+  playersInput: "#setup-players",
   tablesSelect: "#setup-tables",
   ghostsSelect: "#setup-ghosts",
   createButton: "#create-game-btn",
@@ -29,21 +30,16 @@ function buildRunId() {
   return Date.now().toString(36);
 }
 
-async function selectGhosts(hostPage, ghosts) {
-  const ghostValue = String(ghosts);
-  const ghostSelect = hostPage.locator(selectors.ghostsSelect);
-  await ghostSelect.waitFor({ state: "visible" });
-  await expect(ghostSelect).toBeEnabled();
-  await hostPage.waitForFunction((value) => {
-    const select = document.querySelector("#setup-ghosts");
-    if (!select) return false;
-    return Array.from(select.options).some((option) => option.value === value);
-  }, ghostValue);
-  await ghostSelect.evaluate((select, value) => {
-    select.value = value;
-    select.dispatchEvent(new Event("change", { bubbles: true }));
-  }, ghostValue);
-  await expect(ghostSelect).toHaveValue(ghostValue);
+// Host setup asks for a headcount; the page derives tables + ghost seats.
+// Every combination the specs use (2 tables, 0–7 ghosts) maps to a headcount
+// of tables*4 - ghosts, which the page turns back into the same layout.
+async function setHeadcount(hostPage, tables, ghosts) {
+  const players = hostPage.locator(selectors.playersInput);
+  await players.waitFor({ state: "visible" });
+  await players.fill(String(tables * 4 - ghosts));
+  await players.dispatchEvent("change");
+  await expect(hostPage.locator(selectors.tablesSelect)).toHaveValue(String(tables));
+  await expect(hostPage.locator(selectors.ghostsSelect)).toHaveValue(String(ghosts));
 }
 
 async function createPlayerSession({
@@ -81,8 +77,7 @@ export async function createGameAndStartRound({
   await hostPage.goto(`${baseURL}/index.html`);
   await hostPage.click(selectors.hostLink);
   await hostPage.locator(selectors.setupView).waitFor({ state: "visible" });
-  await hostPage.selectOption(selectors.tablesSelect, String(tables));
-  await selectGhosts(hostPage, ghosts);
+  await setHeadcount(hostPage, tables, ghosts);
   await hostPage.click(selectors.createButton);
 
   await hostPage.locator(selectors.waitingView).waitFor({ state: "visible" });
