@@ -171,7 +171,7 @@ if (!code) {
   }
 
   function advanceButtonLabel(round) {
-    return round >= 6 ? 'View Final Standings' : `Start Round ${round + 1}`;
+    return round >= 6 ? 'See final standings' : `Start round ${round + 1}`;
   }
 
   async function checkAndAdvanceRound(code, data, roundNumber) {

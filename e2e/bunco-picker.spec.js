@@ -149,7 +149,7 @@ test("bunco picker: player select, per-table lockout, round call, re-enable next
     // hostPage is guaranteed to have it, regardless of which two devices
     // pageA/pageB turned out to be.
     await expect(hostPage.locator("#br-start-next-btn")).toHaveText(
-      "Start Round 2",
+      "Start round 2",
     );
     await expect(hostPage.locator("#br-start-next-btn")).toBeEnabled();
     await hostPage.click("#br-start-next-btn", { timeout: 10000 });

@@ -63,13 +63,13 @@ test.describe('standings page host advance', () => {
     await request.delete(`${DB}/games/${code}.json`);
   });
 
-  test('round 6 complete shows View Final Standings and ends the game', async ({ page, request }) => {
+  test('round 6 complete shows See final standings and ends the game', async ({ page, request }) => {
     await request.put(`${DB}/games/${code}.json`, { data: seedGame(6) });
     await page.goto(`/standings.html?code=${code}`);
 
     const btn = page.locator('#advance-round-btn');
     await expect(btn).toBeVisible();
-    await expect(btn).toHaveText('View Final Standings');
+    await expect(btn).toHaveText('See final standings');
 
     await btn.click();
 
@@ -89,7 +89,7 @@ test.describe('standings page host advance', () => {
     // Advance round 1 -> 2
     const btn = page.locator('#advance-round-btn');
     await expect(btn).toBeVisible();
-    await expect(btn).toHaveText('Start Round 2');
+    await expect(btn).toHaveText('Start round 2');
     await btn.click();
     await expect.poll(async () => {
       const res = await request.get(`${DB}/games/${code}/meta/currentRound.json`);
@@ -104,7 +104,7 @@ test.describe('standings page host advance', () => {
 
     // Advance round 2 -> 3; a stale closure would silently replay round 1 instead
     await expect(btn).toBeVisible();
-    await expect(btn).toHaveText('Start Round 3');
+    await expect(btn).toHaveText('Start round 3');
     await btn.click();
     await expect.poll(async () => {
       const res = await request.get(`${DB}/games/${code}/meta/currentRound.json`);

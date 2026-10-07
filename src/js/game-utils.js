@@ -55,3 +55,18 @@ export function pickGhostNames(count) {
   }
   return picked;
 }
+
+export const MIN_TABLES  = 2;
+export const MAX_PLAYERS = 24;
+
+/**
+ * Turns the host's headcount into a table layout: as few tables as fit
+ * everyone (never fewer than two), with ghosts in the leftover seats.
+ * @param {number} players - real people playing, 1..MAX_PLAYERS
+ * @returns {{ players: number, tables: number, ghosts: number }}
+ */
+export function seatPlan(players) {
+  const n = Math.min(MAX_PLAYERS, Math.max(1, Math.round(Number(players) || 0)));
+  const tables = Math.max(MIN_TABLES, Math.ceil(n / 4));
+  return { players: n, tables, ghosts: tables * 4 - n };
+}
