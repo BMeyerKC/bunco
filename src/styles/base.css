@@ -104,6 +104,10 @@
 *, *::before, *::after { box-sizing: border-box; }
 
 html { -webkit-text-size-adjust: 100%; }
+button, input, select, textarea { font: inherit; color: inherit; }
+img, svg, canvas { vertical-align: middle; }
+ul, ol { padding-left: 1.5em; }
+abbr[title] { text-decoration: none; }
 
 body {
   margin: 0;
@@ -587,6 +591,9 @@ a.wordmark:hover { color: var(--pen); }
   font-weight: 800;
   cursor: pointer;
 }
+
+.join-form { max-width: 300px; }
+.join-form .btn-pen { margin-top: 18px; }
 
 /* ── Game code slots (js/code-entry.js) ──
    One real input lies over four die-shaped slots that mirror its value. */

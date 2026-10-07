@@ -586,26 +586,40 @@
 #br-start-next-btn { margin-bottom: 8px; }
 
 /* ══════════════════════════════════════════════════════════════
-   Standings rows (standings-controller.js)
+   Standings page (standings-controller.js)
    ══════════════════════════════════════════════════════════════ */
+.standings-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.standings-head h1 { margin: 0; }
+.section-title { font-size: var(--fs-h3); margin: 28px 0 8px; }
+.ghost-section .helper { margin-bottom: 12px; }
+.ghost-table-name { font-size: var(--fs-lead); margin-bottom: 10px; }
+.ghost-table-scores { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+.ghost-table-scores .field { text-align: center; font-size: var(--fs-lead); }
+.advance-card { margin: 20px 0 8px; border-color: var(--pen); }
+.advance-card p { font-weight: 700; margin-bottom: 12px; }
+
 .standings-row {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1.6em minmax(0, 1fr) repeat(4, 2.8em);
   align-items: center;
-  gap: 10px;
-  padding: 10px 14px;
-  margin-bottom: 6px;
-  border-radius: 8px;
-  background: var(--card);
-  border: 1px solid var(--hairline);
+  gap: 6px;
+  padding: 11px 10px;
+  border-bottom: 1px solid var(--rule);
 }
+.standings-header {
+  padding-block: 6px;
+  border-bottom: 2px solid var(--rule);
+  font-size: var(--fs-small);
+  font-weight: 800;
+  color: var(--ink-soft);
+}
+.standings-header abbr { text-decoration: none; cursor: help; }
 .standings-row-first {
-  background:
-    linear-gradient(100deg, transparent 0.5%, var(--marker-soft) 2.5%, var(--marker-soft) 97.5%, transparent 99.5%),
-    var(--card);
-  border-color: var(--marker);
+  background: linear-gradient(100deg, transparent 0.5%, var(--marker-soft) 2%, var(--marker-soft) 98%, transparent 99.5%);
 }
-.standings-rank { width: 20px; flex-shrink: 0; font-weight: 800; color: var(--muted); }
+.standings-rank { font-weight: 800; color: var(--muted); }
 .standings-rank-1 { color: var(--pen); }
-.standings-name { flex: 1; font-weight: 700; }
-.standings-stat { min-width: 28px; text-align: center; font-weight: 800; color: var(--muted); }
+.standings-name { font-weight: 700; overflow-wrap: anywhere; }
+.standings-stat { text-align: center; font-weight: 800; color: var(--muted); font-variant-numeric: tabular-nums; }
 .standings-stat-highlight { color: var(--ink); }
+.standings-key { margin-top: 10px; }

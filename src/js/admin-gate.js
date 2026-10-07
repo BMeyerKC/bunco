@@ -25,15 +25,15 @@ export function ensureAdminAccess() {
     const overlay = document.createElement('div');
     overlay.id = 'admin-gate';
     overlay.style.cssText =
-      'position:fixed;inset:0;background:var(--bg,#13111c);z-index:10000;' +
+      'position:fixed;inset:0;background:var(--paper);z-index:10000;' +
       'display:flex;align-items:center;justify-content:center;';
     overlay.innerHTML = `
       <form style="text-align:center;max-width:320px;width:100%;padding:24px;">
-        <h4 style="margin-bottom:16px;color:var(--fg);">Admin</h4>
-        <input id="admin-gate-pass" type="password" class="form-control mb-1"
+        <h4 style="margin-bottom:16px;color:var(--ink);">Admin</h4>
+        <input id="admin-gate-pass" type="password" class="field"
                placeholder="Passphrase" autocomplete="current-password" autofocus />
-        <p id="admin-gate-error" style="color:#dc2626;font-size:0.85rem;min-height:1.2em;margin:4px 0 8px;"></p>
-        <button type="submit" class="btn btn-primary w-100">Unlock</button>
+        <p id="admin-gate-error" class="tool-error" style="margin:6px 0 10px;"></p>
+        <button type="submit" class="btn-pen btn-block">Unlock</button>
       </form>`;
     document.body.appendChild(overlay);
 

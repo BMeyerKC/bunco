@@ -44,8 +44,8 @@ async function loadGames() {
   } catch (err) {
     console.error('[admin] failed to load games', err);
     listEl.innerHTML =
-      '<p style="color:#dc2626;">Couldn’t load games. ' +
-      '<button id="games-retry" class="btn btn-sm btn-outline-secondary ms-2">Retry</button></p>';
+      '<p class="tool-error">Couldn’t load games. ' +
+      '<button id="games-retry" class="btn-quiet btn-sm">Retry</button></p>';
     document.getElementById('games-retry').addEventListener('click', loadGames);
   }
 }
@@ -64,7 +64,7 @@ function renderGames(rows, listEl) {
   }
 
   const table = document.createElement('table');
-  table.className = 'table table-dark table-sm align-middle';
+  table.className = 'data-table';
   table.innerHTML =
     '<thead><tr>' +
     '<th>Code</th><th>Created</th><th>Status</th><th>Players</th><th>Location</th><th></th>' +
@@ -93,14 +93,14 @@ function renderGames(rows, listEl) {
     locationTd.textContent = row.location || '—';
 
     const linksTd = document.createElement('td');
-    linksTd.className = 'text-end';
+    linksTd.className = 'cell-actions';
     const debugLink = document.createElement('a');
     debugLink.href = `debug.html?code=${encodeURIComponent(row.code)}`;
-    debugLink.className = 'btn btn-sm btn-outline-secondary me-1';
+    debugLink.className = 'btn-ink btn-sm';
     debugLink.textContent = 'Debug';
     const standingsLink = document.createElement('a');
     standingsLink.href = `standings.html?code=${encodeURIComponent(row.code)}`;
-    standingsLink.className = 'btn btn-sm btn-outline-secondary';
+    standingsLink.className = 'btn-ink btn-sm';
     standingsLink.textContent = 'Standings';
     linksTd.append(debugLink, standingsLink);
 
@@ -121,8 +121,8 @@ async function loadFeedback() {
   } catch (err) {
     console.error('[admin] failed to load feedback', err);
     listEl.innerHTML =
-      '<p style="color:#dc2626;">Couldn’t load feedback. ' +
-      '<button id="feedback-retry" class="btn btn-sm btn-outline-secondary ms-2">Retry</button></p>';
+      '<p class="tool-error">Couldn’t load feedback. ' +
+      '<button id="feedback-retry" class="btn-quiet btn-sm">Retry</button></p>';
     document.getElementById('feedback-retry').addEventListener('click', loadFeedback);
   }
 }
@@ -182,8 +182,8 @@ async function loadQuickScorerSessions() {
   } catch (err) {
     console.error('[admin] failed to load quick scorer sessions', err);
     listEl.innerHTML =
-      '<p style="color:#dc2626;">Couldn’t load quick scorer sessions. ' +
-      '<button id="quick-scorer-retry" class="btn btn-sm btn-outline-secondary ms-2">Retry</button></p>';
+      '<p class="tool-error">Couldn’t load quick scorer sessions. ' +
+      '<button id="quick-scorer-retry" class="btn-quiet btn-sm">Retry</button></p>';
     document.getElementById('quick-scorer-retry').addEventListener('click', loadQuickScorerSessions);
   }
 }
@@ -203,7 +203,7 @@ function renderQuickScorerSessions(rows, listEl) {
   }
 
   const table = document.createElement('table');
-  table.className = 'table table-dark table-sm align-middle';
+  table.className = 'data-table';
   table.innerHTML = '<thead><tr><th>Started</th><th>Duration</th><th>Location</th></tr></thead>';
 
   const tbody = document.createElement('tbody');

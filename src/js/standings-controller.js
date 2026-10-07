@@ -2,6 +2,7 @@ import { watchGame, watchAllTableScores, submitTableScore, startRound, getRoundA
 import { getParam, getDeviceId, forgetActiveGame } from './ui.js';
 import { buildTableLayout, calculateNextRoundSeating, determineWinner, updateStandings } from './game-logic.js';
 import { renderTableCards } from './table-cards.js';
+import { initCodeEntry } from './code-entry.js';
 
 const esc = s => String(s)
   .replace(/&/g, '&amp;').replace(/</g, '&lt;')
@@ -15,14 +16,12 @@ let isHost = false;
 if (!code) {
   document.getElementById('no-code-section').style.display  = '';
   document.getElementById('standings-section').style.display = 'none';
-  document.getElementById('code-form').addEventListener('submit', e => {
-    e.preventDefault();
-    const val = document.getElementById('code-input').value.trim().toUpperCase();
-    if (val.length === 4) window.location.href = `standings.html?code=${val}`;
+  initCodeEntry(document.getElementById('code-form'), val => {
+    window.location.href = `standings.html?code=${val}`;
   });
 } else {
   if (isFinal) {
-    document.getElementById('standings-title').textContent = 'Final Standings';
+    document.getElementById('standings-title').textContent = 'Final standings';
     document.getElementById('ad-slot').style.display = '';
   }
 
@@ -67,9 +66,9 @@ if (!code) {
     }
 
     document.getElementById('round-indicator').textContent =
-      isFinal || round >= 7 ? 'Game complete!'
-      : round === 0         ? 'Waiting for Round 1…'
-      :                       `Round ${round} of 6 — Live`;
+      isFinal || round >= 7 ? 'Game over. Thanks for playing!'
+      : round === 0         ? 'Round 1 starts once the host seats everyone.'
+      :                       `Round ${round} of 6, updating live`;
 
     // Live table cards
     const tableCardsEl = document.getElementById('table-cards');
@@ -105,13 +104,13 @@ if (!code) {
 
     const tbody = document.getElementById('standings-body');
     tbody.innerHTML = rows.map((r, i) => `
-      <div class="standings-row ${i === 0 ? 'standings-row-first' : ''}">
-        <span class="standings-rank ${i === 0 ? 'standings-rank-1' : ''}">${i + 1}</span>
-        <span class="standings-name">${esc(r.name)}${i === 0 && isFinal ? ' 🏆' : ''}</span>
-        <span class="standings-stat standings-stat-highlight">${r.wins}</span>
-        <span class="standings-stat" style="margin:0 4px;">${r.losses}</span>
-        <span class="standings-stat ${r.buncos > 0 ? 'standings-stat-highlight' : ''}" style="min-width:36px;">${r.buncos > 0 ? '🎲 ' + r.buncos : r.buncos}</span>
-        <span class="standings-stat" style="min-width:40px;">${r.points}</span>
+      <div class="standings-row ${i === 0 ? 'standings-row-first' : ''}" role="row">
+        <span class="standings-rank ${i === 0 ? 'standings-rank-1' : ''}" role="cell">${i + 1}</span>
+        <span class="standings-name" role="cell">${esc(r.name)}${i === 0 && isFinal ? ' 🏆' : ''}</span>
+        <span class="standings-stat standings-stat-highlight" role="cell">${r.wins}</span>
+        <span class="standings-stat" role="cell">${r.losses}</span>
+        <span class="standings-stat ${r.buncos > 0 ? 'standings-stat-highlight' : ''}" role="cell">${r.buncos}</span>
+        <span class="standings-stat" role="cell">${r.points}</span>
       </div>
     `).join('');
 
@@ -252,23 +251,19 @@ if (!code) {
 
     section.style.display = '';
     list.innerHTML = ghostTables.map(table => `
-      <div class="card mb-3">
-        <div class="card-body p-3">
-          <h5 class="card-title mb-3">Table ${table.tableId}</h5>
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
-            <div style="text-align:center;">
-              <div class="label-upper mb-2">Us</div>
-              <input type="number" class="form-control text-center"
-                     data-table="${table.tableId}" data-side="us" value="0" min="0" max="99" />
-            </div>
-            <div style="text-align:center;">
-              <div class="label-upper mb-2">Them</div>
-              <input type="number" class="form-control text-center"
-                     data-table="${table.tableId}" data-side="them" value="0" min="0" max="99" />
-            </div>
-          </div>
-          <button class="btn btn-primary btn-sm w-100 mt-3" data-table="${table.tableId}">Submit</button>
+      <div class="index-card ghost-table">
+        <h3 class="ghost-table-name">Table ${table.tableId}</h3>
+        <div class="ghost-table-scores">
+          <label>
+            <span class="field-label">Us</span>
+            <input type="number" inputmode="numeric" class="field" data-table="${table.tableId}" data-side="us" value="0" min="0" max="99" />
+          </label>
+          <label>
+            <span class="field-label">Them</span>
+            <input type="number" inputmode="numeric" class="field" data-table="${table.tableId}" data-side="them" value="0" min="0" max="99" />
+          </label>
         </div>
+        <button class="btn-pen btn-block" data-table="${table.tableId}">Submit table ${table.tableId}</button>
       </div>
     `).join('');
 
@@ -286,7 +281,7 @@ if (!code) {
           logEvent(code, EVENT.SCORE_SUBMITTED, { round, tableId, usScore, themScore, ghost: true }).catch(() => {});
         } catch (err) {
           console.error('Failed to submit ghost table score:', err);
-          input.textContent = 'Submit';
+          input.textContent = `Submit table ${tableId}`;
           input.disabled = false;
         }
       });
