@@ -379,8 +379,8 @@ describe('describeResumableGame', () => {
     expect(describeResumableGame('ABCD', game)).toEqual({
       code: 'ABCD',
       ended: false,
-      text: 'You have a game in progress — code ABCD.',
-      linkText: 'Rejoin Game',
+      text: "You're still in game ABCD.",
+      linkText: 'Rejoin game',
       href: 'game.html?code=ABCD',
     });
   });
@@ -398,8 +398,8 @@ describe('describeResumableGame', () => {
     expect(describeResumableGame('WXYZ', game)).toEqual({
       code: 'WXYZ',
       ended: true,
-      text: 'Game WXYZ is over.',
-      linkText: 'View Final Standings',
+      text: 'Game WXYZ has finished.',
+      linkText: 'See final standings',
       href: 'standings.html?code=WXYZ&final=true',
     });
   });

@@ -1,0 +1,122 @@
+/* styles/home.css — landing page */
+
+.home { padding-top: 20px; }
+
+/* ── Resume note: a sticky note on the sheet ── */
+.resume-note {
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+  padding: 10px 8px 10px 16px;
+  background: var(--marker-soft);
+  border: 2px solid var(--stroke);
+  border-radius: var(--wobble-md);
+}
+.resume-note-text { flex: 1 1 12rem; font-weight: 700; }
+
+/* ── The pad: a score-pad sheet with a red margin and ruled lines ── */
+.pad {
+  --pad-margin-x: 30px;
+  --pad-rule: color-mix(in srgb, var(--rule) 55%, transparent);
+  position: relative;
+  margin-bottom: 28px;
+  padding: 20px 18px 24px calc(var(--pad-margin-x) + 16px);
+  background:
+    linear-gradient(to right,
+      transparent var(--pad-margin-x),
+      var(--margin) var(--pad-margin-x),
+      var(--margin) calc(var(--pad-margin-x) + 2px),
+      transparent calc(var(--pad-margin-x) + 2px)),
+    repeating-linear-gradient(to bottom,
+      transparent 0, transparent 33px,
+      var(--pad-rule) 33px, var(--pad-rule) 34px),
+    var(--card);
+  background-position: 0 0, 0 12px, 0 0;
+  border: 2px solid var(--stroke);
+  border-top-width: 12px;   /* the glued binding along the top of a pad */
+  border-radius: 6px 6px 22px 10px / 6px 6px 10px 24px;
+  box-shadow: var(--shadow);
+}
+.pad-title {
+  font-size: var(--fs-h2);
+  text-wrap: balance;
+  margin-bottom: 4px;
+}
+.pad-lead {
+  color: var(--ink-soft);
+  margin-bottom: 18px;
+}
+
+.join-form { max-width: 300px; }
+.join-form .btn-pen { margin-top: 18px; }
+
+/* ── Paths: the two quieter ways in ── */
+.paths {
+  margin-bottom: 40px;
+  border-top: 2px solid var(--rule);
+}
+.path {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 76px;
+  padding: 12px 4px;
+  color: var(--ink);
+  text-decoration: none;
+  border-bottom: 2px solid var(--rule);
+}
+.path:hover { background: var(--pen-soft); color: var(--ink); }
+.path-die { width: 36px; height: 36px; flex-shrink: 0; color: var(--ink); transform: rotate(-6deg); }
+.path:nth-child(even) .path-die { transform: rotate(7deg); }
+.path-text { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+.path-text strong { font-size: var(--fs-lead); font-weight: 800; color: var(--pen); line-height: 1.25; }
+.path-text span { font-size: var(--fs-small); color: var(--ink-soft); }
+.path-go { font-size: 2rem; line-height: 1; color: var(--pen); padding-right: 6px; }
+
+/* ── Rules ── */
+.rules { margin-bottom: 36px; }
+.rules h2 { font-size: var(--fs-h3); margin-bottom: 0; }
+
+/* Steps are numbered in the sheet's red margin */
+.steps {
+  --step-margin-x: 36px;
+  position: relative;
+  list-style: none;
+  counter-reset: step;
+  margin: 0;
+  padding: 0;
+}
+.steps::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: var(--step-margin-x);
+  width: 2px;
+  background: var(--margin);
+  opacity: 0.55;
+}
+.steps li {
+  counter-increment: step;
+  position: relative;
+  padding: 12px 0 12px calc(var(--step-margin-x) + 16px);
+  border-bottom: 1px solid var(--rule);
+}
+.steps li::before {
+  content: counter(step);
+  position: absolute;
+  left: 0;
+  top: 6px;
+  width: var(--step-margin-x);
+  text-align: center;
+  font-family: var(--font-hand);
+  font-size: var(--fs-h3);
+  font-weight: 700;
+  color: var(--margin);
+}
+
+@media (min-width: 640px) {
+  .pad-title { font-size: var(--fs-h1); }
+  .pad { padding: 28px 28px 30px calc(var(--pad-margin-x) + 26px); --pad-margin-x: 44px; }
+}

@@ -226,8 +226,8 @@ export function describeResumableGame(code, game) {
     return {
       code,
       ended: true,
-      text: `Game ${code} is over.`,
-      linkText: 'View Final Standings',
+      text: `Game ${code} has finished.`,
+      linkText: 'See final standings',
       href: `standings.html?code=${code}&final=true`,
     };
   }
@@ -235,8 +235,8 @@ export function describeResumableGame(code, game) {
   return {
     code,
     ended: false,
-    text: `You have a game in progress — code ${code}.`,
-    linkText: 'Rejoin Game',
+    text: `You're still in game ${code}.`,
+    linkText: 'Rejoin game',
     href: `game.html?code=${code}`,
   };
 }

@@ -1,7 +1,7 @@
 import { expect } from "@playwright/test";
 
 const selectors = {
-  hostLink: 'a:has-text("Host Game")',
+  hostLink: 'a:has-text("Host a game night")',
   setupView: "#view-setup",
   tablesSelect: "#setup-tables",
   ghostsSelect: "#setup-ghosts",
