@@ -7,12 +7,17 @@
 
 export function openDialog(id) {
   const el = document.getElementById(id);
-  if (el && !el.open) el.showModal();
+  if (!el || el.hasAttribute('open')) return;
+  // Safari before 15.4 has no showModal(); the open attribute still shows it.
+  if (typeof el.showModal === 'function') el.showModal();
+  else el.setAttribute('open', '');
 }
 
 export function closeDialog(id) {
   const el = document.getElementById(id);
-  if (el?.open) el.close();
+  if (!el?.hasAttribute('open')) return;
+  if (typeof el.close === 'function') el.close();
+  else el.removeAttribute('open');
 }
 
 export function initDialogs(root = document) {
@@ -24,14 +29,15 @@ export function initDialogs(root = document) {
     }
     const closer = e.target.closest('[data-dialog-close]');
     if (closer) {
-      closer.closest('dialog')?.close();
+      const dlg = closer.closest('dialog');
+      if (dlg) closeDialog(dlg.id);
       return;
     }
     // A click whose target is the <dialog> itself landed on the backdrop.
-    if (e.target instanceof HTMLDialogElement && e.target.open) {
+    if (e.target.tagName === 'DIALOG' && e.target.hasAttribute('open')) {
       const r = e.target.getBoundingClientRect();
       const inside = e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom;
-      if (!inside) e.target.close();
+      if (!inside) closeDialog(e.target.id);
     }
   });
 }
