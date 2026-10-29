@@ -1,6 +1,6 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import DieIcon from '../components/DieIcon.astro';
+import { tallyHtml } from '../js/tally.js';
 import '../styles/home.css';
 ---
 <Layout title="Bunco Score Keeper — Free Online Bunco Game" isHome>
@@ -101,9 +101,12 @@ import '../styles/home.css';
       <button id="resume-banner-dismiss" type="button" class="dialog-close" aria-label="Dismiss">×</button>
     </div>
 
-    <!-- The join box is the front door: most people arriving tonight are joining. -->
+    <h1 class="visually-hidden">Bunco score keeper</h1>
+
+    <!-- Two front doors. The pad is game night (join, or host); the index card
+         below it sends one table straight to the scorer. -->
     <section class="pad" aria-labelledby="join-title">
-      <h1 id="join-title" class="pad-title">Join tonight's game</h1>
+      <h2 id="join-title" class="pad-title">Join tonight's game</h2>
       <p class="pad-lead">Type the code from the host's screen.</p>
       <form id="join-form" class="join-form" novalidate>
         <label for="join-code" class="visually-hidden">Game code</label>
@@ -119,26 +122,18 @@ import '../styles/home.css';
         <p id="join-error" class="field-error" hidden></p>
         <button type="submit" class="btn-pen btn-block">Join game</button>
       </form>
+      <p class="pad-host">
+        Running the night?
+        <a href="game.html?host=true">Host a game night</a>
+      </p>
     </section>
 
-    <nav class="paths" aria-label="Other ways to play">
-      <a class="path" href="game.html?host=true">
-        <DieIcon face={6} class="path-die" />
-        <span class="path-text">
-          <strong>Host a game night</strong>
-          <span>Set up tables, seat everyone, and score all six rounds live.</span>
-        </span>
-        <span class="path-go" aria-hidden="true">›</span>
-      </a>
-      <a class="path" href="scorer.html">
-        <DieIcon face={2} class="path-die" />
-        <span class="path-text">
-          <strong>Just keep score</strong>
-          <span>A two-sided scoreboard for one table. No setup.</span>
-        </span>
-        <span class="path-go" aria-hidden="true">›</span>
-      </a>
-    </nav>
+    <section class="quick-card" aria-labelledby="quick-title">
+      <span class="quick-tally" aria-hidden="true" set:html={tallyHtml(5)}></span>
+      <h2 id="quick-title" class="quick-title">Just keeping score?</h2>
+      <p class="quick-lead">Us against them at one table. No code, no setup.</p>
+      <a class="btn-pen btn-block quick-go" href="scorer.html">Start scoring</a>
+    </section>
 
     <!-- A real sequence, so the steps are numbered — in the sheet's margin -->
     <section class="rules" aria-labelledby="how-title">
