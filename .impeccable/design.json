@@ -1,0 +1,342 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-15T18:09:38.565Z",
+  "title": "Design System: Bunco Score Keeper",
+  "extensions": {
+    "colorMeta": {
+      "pen": {
+        "role": "primary",
+        "displayName": "Blue Ballpoint",
+        "tonalRamp": [
+          "oklch(15% 0.096 262)",
+          "oklch(27% 0.136 262)",
+          "oklch(39% 0.160 262)",
+          "oklch(51% 0.160 262)",
+          "oklch(63% 0.144 262)",
+          "oklch(75% 0.104 262)",
+          "oklch(86% 0.064 262)",
+          "oklch(95% 0.029 262)"
+        ]
+      },
+      "margin": {
+        "role": "secondary",
+        "displayName": "Red Margin",
+        "tonalRamp": [
+          "oklch(15% 0.102 23)",
+          "oklch(27% 0.145 23)",
+          "oklch(39% 0.170 23)",
+          "oklch(51% 0.170 23)",
+          "oklch(63% 0.153 23)",
+          "oklch(75% 0.111 23)",
+          "oklch(86% 0.068 23)",
+          "oklch(95% 0.031 23)"
+        ]
+      },
+      "marker": {
+        "role": "tertiary",
+        "displayName": "Highlighter Yellow",
+        "tonalRamp": [
+          "oklch(15% 0.084 100)",
+          "oklch(27% 0.119 100)",
+          "oklch(39% 0.140 100)",
+          "oklch(51% 0.140 100)",
+          "oklch(63% 0.126 100)",
+          "oklch(75% 0.091 100)",
+          "oklch(86% 0.056 100)",
+          "oklch(95% 0.025 100)"
+        ]
+      },
+      "paper": {
+        "role": "neutral",
+        "displayName": "Score-Pad Paper",
+        "tonalRamp": [
+          "oklch(15% 0.007 95)",
+          "oklch(27% 0.010 95)",
+          "oklch(39% 0.012 95)",
+          "oklch(51% 0.012 95)",
+          "oklch(63% 0.011 95)",
+          "oklch(75% 0.008 95)",
+          "oklch(86% 0.005 95)",
+          "oklch(95% 0.002 95)"
+        ]
+      },
+      "card": {
+        "role": "neutral",
+        "displayName": "Index Card"
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "tonalRamp": [
+          "oklch(15% 0.007 265)",
+          "oklch(27% 0.010 265)",
+          "oklch(39% 0.012 265)",
+          "oklch(51% 0.012 265)",
+          "oklch(63% 0.011 265)",
+          "oklch(75% 0.008 265)",
+          "oklch(86% 0.005 265)",
+          "oklch(95% 0.002 265)"
+        ]
+      },
+      "ink-soft": {
+        "role": "neutral",
+        "displayName": "Soft Ink"
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "Pencil Grey"
+      },
+      "stroke": {
+        "role": "neutral",
+        "displayName": "Ink Outline"
+      },
+      "rule": {
+        "role": "neutral",
+        "displayName": "Ruled-Line Blue",
+        "tonalRamp": [
+          "oklch(15% 0.030 250)",
+          "oklch(27% 0.043 250)",
+          "oklch(39% 0.050 250)",
+          "oklch(51% 0.050 250)",
+          "oklch(63% 0.045 250)",
+          "oklch(75% 0.033 250)",
+          "oklch(86% 0.020 250)",
+          "oklch(95% 0.009 250)"
+        ]
+      },
+      "hairline": {
+        "role": "neutral",
+        "displayName": "Hairline"
+      },
+      "error-text": {
+        "role": "secondary",
+        "displayName": "Error Red (text on paper)"
+      },
+      "paper-dark": {
+        "role": "neutral",
+        "displayName": "Slate Chalkboard"
+      },
+      "card-dark": {
+        "role": "neutral",
+        "displayName": "Raised Slate"
+      },
+      "ink-dark": {
+        "role": "neutral",
+        "displayName": "Chalk White"
+      },
+      "pen-dark": {
+        "role": "primary",
+        "displayName": "Chalk Blue"
+      },
+      "margin-dark": {
+        "role": "secondary",
+        "displayName": "Chalk Pink"
+      },
+      "marker-dark": {
+        "role": "tertiary",
+        "displayName": "Chalk Yellow"
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Score numeral",
+        "purpose": "The two live scores on the scoreboard, in blue pen."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Page titles (h1 2.625rem, h2 2.0625rem)."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Card and dialog titles, round label, table names."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "All running text in a 34rem column."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Field labels and helper text, sentence case."
+      }
+    },
+    "shadows": [
+      {
+        "name": "shadow (light)",
+        "value": "0 1px 0 rgba(36,38,43,0.06), 0 3px 10px rgba(36,38,43,0.10)",
+        "purpose": "The one card lift: index cards, pen button, dialogs, toasts, code slots."
+      },
+      {
+        "name": "shadow (dark)",
+        "value": "0 2px 10px rgba(0,0,0,0.35)",
+        "purpose": "Same role on the chalkboard."
+      },
+      {
+        "name": "focus-glow",
+        "value": "0 0 0 3px var(--pen-soft)",
+        "purpose": "Focused fields and the next empty code slot."
+      }
+    ],
+    "motion": [
+      {
+        "name": "control-transition",
+        "value": "0.15s ease",
+        "purpose": "Button background and filter changes."
+      },
+      {
+        "name": "view-fade",
+        "value": "0.2s ease",
+        "purpose": "Switching between views."
+      },
+      {
+        "name": "dialog-in",
+        "value": "0.18s ease-out",
+        "purpose": "Dialog rises 12px as it opens."
+      },
+      {
+        "name": "score-pop",
+        "value": "0.18s cubic-bezier(0.22, 1, 0.36, 1)",
+        "purpose": "Score numeral pops on change."
+      },
+      {
+        "name": "bunco-stamp",
+        "value": "0.5s cubic-bezier(0.17, 0.67, 0.3, 1.4)",
+        "purpose": "BUNCO! stamp spins in and settles at a tilt."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "narrow-phone",
+        "value": "420px"
+      },
+      {
+        "name": "wide",
+        "value": "640px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Pen Button",
+      "kind": "button",
+      "refersTo": "button-pen",
+      "description": "The one main action on a screen.",
+      "html": "<button class=\"ds-btn-pen\">Join game</button>",
+      "css": ".ds-btn-pen{display:inline-flex;align-items:center;justify-content:center;min-height:48px;font-family:var(--font-body);font-size:var(--fs-body);line-height:1.2;border-radius:var(--wobble-sm);cursor:pointer;padding:10px 22px;font-weight:800;background:var(--pen);color:var(--pen-contrast);border:2px solid var(--pen);box-shadow:var(--shadow);transition:filter .15s ease,transform .1s ease}.ds-btn-pen:hover{filter:brightness(1.08) saturate(1.05)}.ds-btn-pen:active{transform:translateY(1px)}.ds-btn-pen:focus-visible{outline:3px solid var(--pen);outline-offset:3px}"
+    },
+    {
+      "name": "Ink Button",
+      "kind": "button",
+      "refersTo": "button-ink",
+      "description": "Secondary action with a drawn outline.",
+      "html": "<button class=\"ds-btn-ink\">Host a game night</button>",
+      "css": ".ds-btn-ink{display:inline-flex;align-items:center;justify-content:center;min-height:48px;font-family:var(--font-body);font-size:var(--fs-body);line-height:1.2;border-radius:var(--wobble-sm);cursor:pointer;padding:10px 22px;font-weight:800;background:var(--card);color:var(--ink);border:2px solid var(--stroke);transition:background-color .15s ease,transform .1s ease}.ds-btn-ink:hover{background:var(--pen-soft)}.ds-btn-ink:active{transform:translateY(1px)}.ds-btn-ink:focus-visible{outline:3px solid var(--pen);outline-offset:3px}"
+    },
+    {
+      "name": "Quiet Button",
+      "kind": "button",
+      "refersTo": "button-quiet",
+      "description": "Tertiary, text-only action.",
+      "html": "<button class=\"ds-btn-quiet\">Not now</button>",
+      "css": ".ds-btn-quiet{display:inline-flex;align-items:center;justify-content:center;min-height:48px;font-family:var(--font-body);font-size:var(--fs-body);line-height:1.2;border-radius:var(--wobble-sm);cursor:pointer;padding:10px 12px;font-weight:700;background:transparent;color:var(--pen);border:2px solid transparent;transition:background-color .15s ease}.ds-btn-quiet:hover{background:var(--pen-soft)}.ds-btn-quiet:focus-visible{outline:3px solid var(--pen);outline-offset:3px}"
+    },
+    {
+      "name": "BUNCO! Button",
+      "kind": "button",
+      "refersTo": "button-bunco",
+      "description": "The one red thing: a tilted rubber stamp.",
+      "html": "<button class=\"ds-btn-bunco\">BUNCO!</button>",
+      "css": ".ds-btn-bunco{min-height:48px;padding:8px 16px;font-family:var(--font-body);font-size:var(--fs-lead);font-weight:900;letter-spacing:.02em;background:var(--margin);color:#fff;border:2px solid var(--margin);border-radius:var(--wobble-sm);box-shadow:var(--shadow);transform:rotate(-1.5deg);cursor:pointer}.ds-btn-bunco:hover{filter:brightness(1.06)}.ds-btn-bunco:focus-visible{outline:3px solid var(--pen);outline-offset:3px}"
+    },
+    {
+      "name": "Field",
+      "kind": "input",
+      "refersTo": "field",
+      "description": "Text field with a drawn outline.",
+      "html": "<input class=\"ds-field\" placeholder=\"Your name\">",
+      "css": ".ds-field{display:block;width:100%;min-height:48px;padding:10px 14px;background:var(--card);color:var(--ink);border:2px solid var(--stroke);border-radius:var(--wobble-sm);font-family:var(--font-body);font-size:var(--fs-body)}.ds-field::placeholder{color:var(--muted)}.ds-field:focus{outline:none;border-color:var(--pen);box-shadow:0 0 0 3px var(--pen-soft)}"
+    },
+    {
+      "name": "Index Card",
+      "kind": "card",
+      "refersTo": "index-card",
+      "description": "The one surface for grouped content.",
+      "html": "<div class=\"ds-card\"><h3 class=\"ds-card-title\">Table 2</h3><p class=\"ds-card-text\">You are sitting with Pat.</p></div>",
+      "css": ".ds-card{background:var(--card);color:var(--ink);border:2px solid var(--stroke);border-radius:var(--wobble-md);box-shadow:var(--shadow);padding:18px 20px}.ds-card-title{font-family:var(--font-hand);font-size:var(--fs-h3);font-weight:700;line-height:1.15;margin:0 0 .4em}.ds-card-text{font-family:var(--font-body);font-size:var(--fs-small);color:var(--muted);margin:0}"
+    },
+    {
+      "name": "Player Chip",
+      "kind": "chip",
+      "refersTo": "player-chip",
+      "description": "Name-tag sticker; dashed for ghost players.",
+      "html": "<span class=\"ds-chip\">Pat</span> <span class=\"ds-chip ds-chip-ghost\">Ghost</span>",
+      "css": ".ds-chip{display:inline-block;padding:6px 12px;border-radius:4px;font-family:var(--font-body);font-size:var(--fs-small);font-weight:700;background:var(--card);color:var(--ink);border:1.5px solid var(--stroke);transform:rotate(-1deg)}.ds-chip-ghost{border-style:dashed;color:var(--muted);transform:rotate(1.2deg)}"
+    },
+    {
+      "name": "Code Slots",
+      "kind": "custom",
+      "refersTo": "code-slot",
+      "description": "Four die-shaped slots that mirror the game code input.",
+      "html": "<div class=\"ds-slots\"><span class=\"ds-slot ds-slot-filled\">K</span><span class=\"ds-slot ds-slot-filled\">7</span><span class=\"ds-slot\"></span><span class=\"ds-slot\"></span></div>",
+      "css": ".ds-slots{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;max-width:300px}.ds-slot{aspect-ratio:1;display:flex;align-items:center;justify-content:center;background:var(--card);border:2.5px solid var(--stroke);border-radius:14px;box-shadow:var(--shadow);font-family:var(--font-body);font-size:2rem;font-weight:900;color:var(--pen);transition:transform .12s ease}.ds-slot:nth-child(odd){transform:rotate(-2deg)}.ds-slot:nth-child(even){transform:rotate(1.5deg)}.ds-slot.ds-slot-filled{transform:none}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Score Sheet on the Card Table",
+    "overview": "Every screen is a piece of stationery you would find at a Bunco night. In light mode it is a ruled score pad written in blue ballpoint; in dark mode it is the same sheet chalked on a slate-green board. Headings and scores look handwritten, surfaces are index cards with a drawn ink outline, and the corners wobble as if someone inked them freehand.\n\nThe playfulness sits on top of a strict usability floor. The body text is 17px, every control is at least 48px tall, and one main action per screen is inked solid blue. The page is a single narrow column made for a phone held in one hand in a dim room. Motion is feedback only, with one exception: the BUNCO! stamp and confetti, the one orchestrated moment in the product.",
+    "keyCharacteristics": [
+      "Paper and chalkboard are one design in two materials, switched by `data-theme`, never two designs.",
+      "Handwriting for what is written on the sheet (headings, scores, table names); a plain sans for everything people read.",
+      "A drawn 2px ink stroke and wobbly corners instead of shadows and gradients.",
+      "Blue pen does the work; red is saved for the margin line and BUNCO!; yellow highlighter marks the winner.",
+      "Sentence case everywhere. No tracked capitals."
+    ],
+    "rules": [
+      {
+        "name": "The One Red Thing Rule",
+        "body": "Red belongs to the margin line and to BUNCO!. Never use it for an ordinary button, link, badge, or decoration, so the big moment owns the color.",
+        "section": "colors"
+      },
+      {
+        "name": "The Token Rule",
+        "body": "New CSS and JS-built markup use the semantic tokens only. The three literal colors in the code are deliberate exceptions: dark ink on highlighter yellow, white text on the red stamp, and a white quiet zone behind the QR code.",
+        "section": "colors"
+      },
+      {
+        "name": "The Written-vs-Read Rule",
+        "body": "Kalam is for things written on the sheet: headings, scores, table names, step numbers. Anything a person must read quickly or tap (body copy, buttons, labels, codes) is Nunito.",
+        "section": "typography"
+      },
+      {
+        "name": "The 17 Rule",
+        "body": "Body text is never below 17px, and nothing a player needs mid-game is below 15px. Small handwriting needs a larger nominal size (1.45rem).",
+        "section": "typography"
+      },
+      {
+        "name": "The One Shadow Rule",
+        "body": "Use `--shadow` or nothing. No new shadow values, no stacked elevations, no glows.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do use the semantic tokens (`var(--pen)`, `var(--card)`, `var(--stroke)`) in all CSS and in any markup built from JS, so both themes work.",
+      "Do give every screen exactly one solid blue button, and make everything else Ink or Quiet.",
+      "Do keep every tappable control at least 48px tall (44px for icon buttons in the top bar and dialogs).",
+      "Do keep body text at 17px or larger and labels in sentence case.",
+      "Do use the highlighter to mean \"winning\" or \"pay attention\", and dashed lines to mean \"not really there yet\".",
+      "Do show errors inline under the field, and use `<dialog>` and `<details>` for dialogs and disclosure.",
+      "Do honor `prefers-reduced-motion`; the global rule in `base.css` already shortens every animation.",
+      "Do check any new surface on both paper and chalkboard."
+    ],
+    "donts": [
+      "Don't use red for anything except the margin line, margin step numbers, field errors, and BUNCO!.",
+      "Don't hardcode palette hex values or reintroduce gradients as fills.",
+      "Don't add a second shadow, a glow, or a new radius; reuse `--shadow`, `--wobble-sm`, and `--wobble-md`.",
+      "Don't use tracked ALL-CAPS labels.",
+      "Don't set body copy, buttons, or codes in Kalam.",
+      "Don't fix elements over the content; the shell stays in normal flow.",
+      "Don't use `alert()`.",
+      "Don't add orchestrated motion beyond the BUNCO! moment; everything else is short feedback.",
+      "Don't reintroduce a CSS framework. The old Bootstrap class names and the legacy token aliases (`--accent`, `--surface`, `--bg`) exist only so older markup keeps working; new code uses the current names."
+    ]
+  }
+}
