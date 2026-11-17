@@ -150,6 +150,43 @@ test.describe('standings page host advance', () => {
       );
     }).toBe(true);
   });
+
+  test('typed ghost table scores survive another table scoring a point', async ({ page, request }) => {
+    const game = seedGame(1);
+    game.meta.tables = 2;
+    game.players = {
+      ...fourPlayers,
+      g1: { name: 'Ghost 1', isGhost: true },
+      g2: { name: 'Ghost 2', isGhost: true },
+      g3: { name: 'Ghost 3', isGhost: true },
+      g4: { name: 'Ghost 4', isGhost: true },
+    };
+    game.rounds[1].assignments = {
+      ...tableOneAssignments,
+      g1: { tableId: 2, side: 'us', seat: 1 },
+      g2: { tableId: 2, side: 'us', seat: 2 },
+      g3: { tableId: 2, side: 'them', seat: 1 },
+      g4: { tableId: 2, side: 'them', seat: 2 },
+    };
+    game.rounds[1].tables = { 1: { liveUs: 0, liveThem: 0, submitted: false } };
+    await request.put(`${DB}/games/${code}.json`, { data: game });
+    await page.goto(`/standings.html?code=${code}`);
+
+    await expect(page.locator('#ghost-scoring-section')).toBeVisible();
+    await page.fill('input[data-table="2"][data-side="us"]', '21');
+    await page.fill('input[data-table="2"][data-side="them"]', '14');
+    // Table 1 is still playing: a point lands while the host is on the form
+    await request.put(`${DB}/games/${code}/rounds/1/tables/1/liveUs.json`, { data: 1 });
+    await page.waitForTimeout(1_000);
+    await expect(page.locator('input[data-table="2"][data-side="us"]')).toHaveValue('21');
+    await page.click('#ghost-tables-list button[data-table="2"]');
+
+    await expect.poll(async () => {
+      const res = await request.get(`${DB}/games/${code}/rounds/1/tables/2.json`);
+      const t = await res.json();
+      return t?.submitted ? `${t.usScore}-${t.themScore}` : null;
+    }).toBe('21-14');
+  });
 });
 
 test.describe('standings page returns a seated player to scoring', () => {
