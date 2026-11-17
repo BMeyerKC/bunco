@@ -3,6 +3,7 @@
 //   npx firebase emulators:start --only database --project bunco-60f5d
 // then: npx playwright test -c sim/playwright.config.js
 // SIM_SEEDS=1-50 picks the games; SIM_WORKERS sets parallel games;
+// SIM_PLAYERS=8 fixes the head count (default: random 3-12);
 // SIM_PORT serves this checkout's build on another port.
 import { defineConfig, devices } from '@playwright/test';
 
