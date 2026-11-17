@@ -177,8 +177,10 @@ for (const seed of parseSeeds(process.env.SIM_SEEDS)) {
             await Promise.all(clickers.map(async c => {
               await c.page.click('#bunco-btn');
               const btn = c.page.locator('#bunco-picker-list .bunco-picker-player', { hasText: roller });
-              // A second phone may see the Bunco already claimed (its tap becomes an undo)
-              if (await btn.isVisible({ timeout: 2_000 }).catch(() => false)) await btn.click();
+              // On a second phone the picker may never open (Bunco already claimed)
+              // or close under the tap when the first phone's claim arrives.
+              // Both are the app working: the first claim wins.
+              await btn.click({ timeout: 2_000 }).catch(() => note(`r${round} t${tableId}: ${c.name}'s picker closed: Bunco already claimed`));
             }));
           }
 
