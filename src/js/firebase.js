@@ -15,7 +15,7 @@ import {
   limitToLast,
 } from 'firebase/database';
 
-import { buncoClaimUpdate, uncallGameUpdate } from './game-logic.js';
+import { buncoClaimUpdate, uncallGameUpdate, ghostClaimUpdate } from './game-logic.js';
 import { addPlayerUpdate } from './game-utils.js';
 
 // ⚠️  databaseURL must match your Firebase Realtime Database URL.
@@ -89,10 +89,11 @@ export async function addPlayer(code, name, isGhost = false) {
   return result.committed ? playerId : null;
 }
 
+/** @returns {Promise<boolean>} false when someone else claimed the seat first */
 export async function claimGhostSeat(code, playerId, name) {
-  const updateData = { name, isGhost: false };
-  logSend(`games/${code}/players/${playerId}`, updateData);
-  await update(ref(db, `games/${code}/players/${playerId}`), updateData);
+  logSend(`games/${code}/players/${playerId}`, { name, isGhost: false });
+  const result = await runTransaction(ref(db, `games/${code}/players/${playerId}`), current => ghostClaimUpdate(current, name));
+  return result.committed && result.snapshot.exists();
 }
 
 // ─── Live scoring ─────────────────────────────────────────────
