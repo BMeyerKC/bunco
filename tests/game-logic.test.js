@@ -12,6 +12,7 @@ import {
   describeResumableGame,
   uncallGameUpdate,
   roundWinners,
+  submitLiveUpdate,
   deriveStandings,
 } from '../src/js/game-logic.js';
 
@@ -485,5 +486,16 @@ describe('deriveStandings', () => {
 
   test('no rounds yet → empty standings', () => {
     expect(deriveStandings(undefined, 0, 2)).toEqual({});
+  });
+});
+
+describe('submitLiveUpdate', () => {
+  test("records the table's live tally, not a phone's copy", () => {
+    expect(submitLiveUpdate({ liveUs: 12, liveThem: 21, submitted: false }))
+      .toEqual({ liveUs: 12, liveThem: 21, usScore: 12, themScore: 21, submitted: true });
+  });
+
+  test('a table nobody tapped submits 0-0', () => {
+    expect(submitLiveUpdate(null)).toEqual({ usScore: 0, themScore: 0, submitted: true });
   });
 });

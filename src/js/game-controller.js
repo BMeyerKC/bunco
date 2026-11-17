@@ -1,6 +1,6 @@
 // js/game-controller.js
 import { createGame, addPlayer, claimGhostSeat, watchGame, getGame, saveRoundAssignments, startRound,
-         recordBunco, undoBunco, callGame, submitTableScore,
+         recordBunco, undoBunco, callGame, submitTableScore, submitLiveTableScore,
          incrementTableScore, decrementTableScore, watchTableScore, watchAllTableScores, initializeRoundTables,
          EVENT, logEvent, logGameOrigin } from './firebase.js';
 import { captureOrigin } from './geo.js';
@@ -612,8 +612,8 @@ async function handleCallGame() {
 }
 
 async function handleSubmitScores(roundNumber) {
-  await submitTableScore(gameCode, roundNumber, myTableId, usScore, themScore);
-  logEvent(gameCode, EVENT.SCORE_SUBMITTED, { round: roundNumber, tableId: myTableId, usScore, themScore }).catch(() => {});
+  const submitted = await submitLiveTableScore(gameCode, roundNumber, myTableId);
+  logEvent(gameCode, EVENT.SCORE_SUBMITTED, { round: roundNumber, tableId: myTableId, ...submitted }).catch(() => {});
   document.getElementById('view-standings-link').href = `standings.html?code=${gameCode}`;
   // If Firebase's optimistic local write fired onGameUpdate → showBetweenRoundsView
   // before this line, skip showing view-submitted so we don't override the transition.
