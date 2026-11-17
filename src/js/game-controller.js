@@ -23,10 +23,6 @@ let myPlayerId  = null;
 
 let betweenRoundsForRound    = 0; // which round we've shown the between-rounds view for
 let betweenRoundsPrepForRound = 0; // which round the host has already prepped
-// Firebase's optimistic local write can fire onGameUpdate → showBetweenRoundsView
-// *during* the await in handleSubmitScores, before showView('view-submitted') runs.
-// This flag lets handleSubmitScores detect that and skip the override.
-let betweenRoundsJustTriggered = false;
 
 const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
@@ -334,7 +330,6 @@ export function onGameUpdate(data) {
     if (allDone && betweenRoundsForRound !== round) {
       // All tables in — auto-navigate everyone to the between-rounds screen.
       betweenRoundsForRound = round;
-      betweenRoundsJustTriggered = true;
       showBetweenRoundsView(data);
     } else if (!allDone && (currentView === 'view-waiting' || currentView === 'view-between-rounds')) {
       // A new round started while we're in a holding view — go to scoring
@@ -411,7 +406,6 @@ let allTableScoresRound       = 0;
 let allTableScoresTables      = [];
 
 function navigateToScoring(data) {
-  betweenRoundsJustTriggered = false;
   myPlayerId = localStorage.getItem(`bunco_player_${gameCode}`);
   const storedHostCode = localStorage.getItem('bunco_host_code');
 
@@ -628,13 +622,12 @@ async function handleSubmitScores(roundNumber) {
   const submitted = await submitLiveTableScore(gameCode, roundNumber, myTableId);
   logEvent(gameCode, EVENT.SCORE_SUBMITTED, { round: roundNumber, tableId: myTableId, ...submitted }).catch(() => {});
   document.getElementById('view-standings-link').href = `standings.html?code=${gameCode}`;
-  // If Firebase's optimistic local write fired onGameUpdate → showBetweenRoundsView
-  // before this line, skip showing view-submitted so we don't override the transition.
-  if (betweenRoundsJustTriggered) {
-    betweenRoundsJustTriggered = false;
-    return;
-  }
-  showView('view-submitted');
+  // The game can move on during the await: this submit (or a tablemate's)
+  // may finish the round, and on a slow connection the host may even start
+  // the next one. Only show "submitted" while still scoring this round.
+  const stillScoring = gameData?.meta?.currentRound === roundNumber
+    && document.getElementById('view-scoring').classList.contains('view-active');
+  if (stillScoring) showView('view-submitted');
 }
 
 // ─── Round end ────────────────────────────────────────────────
