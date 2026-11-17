@@ -279,6 +279,22 @@ export function submitLiveUpdate(current) {
 }
 
 /**
+ * Transaction updater for a point tap (delta 1) or undo (delta -1) on a
+ * table. If a tablemate already submitted, the saved score follows the tap,
+ * so a point still on its way at submit time isn't lost (#39).
+ * @param {object|null} current - the table
+ * @param {'us'|'them'} side
+ * @param {1|-1} delta
+ * @returns {object} the updated table
+ */
+export function tapUpdate(current, side, delta) {
+  const t = current || {};
+  const live = side === 'us' ? 'liveUs' : 'liveThem';
+  const next = Math.max(0, (t[live] || 0) + delta);
+  return { ...t, [live]: next, ...(t.submitted && { [side === 'us' ? 'usScore' : 'themScore']: next }) };
+}
+
+/**
  * Transaction updater for undoing a Bunco's round call. Only clears
  * meta/gameCalledBy if it still points at the table being undone — another
  * table may have independently called Game (Bunco or otherwise) since,

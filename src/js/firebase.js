@@ -16,7 +16,7 @@ import {
   limitToLast,
 } from 'firebase/database';
 
-import { buncoClaimUpdate, uncallGameUpdate, ghostClaimUpdate, submitLiveUpdate } from './game-logic.js';
+import { buncoClaimUpdate, uncallGameUpdate, ghostClaimUpdate, submitLiveUpdate, tapUpdate } from './game-logic.js';
 import { addPlayerUpdate } from './game-utils.js';
 
 // ⚠️  databaseURL must match your Firebase Realtime Database URL.
@@ -106,17 +106,15 @@ export async function claimGhostSeat(code, playerId, name) {
 // ─── Live scoring ─────────────────────────────────────────────
 
 export async function incrementTableScore(code, roundNumber, tableId, side) {
-  const field = side === 'us' ? 'liveUs' : 'liveThem';
-  const r = ref(db, `games/${code}/rounds/${roundNumber}/tables/${tableId}/${field}`);
-  logSend(`games/${code}/rounds/${roundNumber}/tables/${tableId}/${field}`, `increment`);
-  await runTransaction(r, current => (current || 0) + 1);
+  const path = `games/${code}/rounds/${roundNumber}/tables/${tableId}`;
+  logSend(`${path}/${side === 'us' ? 'liveUs' : 'liveThem'}`, 'increment');
+  await runTransaction(ref(db, path), t => tapUpdate(t, side, 1));
 }
 
 export async function decrementTableScore(code, roundNumber, tableId, side) {
-  const field = side === 'us' ? 'liveUs' : 'liveThem';
-  const r = ref(db, `games/${code}/rounds/${roundNumber}/tables/${tableId}/${field}`);
-  logSend(`games/${code}/rounds/${roundNumber}/tables/${tableId}/${field}`, `decrement`);
-  await runTransaction(r, current => Math.max(0, (current || 0) - 1));
+  const path = `games/${code}/rounds/${roundNumber}/tables/${tableId}`;
+  logSend(`${path}/${side === 'us' ? 'liveUs' : 'liveThem'}`, 'decrement');
+  await runTransaction(ref(db, path), t => tapUpdate(t, side, -1));
 }
 
 export function watchTableScore(code, roundNumber, tableId, callback) {

@@ -14,6 +14,7 @@ import {
   roundWinners,
   ghostClaimUpdate,
   submitLiveUpdate,
+  tapUpdate,
   deriveStandings,
 } from '../src/js/game-logic.js';
 
@@ -512,5 +513,24 @@ describe('submitLiveUpdate', () => {
 
   test('a table nobody tapped submits 0-0', () => {
     expect(submitLiveUpdate(null)).toEqual({ usScore: 0, themScore: 0, submitted: true });
+  });
+});
+
+describe('tapUpdate', () => {
+  test('adds a point to the live tally', () => {
+    expect(tapUpdate({ liveUs: 4, liveThem: 2 }, 'us', 1)).toEqual({ liveUs: 5, liveThem: 2 });
+  });
+
+  test('undo never goes below 0', () => {
+    expect(tapUpdate({ liveUs: 0, liveThem: 3 }, 'us', -1)).toEqual({ liveUs: 0, liveThem: 3 });
+  });
+
+  test("a tap that lands after a tablemate submitted moves the table's score too", () => {
+    expect(tapUpdate({ liveUs: 20, liveThem: 17, usScore: 20, themScore: 17, submitted: true }, 'us', 1))
+      .toEqual({ liveUs: 21, liveThem: 17, usScore: 21, themScore: 17, submitted: true });
+  });
+
+  test('passes an unloaded table through as a fresh tally', () => {
+    expect(tapUpdate(null, 'them', 1)).toEqual({ liveThem: 1 });
   });
 });
