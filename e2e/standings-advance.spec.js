@@ -97,7 +97,6 @@ test.describe('standings page host advance', () => {
     }).toBe(2);
     await expect.poll(() => eventTypes(request, code)).toContain('round_started');
     await expect.poll(() => eventTypes(request, code)).toContain('seats_assigned');
-    await expect.poll(() => eventTypes(request, code)).toContain('standings_saved');
 
     // Round 2 finishes (winners are "us" again)
     await request.put(`${DB}/games/${code}/rounds/2/tables/1.json`, { data: submittedTable });
@@ -111,9 +110,10 @@ test.describe('standings page host advance', () => {
       return res.json();
     }).toBe(3);
 
-    // Standings must reflect BOTH rounds: p1 sat on the winning side twice
-    const standingsRes = await request.get(`${DB}/games/${code}/standings/p1/wins.json`);
-    expect(await standingsRes.json()).toBe(2);
+    // Standings must reflect BOTH rounds exactly once: Ann sat on the winning side twice
+    const annWins = page.locator('.standings-row', { hasText: 'Ann' }).locator('.standings-stat').first();
+    await expect(annWins).toHaveText('2');
+    expect(await eventTypes(request, code)).not.toContain('standings_saved');
   });
 
   test('ghost table score entry logs a ghost score_submitted event', async ({ page, request }) => {

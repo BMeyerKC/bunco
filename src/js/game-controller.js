@@ -1,12 +1,11 @@
 // js/game-controller.js
 import { createGame, addPlayer, claimGhostSeat, watchGame, getGame, saveRoundAssignments, startRound,
          recordBunco, undoBunco, callGame, submitTableScore,
-         saveStandings,
          incrementTableScore, decrementTableScore, watchTableScore, watchAllTableScores, initializeRoundTables,
          EVENT, logEvent, logGameOrigin } from './firebase.js';
 import { captureOrigin } from './geo.js';
 import { generateGameCode, assignRandomSeats,
-         calculateNextRoundSeating, roundWinners, updateStandings, buildTableLayout } from './game-logic.js';
+         calculateNextRoundSeating, roundWinners, deriveStandings, buildTableLayout } from './game-logic.js';
 import { showView, showToast, getParam, getDeviceId, rememberActiveGame } from './ui.js';
 import { renderTableCards } from './table-cards.js';
 import { renderTally, TARGET } from './tally.js';
@@ -786,7 +785,7 @@ function showBetweenRoundsView(data) {
 
   const roundResults = roundWinners(tables, assignments, buncos, numTables);
 
-  const newStandings = updateStandings(data.standings || {}, tables, roundResults, assignments, buncos);
+  const newStandings = deriveStandings(data.rounds, round, numTables);
 
   // Header
   document.getElementById('br-round-title').textContent =
@@ -873,7 +872,7 @@ function showBetweenRoundsView(data) {
       startBtn.disabled    = true;
       startBtn.textContent = 'Preparing…';
     }
-    prepareNextRound(round, tables, assignments, buncos, players, numTables, newStandings)
+    prepareNextRound(round, tables, assignments, buncos, players, numTables)
       .then(() => {
         if (startBtn && round < 6) {
           startBtn.textContent = `Start round ${round + 1}`;
@@ -892,9 +891,7 @@ function showBetweenRoundsView(data) {
   }
 }
 
-async function prepareNextRound(round, tables, assignments, buncos, players, numTables, newStandings) {
-  await saveStandings(gameCode, newStandings);
-  logEvent(gameCode, EVENT.STANDINGS_SAVED, { round, source: 'game' }).catch(() => {});
+async function prepareNextRound(round, tables, assignments, buncos, players, numTables) {
   if (round >= 6) return;
 
   const roundResults = roundWinners(tables, assignments, buncos, numTables);

@@ -1,6 +1,6 @@
-import { watchGame, watchAllTableScores, submitTableScore, startRound, getRoundAssignments, saveStandings, saveRoundAssignments, EVENT, logEvent } from './firebase.js';
+import { watchGame, watchAllTableScores, submitTableScore, startRound, getRoundAssignments, saveRoundAssignments, EVENT, logEvent } from './firebase.js';
 import { getParam, getDeviceId, forgetActiveGame } from './ui.js';
-import { buildTableLayout, calculateNextRoundSeating, roundWinners, updateStandings } from './game-logic.js';
+import { buildTableLayout, calculateNextRoundSeating, roundWinners, deriveStandings } from './game-logic.js';
 import { renderTableCards } from './table-cards.js';
 import { initCodeEntry } from './code-entry.js';
 
@@ -91,8 +91,7 @@ if (!code) {
 
     // Cumulative standings table
     const players   = data.players   || {};
-    const standings = data.standings || {};
-    const roundBuncos = round >= 1 && round <= 6 ? (data.rounds?.[round]?.buncos || {}) : {};
+    const standings = deriveStandings(data.rounds, round, data.meta.tables);
 
     const rows = Object.entries(players)
       .filter(([, p]) => !p.isGhost)
@@ -100,7 +99,7 @@ if (!code) {
         name:   p.name,
         wins:   standings[id]?.wins        || 0,
         losses: standings[id]?.losses      || 0,
-        buncos: (standings[id]?.buncos || 0) + (roundBuncos[id] || 0),
+        buncos: standings[id]?.buncos      || 0,
         points: standings[id]?.totalPoints || 0,
       }))
       .sort((a, b) => b.wins - a.wins || b.buncos - a.buncos || b.points - a.points);
@@ -191,14 +190,10 @@ if (!code) {
 
     // All tables submitted — advance round
     try {
-      // Update standings
+      // Standings derive from rounds (ADR-0002), so advancing writes none
       const assignments = await getRoundAssignments(code, roundNumber);
       const buncos = data.rounds?.[roundNumber]?.buncos || {};
       const roundResults = roundWinners(tables, assignments, buncos, numTables);
-      const current = data.standings || {};
-      const next = updateStandings(current, tables, roundResults, assignments, buncos);
-      await saveStandings(code, next);
-      logEvent(code, EVENT.STANDINGS_SAVED, { round: roundNumber, source: 'standings' }).catch(() => {});
 
       if (roundNumber >= 6) {
         const ended = await startRound(code, roundNumber, 7);

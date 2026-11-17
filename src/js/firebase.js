@@ -55,7 +55,6 @@ export async function createGame(code, hostDeviceId, numTables, ghostSlots) {
     },
     players: {},
     rounds: {},
-    standings: {},
   };
   logSend(`games/${code}`, gameData);
   await set(ref(db, `games/${code}`), gameData);
@@ -223,11 +222,6 @@ export async function startRound(code, fromRound, toRound) {
     await update(ref(db, `games/${code}/meta`), { gameCalledBy: null });
   }
   return result.committed;
-}
-
-export async function saveStandings(code, standings) {
-  logSend(`games/${code}/standings`, standings);
-  await set(ref(db, `games/${code}/standings`), standings);
 }
 
 export async function initializeRoundTables(code, roundNumber, numTables) {
