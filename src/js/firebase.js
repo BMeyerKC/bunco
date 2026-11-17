@@ -10,6 +10,7 @@ import {
   off,
   runTransaction,
   serverTimestamp,
+  connectDatabaseEmulator,
   query,
   orderByChild,
   limitToLast,
@@ -31,6 +32,12 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db  = getDatabase(app);
+
+// Bot simulator only (sim/): a localhost page opts into the local emulator.
+// The hostname check keeps the live site on the real database regardless.
+const emulatorPort = ['localhost', '127.0.0.1'].includes(globalThis.location?.hostname)
+  && globalThis.localStorage?.getItem('bunco_db_emulator');
+if (emulatorPort) connectDatabaseEmulator(db, '127.0.0.1', Number(emulatorPort));
 
 // Logging helper
 function logSend(path, data) {

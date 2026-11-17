@@ -74,3 +74,4 @@ export const query = (ref) => ref;
 export const orderByChild = () => ({});
 
 export const limitToLast = () => ({});
+export const connectDatabaseEmulator = () => {};

@@ -7,3 +7,5 @@ docs/
 /.superpowers
 dist/
 .astro/
+
+sim/results/
