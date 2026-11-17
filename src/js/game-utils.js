@@ -12,6 +12,18 @@ export function isNameTaken(players, name) {
   return taken.includes(name.toLowerCase());
 }
 
+/**
+ * Transaction updater for adding a player: two phones joining with the same
+ * name at the same moment can't both get in. The first one wins.
+ * @param {object|null} current - games/{code}/players (null until loaded)
+ * @returns {object|undefined} the players map with the new player, or
+ *   undefined (abort) when a real player's name is already taken
+ */
+export function addPlayerUpdate(current, playerId, name, isGhost) {
+  if (!isGhost && isNameTaken(current || {}, name)) return undefined;
+  return { ...(current || {}), [playerId]: { name, isGhost } };
+}
+
 export function getAvailableGhostSeats(players, assignments) {
   return Object.entries(players)
     .filter(([, p]) => p.isGhost)

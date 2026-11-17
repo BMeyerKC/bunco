@@ -1,6 +1,6 @@
 // js/game-controller.js
 import { createGame, addPlayer, claimGhostSeat, watchGame, getGame, saveRoundAssignments, startRound,
-         recordBunco, undoBunco, callGame, submitTableScore,
+         recordBunco, undoBunco, callGame, submitTableScore, submitLiveTableScore,
          incrementTableScore, decrementTableScore, watchTableScore, watchAllTableScores, initializeRoundTables,
          EVENT, logEvent, logGameOrigin } from './firebase.js';
 import { captureOrigin } from './geo.js';
@@ -134,6 +134,12 @@ async function handleJoin() {
   }
 
   const playerId = await addPlayer(gameCode, name, false);
+  if (!playerId) {
+    showToast('Someone already has that name. Add an initial.', 'warning');
+    btn.disabled = false;
+    btn.textContent = 'Join game';
+    return;
+  }
   logEvent(gameCode, EVENT.PLAYER_JOINED, { playerId, name }).catch(() => {});
   localStorage.setItem(`bunco_player_${gameCode}`, playerId);
   rememberActiveGame(gameCode);
@@ -173,6 +179,7 @@ function showWaitingRoom(isHostView) {
 
 async function handleHostJoinAsPlayer() {
   const btn  = document.getElementById('host-join-btn');
+  const btnLabel = btn.textContent;
   const name = document.getElementById('host-join-name').value.trim();
   if (!name) { showToast('Enter your name to join.', 'warning'); return; }
 
@@ -180,6 +187,12 @@ async function handleHostJoinAsPlayer() {
   btn.textContent = 'Joining…';
 
   const playerId = await addPlayer(gameCode, name, false);
+  if (!playerId) {
+    showToast('Someone already has that name. Add an initial.', 'warning');
+    btn.disabled = false;
+    btn.textContent = btnLabel;
+    return;
+  }
   logEvent(gameCode, EVENT.PLAYER_JOINED, { playerId, name }).catch(() => {});
   localStorage.setItem(`bunco_player_${gameCode}`, playerId);
   rememberActiveGame(gameCode);
@@ -612,8 +625,8 @@ async function handleCallGame() {
 }
 
 async function handleSubmitScores(roundNumber) {
-  await submitTableScore(gameCode, roundNumber, myTableId, usScore, themScore);
-  logEvent(gameCode, EVENT.SCORE_SUBMITTED, { round: roundNumber, tableId: myTableId, usScore, themScore }).catch(() => {});
+  const submitted = await submitLiveTableScore(gameCode, roundNumber, myTableId);
+  logEvent(gameCode, EVENT.SCORE_SUBMITTED, { round: roundNumber, tableId: myTableId, ...submitted }).catch(() => {});
   document.getElementById('view-standings-link').href = `standings.html?code=${gameCode}`;
   // If Firebase's optimistic local write fired onGameUpdate → showBetweenRoundsView
   // before this line, skip showing view-submitted so we don't override the transition.
@@ -693,6 +706,12 @@ function updateJoinView(data) {
     const ghostSection = document.getElementById('join-ghost-section');
     const ghostList    = document.getElementById('join-ghost-list');
     if (ghostSection && ghostList) {
+      // Someone else took the seat this phone was about to claim
+      const confirmBtn = document.getElementById('join-ghost-confirm');
+      if (pendingGhostId && !confirmBtn?.disabled && !ghosts.some(g => g.ghostId === pendingGhostId)) {
+        document.getElementById('join-ghost-cancel')?.click();
+        showToast('Someone just took that seat. Pick another.', 'warning');
+      }
       if (ghosts.length === 0) {
         ghostSection.style.display = 'none';
       } else {
@@ -739,11 +758,17 @@ function handleClaimGhost(ghostId) {
   confirmBtn.onclick = async () => {
     const name = nameInput.value.trim();
     if (!name) { showToast('Enter your name to join.', 'warning'); return; }
+    const others = Object.fromEntries(Object.entries(gameData?.players || {}).filter(([id]) => id !== pendingGhostId));
+    if (isNameTaken(others, name)) { showToast('Someone already has that name. Add an initial.', 'warning'); return; }
     confirmBtn.disabled = true;
     confirmBtn.textContent = 'Joining…';
     try {
       if (!gameData) throw new Error('Game data unavailable');
-      await claimGhostSeat(gameCode, pendingGhostId, name);
+      if (!(await claimGhostSeat(gameCode, pendingGhostId, name))) {
+        cancelBtn.click();
+        showToast('Someone just took that seat. Pick another.', 'warning');
+        return;
+      }
       logEvent(gameCode, EVENT.GHOST_CLAIMED, { playerId: pendingGhostId, name }).catch(() => {});
       localStorage.setItem(`bunco_player_${gameCode}`, pendingGhostId);
       rememberActiveGame(gameCode);

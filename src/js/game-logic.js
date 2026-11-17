@@ -254,6 +254,31 @@ export function buncoClaimUpdate(current, playerId, tableId, ts) {
 }
 
 /**
+ * Transaction updater for claiming a ghost seat: first claim wins.
+ * @param {{ name: string, isGhost: boolean }|null} current - players/{id}
+ * @param {string} name - the claiming player's name
+ * @returns {object|null|undefined} the claimed player, null while the seat
+ *   isn't loaded yet (the server re-runs with its value), undefined to abort
+ */
+export function ghostClaimUpdate(current, name) {
+  if (current === null) return null;
+  if (!current.isGhost) return undefined; // someone already took this seat
+  return { ...current, name, isGhost: false };
+}
+
+/**
+ * Transaction updater for a phone submitting its table: records the live
+ * tally as the score at commit time, so taps a slow phone hasn't seen yet
+ * still count.
+ * @param {{ liveUs?: number, liveThem?: number }|null} current - the table
+ * @returns {object} the table with usScore/themScore set and submitted
+ */
+export function submitLiveUpdate(current) {
+  const t = current || {};
+  return { ...t, usScore: t.liveUs || 0, themScore: t.liveThem || 0, submitted: true };
+}
+
+/**
  * Transaction updater for undoing a Bunco's round call. Only clears
  * meta/gameCalledBy if it still points at the table being undone — another
  * table may have independently called Game (Bunco or otherwise) since,

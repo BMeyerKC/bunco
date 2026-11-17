@@ -31,6 +31,7 @@ if (!code) {
   let isAdvancing     = false;
   let latestData      = null;
   let lastObservedRound = null;
+  let ghostFormKey    = '';
 
   const unwatchGame = watchGame(code, data => {
     if (!data) return;
@@ -122,6 +123,7 @@ if (!code) {
       checkAndShowAdvanceButton(data);
     } else {
       document.getElementById('ghost-scoring-section').style.display = 'none';
+      ghostFormKey = '';
       document.getElementById('advance-round-section').style.display = 'none';
     }
   });
@@ -237,6 +239,12 @@ if (!code) {
     const section = document.getElementById('ghost-scoring-section');
     const list = document.getElementById('ghost-tables-list');
 
+    // Every tap at any table re-fires this; rebuilding the form would wipe
+    // scores the host is typing. Rebuild only when the ghost tables change.
+    const key = `${round}:${ghostTables.map(t => t.tableId).join(',')}`;
+    if (key === ghostFormKey) return;
+    ghostFormKey = key;
+
     if (ghostTables.length === 0) {
       section.style.display = 'none';
       return;
@@ -272,6 +280,8 @@ if (!code) {
         try {
           await submitTableScore(code, round, tableId, usScore, themScore);
           logEvent(code, EVENT.SCORE_SUBMITTED, { round, tableId, usScore, themScore, ghost: true }).catch(() => {});
+          input.textContent = `Table ${tableId} submitted`;
+          input.disabled = false;
         } catch (err) {
           console.error('Failed to submit ghost table score:', err);
           input.textContent = `Submit table ${tableId}`;

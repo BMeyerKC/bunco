@@ -16,7 +16,8 @@ import {
   limitToLast,
 } from 'firebase/database';
 
-import { buncoClaimUpdate, uncallGameUpdate } from './game-logic.js';
+import { buncoClaimUpdate, uncallGameUpdate, ghostClaimUpdate, submitLiveUpdate } from './game-logic.js';
+import { addPlayerUpdate } from './game-utils.js';
 
 // ⚠️  databaseURL must match your Firebase Realtime Database URL.
 // Verify at: Firebase Console → Realtime Database → Data tab (shown at top)
@@ -86,18 +87,20 @@ export function watchGame(code, callback) {
 
 // ─── Players ─────────────────────────────────────────────────
 
+/** @returns {Promise<string|null>} the new player's id, or null when the name is taken */
 export async function addPlayer(code, name, isGhost = false) {
-  const playerRef = push(ref(db, `games/${code}/players`));
-  const playerData = { name, isGhost };
-  logSend(`games/${code}/players/${playerRef.key}`, playerData);
-  await set(playerRef, playerData);
-  return playerRef.key;
+  const playersRef = ref(db, `games/${code}/players`);
+  const playerId = push(playersRef).key;
+  logSend(`games/${code}/players/${playerId}`, { name, isGhost });
+  const result = await runTransaction(playersRef, current => addPlayerUpdate(current, playerId, name, isGhost));
+  return result.committed ? playerId : null;
 }
 
+/** @returns {Promise<boolean>} false when someone else claimed the seat first */
 export async function claimGhostSeat(code, playerId, name) {
-  const updateData = { name, isGhost: false };
-  logSend(`games/${code}/players/${playerId}`, updateData);
-  await update(ref(db, `games/${code}/players/${playerId}`), updateData);
+  logSend(`games/${code}/players/${playerId}`, { name, isGhost: false });
+  const result = await runTransaction(ref(db, `games/${code}/players/${playerId}`), current => ghostClaimUpdate(current, name));
+  return result.committed && result.snapshot.exists();
 }
 
 // ─── Live scoring ─────────────────────────────────────────────
@@ -162,6 +165,18 @@ export async function submitTableScore(code, roundNumber, tableId, usScore, them
   const updateData = { usScore, themScore, submitted: true };
   logSend(`games/${code}/rounds/${roundNumber}/tables/${tableId}`, updateData);
   await update(ref(db, `games/${code}/rounds/${roundNumber}/tables/${tableId}`), updateData);
+}
+
+/**
+ * A phone submits its table's live tally (see submitLiveUpdate).
+ * @returns {Promise<{ usScore: number, themScore: number }>} what was recorded
+ */
+export async function submitLiveTableScore(code, roundNumber, tableId) {
+  const path = `games/${code}/rounds/${roundNumber}/tables/${tableId}`;
+  logSend(path, 'submit live score');
+  const result = await runTransaction(ref(db, path), submitLiveUpdate);
+  const { usScore = 0, themScore = 0 } = result.snapshot.val() || {};
+  return { usScore, themScore };
 }
 
 export async function recordBunco(code, roundNumber, playerId, tableId) {
