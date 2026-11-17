@@ -37,7 +37,8 @@ function makeRng(seed) {
 function scenario(seed) {
   const r = makeRng(seed);
   // The setup page's own plan: always at least 2 tables, ghosts fill the rest
-  const plan = seatPlan(r.pick([3, 4, 5, 6, 7, 8, 8, 9, 11, 12]));
+  // SIM_PLAYERS pins the head count (8 → 2 full tables, no ghosts)
+  const plan = seatPlan(Number(process.env.SIM_PLAYERS) || r.pick([3, 4, 5, 6, 7, 8, 8, 9, 11, 12]));
   return {
     seed,
     tables: plan.tables,
