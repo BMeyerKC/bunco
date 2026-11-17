@@ -1,5 +1,5 @@
 // tests/game-utils.test.js
-import { getGhostOnlyTableIds, allTablesSubmitted, seatPlan } from '../src/js/game-utils.js';
+import { getGhostOnlyTableIds, allTablesSubmitted, seatPlan, addPlayerUpdate } from '../src/js/game-utils.js';
 
 describe('getGhostOnlyTableIds', () => {
   test('returns empty array when every table has at least one real player', () => {
@@ -135,5 +135,25 @@ describe('seatPlan', () => {
     expect(seatPlan(40)).toEqual({ players: 24, tables: 6, ghosts: 0 });
     expect(seatPlan(0).players).toBe(1);
     expect(seatPlan('abc').players).toBe(1);
+  });
+});
+
+describe('addPlayerUpdate', () => {
+  const players = { a: { name: 'Ann', isGhost: false }, g: { name: 'Eve', isGhost: true } };
+
+  test('adds a player whose name is free', () => {
+    expect(addPlayerUpdate(players, 'n', 'Dana', false)).toEqual({ ...players, n: { name: 'Dana', isGhost: false } });
+  });
+
+  test('aborts when a real player already has the name, ignoring case', () => {
+    expect(addPlayerUpdate(players, 'n', 'ann', false)).toBeUndefined();
+  });
+
+  test('adds the first player to an empty or not-yet-loaded list', () => {
+    expect(addPlayerUpdate(null, 'n', 'Dana', false)).toEqual({ n: { name: 'Dana', isGhost: false } });
+  });
+
+  test('ghosts are added without the name check', () => {
+    expect(addPlayerUpdate(players, 'n', 'Ann', true)).toEqual({ ...players, n: { name: 'Ann', isGhost: true } });
   });
 });
