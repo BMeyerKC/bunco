@@ -267,6 +267,18 @@ export function ghostClaimUpdate(current, name) {
 }
 
 /**
+ * Transaction updater for a phone submitting its table: records the live
+ * tally as the score at commit time, so taps a slow phone hasn't seen yet
+ * still count.
+ * @param {{ liveUs?: number, liveThem?: number }|null} current - the table
+ * @returns {object} the table with usScore/themScore set and submitted
+ */
+export function submitLiveUpdate(current) {
+  const t = current || {};
+  return { ...t, usScore: t.liveUs || 0, themScore: t.liveThem || 0, submitted: true };
+}
+
+/**
  * Transaction updater for undoing a Bunco's round call. Only clears
  * meta/gameCalledBy if it still points at the table being undone — another
  * table may have independently called Game (Bunco or otherwise) since,

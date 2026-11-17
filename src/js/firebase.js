@@ -15,7 +15,7 @@ import {
   limitToLast,
 } from 'firebase/database';
 
-import { buncoClaimUpdate, uncallGameUpdate, ghostClaimUpdate } from './game-logic.js';
+import { buncoClaimUpdate, uncallGameUpdate, ghostClaimUpdate, submitLiveUpdate } from './game-logic.js';
 import { addPlayerUpdate } from './game-utils.js';
 
 // ⚠️  databaseURL must match your Firebase Realtime Database URL.
@@ -158,6 +158,18 @@ export async function submitTableScore(code, roundNumber, tableId, usScore, them
   const updateData = { usScore, themScore, submitted: true };
   logSend(`games/${code}/rounds/${roundNumber}/tables/${tableId}`, updateData);
   await update(ref(db, `games/${code}/rounds/${roundNumber}/tables/${tableId}`), updateData);
+}
+
+/**
+ * A phone submits its table's live tally (see submitLiveUpdate).
+ * @returns {Promise<{ usScore: number, themScore: number }>} what was recorded
+ */
+export async function submitLiveTableScore(code, roundNumber, tableId) {
+  const path = `games/${code}/rounds/${roundNumber}/tables/${tableId}`;
+  logSend(path, 'submit live score');
+  const result = await runTransaction(ref(db, path), submitLiveUpdate);
+  const { usScore = 0, themScore = 0 } = result.snapshot.val() || {};
+  return { usScore, themScore };
 }
 
 export async function recordBunco(code, roundNumber, playerId, tableId) {
