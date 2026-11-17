@@ -12,6 +12,7 @@ import {
   describeResumableGame,
   uncallGameUpdate,
   roundWinners,
+  deriveStandings,
 } from '../src/js/game-logic.js';
 
 describe('generateGameCode', () => {
@@ -437,5 +438,52 @@ describe('roundWinners', () => {
     expect(next.c).toMatchObject({ wins: 1, losses: 0, buncos: 1 });
     expect(next.d).toMatchObject({ wins: 1, losses: 0 });
     expect(next.a).toMatchObject({ wins: 0, losses: 1 });
+  });
+});
+
+describe('deriveStandings', () => {
+  // Shape of a real two-round game (code 3UJV) whose stored standings
+  // double-counted round 1. Players renamed; firebase arrays keep index 0 null.
+  const a = (tableId, side) => ({ tableId, side });
+  const rounds = [
+    null,
+    {
+      assignments: { jo: a(1, 'us'), wi: a(2, 'us'), fr: a(2, 'them'), sp: a(2, 'us'), ke: a(2, 'them'), mi: a(1, 'them'), pa: a(1, 'them'), ja: a(1, 'us') },
+      tables: [null, { usScore: 0, themScore: 21, submitted: true }, { usScore: 21, themScore: 20, submitted: true }],
+    },
+    {
+      assignments: { jo: a(2, 'us'), wi: a(2, 'us'), fr: a(1, 'us'), sp: a(2, 'them'), ke: a(1, 'them'), mi: a(1, 'us'), pa: a(1, 'them'), ja: a(2, 'them') },
+      buncos: { mi: 1 },
+      tables: [null, { usScore: 5, themScore: 21, submitted: true }, { usScore: 6, themScore: 12, submitted: true }],
+    },
+  ];
+
+  test('counts each completed round exactly once', () => {
+    const s = deriveStandings(rounds, 2, 2);
+    expect(s.wi).toEqual({ wins: 1, losses: 1, buncos: 0, totalPoints: 27 });
+    expect(s.sp).toEqual({ wins: 2, losses: 0, buncos: 0, totalPoints: 33 });
+  });
+
+  test('a Bunco wins round 2 for the roller and teammate despite the score', () => {
+    const s = deriveStandings(rounds, 2, 2);
+    expect(s.mi).toEqual({ wins: 2, losses: 0, buncos: 1, totalPoints: 26 });
+    expect(s.fr).toEqual({ wins: 1, losses: 1, buncos: 0, totalPoints: 25 });
+    expect(s.ke).toEqual({ wins: 0, losses: 2, buncos: 0, totalPoints: 41 });
+  });
+
+  test('an in-progress round adds only its Buncos', () => {
+    const live = [rounds[0], rounds[1], { ...rounds[2], tables: [null, { submitted: true, usScore: 5, themScore: 21 }, {}] }];
+    const s = deriveStandings(live, 2, 2);
+    expect(s.mi).toEqual({ wins: 1, losses: 0, buncos: 1, totalPoints: 21 });
+    expect(s.wi).toEqual({ wins: 1, losses: 0, buncos: 0, totalPoints: 21 });
+  });
+
+  test('ignores rounds past the current one and a finished game (round 7) counts all six', () => {
+    expect(deriveStandings(rounds, 1, 2).wi).toEqual({ wins: 1, losses: 0, buncos: 0, totalPoints: 21 });
+    expect(deriveStandings(rounds, 7, 2).wi).toEqual({ wins: 1, losses: 1, buncos: 0, totalPoints: 27 });
+  });
+
+  test('no rounds yet → empty standings', () => {
+    expect(deriveStandings(undefined, 0, 2)).toEqual({});
   });
 });

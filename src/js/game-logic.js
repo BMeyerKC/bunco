@@ -145,6 +145,35 @@ export function updateStandings(currentStandings, tableResults, roundResults, as
 }
 
 /**
+ * Standings as a derived view over Round Results (ADR-0002): folds every
+ * completed round up to the current one. An in-progress round contributes
+ * only its Buncos, since those are already earned.
+ *
+ * @param {Array|object|undefined} rounds  games/{code}/rounds (index 0 unused)
+ * @param {number} currentRound  meta.currentRound (7 once the game is over)
+ * @param {number} numTables
+ * @returns {{ [id: string]: { wins, losses, buncos, totalPoints } }}
+ */
+export function deriveStandings(rounds, currentRound, numTables) {
+  let standings = {};
+  for (let r = 1; r <= Math.min(currentRound, 6); r++) {
+    const { tables = {}, assignments = {}, buncos = {} } = rounds?.[r] || {};
+    let complete = true;
+    for (let t = 1; t <= numTables; t++) if (!tables[t]?.submitted) complete = false;
+
+    if (complete) {
+      standings = updateStandings(standings, tables, roundWinners(tables, assignments, buncos, numTables), assignments, buncos);
+    } else {
+      for (const [id, n] of Object.entries(buncos)) {
+        standings[id] ??= { wins: 0, losses: 0, buncos: 0, totalPoints: 0 };
+        standings[id].buncos += n;
+      }
+    }
+  }
+  return standings;
+}
+
+/**
  * Groups players and assignments into a per-table structure for rendering.
  *
  * @param {{ [id: string]: { name: string, isGhost: boolean } }} players
