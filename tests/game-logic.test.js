@@ -12,6 +12,7 @@ import {
   describeResumableGame,
   uncallGameUpdate,
   roundWinners,
+  ghostClaimUpdate,
   submitLiveUpdate,
   deriveStandings,
 } from '../src/js/game-logic.js';
@@ -486,6 +487,20 @@ describe('deriveStandings', () => {
 
   test('no rounds yet → empty standings', () => {
     expect(deriveStandings(undefined, 0, 2)).toEqual({});
+  });
+});
+
+describe('ghostClaimUpdate', () => {
+  test('claims an open ghost seat under the new name', () => {
+    expect(ghostClaimUpdate({ name: 'Ghost Gus', isGhost: true }, 'Dot')).toEqual({ name: 'Dot', isGhost: false });
+  });
+
+  test('aborts when someone already took the seat', () => {
+    expect(ghostClaimUpdate({ name: 'Eve', isGhost: false }, 'Dot')).toBeUndefined();
+  });
+
+  test('passes null through so the server retries with its value', () => {
+    expect(ghostClaimUpdate(null, 'Dot')).toBeNull();
   });
 });
 
