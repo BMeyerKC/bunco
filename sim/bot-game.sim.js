@@ -7,6 +7,7 @@ import { test, expect } from '@playwright/test';
 import { writeFileSync, mkdirSync } from 'node:fs';
 import { createGameAndStartRound, closeGameContexts } from '../e2e/actions/setup-tables.js';
 import { checkGame } from './invariants.js';
+import { seatPlan } from '../src/js/game-utils.js';
 
 const DB = 'http://127.0.0.1:9000';
 const NS = 'ns=bunco-60f5d-default-rtdb';
@@ -35,12 +36,12 @@ function makeRng(seed) {
 
 function scenario(seed) {
   const r = makeRng(seed);
-  const humans = r.pick([4, 4, 5, 6, 7, 8, 8, 9, 11, 12]);
-  const tables = Math.ceil(humans / 4);
+  // The setup page's own plan: always at least 2 tables, ghosts fill the rest
+  const plan = seatPlan(r.pick([3, 4, 5, 6, 7, 8, 8, 9, 11, 12]));
   return {
     seed,
-    tables,
-    ghosts: tables * 4 - humans,
+    tables: plan.tables,
+    ghosts: plan.ghosts,
     hostPlays: r.chance(0.6),
     rng: r,
   };
@@ -52,6 +53,11 @@ function parseSeeds(spec = '1-3') {
     return Array.from({ length: (hi ?? lo) - lo + 1 }, (_, i) => lo + i);
   });
 }
+
+// Which screen a phone is showing, for stuck/crash reports
+const viewOf = page => page.evaluate(() =>
+  [...document.querySelectorAll('[id^="view-"]')].find(v => v.offsetParent)?.id ?? location.pathname,
+).catch(() => 'closed');
 
 const sleep = ms => new Promise(res => setTimeout(res, ms));
 
@@ -90,10 +96,11 @@ for (const seed of parseSeeds(process.env.SIM_SEEDS)) {
     const code = session.gameCode;
     note(`seed ${seed}: code ${code}, ${sc.tables} tables, ${sc.ghosts} ghosts, host ${sc.hostPlays ? 'plays' : 'only hosts'}`);
 
+    const devices = [];
     try {
       const game0 = await read(request, `games/${code}`);
       const idByName = Object.fromEntries(Object.entries(game0.players).map(([id, p]) => [p.name, id]));
-      const devices = session.players.map(p => ({ name: p.name, id: idByName[p.name], page: p.page }));
+      devices.push(...session.players.map(p => ({ name: p.name, id: idByName[p.name], page: p.page })));
       if (sc.hostPlays) devices.push({ name: 'Host', id: idByName.Host, page: session.hostPage, host: true });
 
       // A standings tab the host can use to advance or score ghost tables
@@ -113,7 +120,7 @@ for (const seed of parseSeeds(process.env.SIM_SEEDS)) {
             await expect(d.page.locator('#round-label')).toHaveText(`Round ${round} of 6`, { timeout: 20_000 });
             await expect(d.page.locator('#view-scoring')).toBeVisible();
           } catch {
-            const view = await d.page.evaluate(() => [...document.querySelectorAll('[id^="view-"]')].find(v => v.offsetParent)?.id ?? location.pathname);
+            const view = await viewOf(d.page);
             runtime.push(`round ${round}: ${d.name} stuck on ${view}; reloaded`);
             await d.page.reload();
             await expect(d.page.locator('#round-label')).toHaveText(`Round ${round} of 6`);
@@ -230,7 +237,12 @@ for (const seed of parseSeeds(process.env.SIM_SEEDS)) {
         try {
           if (mode === 'game') await fromGame();
           else if (mode === 'standings') await fromStandings();
-          else await Promise.all([fromGame(), fromStandings()]);
+          else {
+            // Whichever tap lands first advances; the other button then goes
+            // away, which is fine. Only both failing is a problem.
+            const tries = await Promise.allSettled([fromGame(), fromStandings()]);
+            if (tries.every(t => t.status === 'rejected')) throw tries[0].reason;
+          }
         } catch (err) {
           runtime.push(`round ${round}: host could not advance from ${mode} (${err.message.split('\n')[0]})`);
           break;
@@ -239,7 +251,12 @@ for (const seed of parseSeeds(process.env.SIM_SEEDS)) {
         await expect.poll(() => read(request, `games/${code}/meta/currentRound`), { timeout: 20_000 })
           .toBe(round + 1).catch(() => runtime.push(`round ${round}: currentRound never reached ${round + 1}`));
       }
+    } catch (err) {
+      const views = await Promise.all(devices.map(async d => `${d.name}: ${await viewOf(d.page)}`));
+      runtime.push(`bots crashed: ${err.message.split(/\r?\n/)[0]} | ${views.join('; ')}`);
+    }
 
+    try {
       // Ghost tables the host typed: what was typed must be what was saved
       const game = await read(request, `games/${code}`);
       for (const [r, tables] of Object.entries(expected)) {

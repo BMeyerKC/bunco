@@ -2,8 +2,11 @@
 // RTDB emulator. Start the emulator first:
 //   npx firebase emulators:start --only database --project bunco-60f5d
 // then: npx playwright test -c sim/playwright.config.js
-// SIM_SEEDS=1-50 picks the games; SIM_WORKERS sets parallel games.
+// SIM_SEEDS=1-50 picks the games; SIM_WORKERS sets parallel games;
+// SIM_PORT serves this checkout's build on another port.
 import { defineConfig, devices } from '@playwright/test';
+
+const port = Number(process.env.SIM_PORT || 4173);
 
 export default defineConfig({
   testDir: '.',
@@ -17,13 +20,16 @@ export default defineConfig({
   outputDir: 'results/artifacts',
   use: {
     ...devices['Desktop Chrome'],
-    baseURL: 'http://localhost:4173',
+    baseURL: `http://localhost:${port}`,
     trace: 'retain-on-failure',
+    // A bot tapping a button that never shows up is a stuck phone: fail fast
+    actionTimeout: 15_000,
+    navigationTimeout: 20_000,
   },
   webServer: {
-    command: 'npm run build && npx astro preview --port 4173',
+    command: `npm run build && npx astro preview --port ${port}`,
     cwd: '..',
-    url: 'http://localhost:4173/game.html',
+    url: `http://localhost:${port}/game.html`,
     reuseExistingServer: true,
     timeout: 120_000,
   },
