@@ -16,6 +16,7 @@ import {
 } from 'firebase/database';
 
 import { buncoClaimUpdate, uncallGameUpdate, ghostClaimUpdate } from './game-logic.js';
+import { addPlayerUpdate } from './game-utils.js';
 
 // ⚠️  databaseURL must match your Firebase Realtime Database URL.
 // Verify at: Firebase Console → Realtime Database → Data tab (shown at top)
@@ -79,12 +80,13 @@ export function watchGame(code, callback) {
 
 // ─── Players ─────────────────────────────────────────────────
 
+/** @returns {Promise<string|null>} the new player's id, or null when the name is taken */
 export async function addPlayer(code, name, isGhost = false) {
-  const playerRef = push(ref(db, `games/${code}/players`));
-  const playerData = { name, isGhost };
-  logSend(`games/${code}/players/${playerRef.key}`, playerData);
-  await set(playerRef, playerData);
-  return playerRef.key;
+  const playersRef = ref(db, `games/${code}/players`);
+  const playerId = push(playersRef).key;
+  logSend(`games/${code}/players/${playerId}`, { name, isGhost });
+  const result = await runTransaction(playersRef, current => addPlayerUpdate(current, playerId, name, isGhost));
+  return result.committed ? playerId : null;
 }
 
 /** @returns {Promise<boolean>} false when someone else claimed the seat first */
