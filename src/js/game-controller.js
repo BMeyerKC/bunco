@@ -134,6 +134,12 @@ async function handleJoin() {
   }
 
   const playerId = await addPlayer(gameCode, name, false);
+  if (!playerId) {
+    showToast('Someone already has that name. Add an initial.', 'warning');
+    btn.disabled = false;
+    btn.textContent = 'Join game';
+    return;
+  }
   logEvent(gameCode, EVENT.PLAYER_JOINED, { playerId, name }).catch(() => {});
   localStorage.setItem(`bunco_player_${gameCode}`, playerId);
   rememberActiveGame(gameCode);
@@ -173,6 +179,7 @@ function showWaitingRoom(isHostView) {
 
 async function handleHostJoinAsPlayer() {
   const btn  = document.getElementById('host-join-btn');
+  const btnLabel = btn.textContent;
   const name = document.getElementById('host-join-name').value.trim();
   if (!name) { showToast('Enter your name to join.', 'warning'); return; }
 
@@ -180,6 +187,12 @@ async function handleHostJoinAsPlayer() {
   btn.textContent = 'Joining…';
 
   const playerId = await addPlayer(gameCode, name, false);
+  if (!playerId) {
+    showToast('Someone already has that name. Add an initial.', 'warning');
+    btn.disabled = false;
+    btn.textContent = btnLabel;
+    return;
+  }
   logEvent(gameCode, EVENT.PLAYER_JOINED, { playerId, name }).catch(() => {});
   localStorage.setItem(`bunco_player_${gameCode}`, playerId);
   rememberActiveGame(gameCode);
