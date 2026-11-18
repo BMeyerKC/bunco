@@ -5,6 +5,8 @@
 // SIM_SEEDS=1-50 picks the games; SIM_WORKERS sets parallel games;
 // SIM_PLAYERS=8 fixes the head count (default: random 3-12);
 // SIM_PORT serves this checkout's build on another port.
+// A game that breaks a rule also saves every phone's table traffic to
+// results/games/seed-N.wire.jsonl.
 import { defineConfig, devices } from '@playwright/test';
 
 const port = Number(process.env.SIM_PORT || 4173);

@@ -6,7 +6,7 @@
 import { test, expect } from '@playwright/test';
 import { writeFileSync, mkdirSync } from 'node:fs';
 import { createGameAndStartRound, closeGameContexts } from '../e2e/actions/setup-tables.js';
-import { checkGame } from './invariants.js';
+import { checkGame, isTableFrame, needsWire } from './invariants.js';
 import { seatPlan } from '../src/js/game-utils.js';
 
 const DB = 'http://127.0.0.1:9000';
@@ -68,13 +68,26 @@ async function read(request, path) {
 }
 
 // Every context this browser opens talks to the emulator, never the live DB.
-const emulatorBrowser = browser => ({
-  newContext: async opts => {
-    const ctx = await browser.newContext(opts);
-    await ctx.addInitScript(() => localStorage.setItem('bunco_db_emulator', '9000'));
-    return ctx;
-  },
-});
+// Each phone's table traffic goes into `wire`, in the order this process saw it.
+const emulatorBrowser = (browser, wire) => {
+  let phones = 0;
+  return {
+    newContext: async opts => {
+      const ctx = await browser.newContext(opts);
+      await ctx.addInitScript(() => localStorage.setItem('bunco_db_emulator', '9000'));
+      const phone = ++phones;
+      const record = dir => ({ payload }) => {
+        const frame = String(payload);
+        if (isTableFrame(frame)) wire.push({ at: Date.now(), phone, dir, frame });
+      };
+      ctx.on('page', page => page.on('websocket', ws => {
+        ws.on('framesent', record('sent'));
+        ws.on('framereceived', record('received'));
+      }));
+      return ctx;
+    },
+  };
+};
 
 for (const seed of parseSeeds(process.env.SIM_SEEDS)) {
   test(`bot game seed ${seed}`, async ({ browser, baseURL, request }) => {
@@ -84,10 +97,11 @@ for (const seed of parseSeeds(process.env.SIM_SEEDS)) {
     const note = msg => log.push(msg);
     const runtime = []; // violations seen while playing (stuck screens, etc.)
     const expected = {};
+    const wire = [];
 
     const humans = sc.tables * 4 - sc.ghosts;
     const session = await createGameAndStartRound({
-      browser: emulatorBrowser(browser),
+      browser: emulatorBrowser(browser, wire),
       baseURL,
       tables: sc.tables,
       ghosts: sc.ghosts,
@@ -277,6 +291,7 @@ for (const seed of parseSeeds(process.env.SIM_SEEDS)) {
 
       mkdirSync('sim/results/games', { recursive: true });
       writeFileSync(`sim/results/games/seed-${seed}.json`, JSON.stringify({ seed, code, violations, log, game, events }, null, 1));
+      if (needsWire(violations)) writeFileSync(`sim/results/games/seed-${seed}.wire.jsonl`, wire.map(w => JSON.stringify(w)).join('\n'));
       expect(violations, log.join('\n')).toEqual([]);
     } finally {
       await closeGameContexts(session);
