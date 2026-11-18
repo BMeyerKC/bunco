@@ -332,8 +332,15 @@ export function onGameUpdate(data) {
       betweenRoundsForRound = round;
       showBetweenRoundsView(data);
     } else if (!allDone && (currentView === 'view-waiting' || currentView === 'view-between-rounds')) {
-      // A new round started while we're in a holding view — go to scoring
+      // A new round started while we're in a holding view — go to scoring.
+      // Or a pending submit's optimistic copy briefly read as round over (#43):
+      // clear the latch so the real round-over still shows between-rounds.
+      if (betweenRoundsForRound === round) betweenRoundsForRound = 0;
       navigateToScoring(data);
+    } else if (currentView === 'view-submitted') {
+      // "Submitted" only while our table really is, this round (#43, #44)
+      const myTable = data.rounds?.[round]?.assignments?.[myPlayerId]?.tableId;
+      if (myTable && !tables[myTable]?.submitted) navigateToScoring(data);
     }
   }
 }

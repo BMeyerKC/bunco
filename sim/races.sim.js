@@ -142,6 +142,97 @@ test('host types a ghost table score while another table is scoring', async ({ b
   }
 });
 
+test("a tap still on its way when a tablemate submits keeps the table submitted", async ({ browser, baseURL, request }) => {
+  const code = randomCode();
+  const ids = ['a', 'b', 'c', 'd'];
+  await put(request, `games/${code}`, {
+    meta: meta(1, 1, 0),
+    players: Object.fromEntries(ids.map(id => [id, { name: `P${id}`, isGhost: false }])),
+    rounds: [null, {
+      assignments: Object.fromEntries(ids.map((id, i) => [id, seat(1, i < 2 ? 'us' : 'them', (i % 2) + 1)])),
+      tables: [null, { liveUs: 20, liveThem: 17, submitted: false }],
+    }],
+  });
+  const p = await phone(browser, 'race-a');
+  try {
+    const held = [];
+    let holding = false;
+    let server;
+    await p.page.routeWebSocket(/127\.0\.0\.1:9000/, ws => {
+      server = ws.connectToServer();
+      ws.onMessage(m => (holding && String(m).includes('liveUs') ? held.push(m) : server.send(m)));
+      server.onMessage(m => ws.send(m));
+    });
+    await p.ctx.addInitScript(c => localStorage.setItem(`bunco_player_${c}`, 'a'), code);
+    await p.page.goto(`${baseURL}/game.html?code=${code}`);
+    await expect(p.page.locator('#sc-us-score')).toHaveText('20');
+
+    holding = true;
+    await p.page.click('#sc-us .side-add');
+    await expect.poll(() => held.length).toBeGreaterThan(0);
+    // A tablemate's submit lands first
+    await request.patch(`${DB}/games/${code}/rounds/1/tables/1.json?${NS}`, { headers: OWNER, data: { usScore: 20, themScore: 17, submitted: true } });
+    holding = false;
+    held.splice(0).forEach(m => server.send(m));
+
+    await expect.poll(async () => {
+      const t = await read(request, `games/${code}/rounds/1/tables/1`);
+      return `live ${t.liveUs}-${t.liveThem}, saved ${t.usScore}-${t.themScore}, submitted ${t.submitted}`;
+    }).toBe('live 21-17, saved 21-17, submitted true');
+  } finally {
+    await p.ctx.close();
+  }
+});
+
+// Seed 164: a lagging phone's queued taps and a tablemate's submit reach the
+// database together
+for (let n = 1; n <= Number(process.env.RACE_REPEAT || 1); n++) {
+  test(`queued taps and a submit arrive together (${n})`, async ({ browser, baseURL, request }) => {
+    const code = randomCode();
+    const ids = ['a', 'b', 'c', 'd'];
+    await put(request, `games/${code}`, {
+      meta: meta(1, 1, 0),
+      players: Object.fromEntries(ids.map(id => [id, { name: `P${id}`, isGhost: false }])),
+      rounds: [null, {
+        assignments: Object.fromEntries(ids.map((id, i) => [id, seat(1, i < 2 ? 'us' : 'them', (i % 2) + 1)])),
+        tables: [null, { liveUs: 18, liveThem: 14, submitted: false }],
+      }],
+    });
+    const phones = [];
+    try {
+      for (const [id, hold] of [['a', 'submitted'], ['c', 'liveUs']]) {
+        const p = await phone(browser, `race-${id}`);
+        p.held = [];
+        p.holding = false;
+        await p.page.routeWebSocket(/127\.0\.0\.1:9000/, ws => {
+          p.server = ws.connectToServer();
+          ws.onMessage(m => (p.holding && String(m).includes(hold) ? p.held.push(m) : p.server.send(m)));
+          p.server.onMessage(m => ws.send(m));
+        });
+        await p.ctx.addInitScript(([c, pid]) => localStorage.setItem(`bunco_player_${c}`, pid), [code, id]);
+        await p.page.goto(`${baseURL}/game.html?code=${code}`);
+        await expect(p.page.locator('#sc-us-score')).toHaveText('18');
+        phones.push(p);
+      }
+      const [submitter, tapper] = phones;
+      tapper.holding = true;
+      for (let i = 0; i < 3; i++) await tapper.page.click('#sc-us .side-add');
+      await expect.poll(() => tapper.held.length).toBeGreaterThan(0);
+      submitter.holding = true;
+      await submitter.page.click('#submit-scores-btn');
+      await expect.poll(() => submitter.held.length).toBeGreaterThan(0);
+      for (const p of [submitter, tapper]) { p.holding = false; p.held.splice(0).forEach(m => p.server.send(m)); }
+
+      await expect.poll(async () => {
+        const t = await read(request, `games/${code}/rounds/1/tables/1`);
+        return `live ${t.liveUs}-${t.liveThem}, saved ${t.usScore}-${t.themScore}, submitted ${t.submitted}`;
+      }).toBe('live 21-14, saved 21-14, submitted true');
+    } finally {
+      await Promise.all(phones.map(p => p.ctx.close()));
+    }
+  });
+}
+
 test('an old phone on slow Wi-Fi submits right after its tablemates tap fast', async ({ browser, baseURL, request }) => {
   const code = randomCode();
   const ids = ['a', 'b', 'c', 'd'];
