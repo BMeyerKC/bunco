@@ -14,7 +14,7 @@ import {
   roundWinners,
   ghostClaimUpdate,
   submitLiveUpdate,
-  tapUpdate,
+  tapSyncUpdate,
   deriveStandings,
 } from '../src/js/game-logic.js';
 
@@ -516,21 +516,39 @@ describe('submitLiveUpdate', () => {
   });
 });
 
-describe('tapUpdate', () => {
-  test('adds a point to the live tally', () => {
-    expect(tapUpdate({ liveUs: 4, liveThem: 2 }, 'us', 1)).toEqual({ liveUs: 5, liveThem: 2 });
+describe('tapSyncUpdate', () => {
+  const live = t => `${t.liveUs}-${t.liveThem}`;
+
+  test("adds this phone's new taps to the live tally", () => {
+    const t = tapSyncUpdate({ liveUs: 4, liveThem: 2, taps: { p1: { us: 1, them: 0 } } }, 'p1', { us: 2, them: 0 });
+    expect(live(t)).toBe('5-2');
+    expect(t.taps.p1).toEqual({ us: 2, them: 0 });
   });
 
-  test('undo never goes below 0', () => {
-    expect(tapUpdate({ liveUs: 0, liveThem: 3 }, 'us', -1)).toEqual({ liveUs: 0, liveThem: 3 });
+  test('sending the same counts again changes nothing (a resend after a reload)', () => {
+    const once = tapSyncUpdate({ liveUs: 4, liveThem: 2 }, 'p1', { us: 1, them: 0 });
+    expect(tapSyncUpdate(once, 'p1', { us: 1, them: 0 })).toEqual(once);
+  });
+
+  test("leaves other phones' taps alone", () => {
+    const t = tapSyncUpdate({ liveUs: 3, liveThem: 0, taps: { p2: { us: 3, them: 0 } } }, 'p1', { us: 0, them: 1 });
+    expect(live(t)).toBe('3-1');
+    expect(t.taps.p2).toEqual({ us: 3, them: 0 });
+  });
+
+  test("an undo can take back a tablemate's point, but never below 0", () => {
+    const t = tapSyncUpdate({ liveUs: 1, liveThem: 0, taps: { p2: { us: 1, them: 0 } } }, 'p1', { us: -2, them: 0 });
+    expect(live(t)).toBe('0-0');
+    // ...and this phone's next tap still shows up
+    expect(live(tapSyncUpdate(t, 'p1', { us: -1, them: 0 }))).toBe('1-0');
   });
 
   test("a tap that lands after a tablemate submitted moves the table's score too", () => {
-    expect(tapUpdate({ liveUs: 20, liveThem: 17, usScore: 20, themScore: 17, submitted: true }, 'us', 1))
-      .toEqual({ liveUs: 21, liveThem: 17, usScore: 21, themScore: 17, submitted: true });
+    const t = tapSyncUpdate({ liveUs: 20, liveThem: 17, usScore: 20, themScore: 17, submitted: true }, 'p1', { us: 1, them: 0 });
+    expect(`${t.usScore}-${t.themScore}`).toBe('21-17');
   });
 
-  test('passes an unloaded table through as a fresh tally', () => {
-    expect(tapUpdate(null, 'them', 1)).toEqual({ liveThem: 1 });
+  test("an unloaded table starts from this phone's counts", () => {
+    expect(live(tapSyncUpdate(null, 'p1', { us: 0, them: 1 }))).toBe('0-1');
   });
 });

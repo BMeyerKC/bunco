@@ -16,7 +16,7 @@ import {
   limitToLast,
 } from 'firebase/database';
 
-import { buncoClaimUpdate, uncallGameUpdate, ghostClaimUpdate, submitLiveUpdate, tapUpdate } from './game-logic.js';
+import { buncoClaimUpdate, uncallGameUpdate, ghostClaimUpdate, submitLiveUpdate, tapSyncUpdate } from './game-logic.js';
 import { addPlayerUpdate } from './game-utils.js';
 
 // ⚠️  databaseURL must match your Firebase Realtime Database URL.
@@ -105,16 +105,14 @@ export async function claimGhostSeat(code, playerId, name) {
 
 // ─── Live scoring ─────────────────────────────────────────────
 
-export async function incrementTableScore(code, roundNumber, tableId, side) {
+/**
+ * Sends this phone's tap counts for its table (see tapSyncUpdate). getMine is
+ * read each time the transaction runs, so a retry carries the latest count.
+ */
+export async function syncMyTaps(code, roundNumber, tableId, deviceId, getMine) {
   const path = `games/${code}/rounds/${roundNumber}/tables/${tableId}`;
-  logSend(`${path}/${side === 'us' ? 'liveUs' : 'liveThem'}`, 'increment');
-  await runTransaction(ref(db, path), t => tapUpdate(t, side, 1));
-}
-
-export async function decrementTableScore(code, roundNumber, tableId, side) {
-  const path = `games/${code}/rounds/${roundNumber}/tables/${tableId}`;
-  logSend(`${path}/${side === 'us' ? 'liveUs' : 'liveThem'}`, 'decrement');
-  await runTransaction(ref(db, path), t => tapUpdate(t, side, -1));
+  logSend(`${path}/taps/${deviceId}`, getMine());
+  await runTransaction(ref(db, path), t => tapSyncUpdate(t, deviceId, getMine()));
 }
 
 export function watchTableScore(code, roundNumber, tableId, callback) {

@@ -1,7 +1,7 @@
 // js/game-controller.js
 import { createGame, addPlayer, claimGhostSeat, watchGame, getGame, saveRoundAssignments, startRound,
          recordBunco, undoBunco, callGame, submitTableScore, submitLiveTableScore,
-         incrementTableScore, decrementTableScore, watchTableScore, watchAllTableScores, initializeRoundTables,
+         syncMyTaps, watchTableScore, watchAllTableScores, initializeRoundTables,
          EVENT, logEvent, logGameOrigin } from './firebase.js';
 import { captureOrigin } from './geo.js';
 import { generateGameCode, assignRandomSeats,
@@ -404,6 +404,11 @@ let tableScoreUnsubscribe = null;
 let allTableScoresUnsubscribe = null;
 let allTableScoresRound       = 0;
 let allTableScoresTables      = [];
+// This phone's taps minus undos at its table this round, saved before every
+// send so a reload can resend what never reached the table (#35)
+let myTaps = { us: 0, them: 0 };
+let myTapsKey = null;
+let myTapsLoaded = false;
 
 function navigateToScoring(data) {
   myPlayerId = localStorage.getItem(`bunco_player_${gameCode}`);
@@ -420,6 +425,14 @@ function navigateToScoring(data) {
 
   myTableId = myAssignment?.tableId || 1;
   usScore   = 0;
+  const round = data.meta.currentRound;
+  myTapsKey = `bunco_taps_${gameCode}_${round}_${myTableId}`;
+  Object.keys(localStorage).filter(k => k.startsWith('bunco_taps_') && k !== myTapsKey)
+    .forEach(k => localStorage.removeItem(k));
+  const saved = JSON.parse(localStorage.getItem(myTapsKey) || 'null');
+  myTaps = saved || { us: 0, them: 0 };
+  myTapsLoaded = !!saved;
+  if (saved) sendMyTaps(round); // after a reload: resending counts is harmless
   themScore = 0;
   // A picker left open from a round that just got submitted out from under
   // this device (e.g. a teammate submitted while we were still choosing)
@@ -434,7 +447,16 @@ function navigateToScoring(data) {
     allTableScoresUnsubscribe = null;
     allTableScoresRound = 0;
   }
-  tableScoreUnsubscribe = watchTableScore(gameCode, data.meta.currentRound, myTableId, tableData => {
+  tableScoreUnsubscribe = watchTableScore(gameCode, round, myTableId, tableData => {
+    if (!myTapsLoaded) {
+      // Nothing saved on this phone: pick up what the table has for it, plus
+      // anything tapped while the table was loading
+      const had = tableData.taps?.[deviceId] || {};
+      const pending = myTaps.us || myTaps.them;
+      myTaps = { us: (had.us || 0) + myTaps.us, them: (had.them || 0) + myTaps.them };
+      myTapsLoaded = true;
+      if (pending) { localStorage.setItem(myTapsKey, JSON.stringify(myTaps)); sendMyTaps(round); }
+    }
     usScore = tableData.liveUs || 0;
     themScore = tableData.liveThem || 0;
     renderScores();
@@ -508,30 +530,38 @@ function triggerScorePop(el) {
   el.classList.add('score-pop');
 }
 
+function tap(roundNumber, side, delta) {
+  myTaps[side] += delta;
+  localStorage.setItem(myTapsKey, JSON.stringify(myTaps));
+  if (myTapsLoaded) sendMyTaps(roundNumber);
+}
+
+function sendMyTaps(roundNumber) {
+  const key = myTapsKey; // a retry after the round moves on still sends this round's counts
+  syncMyTaps(gameCode, roundNumber, myTableId, deviceId, () => JSON.parse(localStorage.getItem(key)))
+    .catch(() => showToast("That point didn't save. Check your connection.", 'warning'));
+}
+
 function attachScoringListeners(roundNumber) {
   const signal = scoringAbortController.signal;
 
   document.getElementById('sc-us').addEventListener('click', e => {
     if (e.target.closest('#sc-us-dec')) return;
     keepScreenAwake();
-    incrementTableScore(gameCode, roundNumber, myTableId, 'us')
-      .catch(() => showToast("That point didn't save. Check your connection.", 'warning'));
+    tap(roundNumber, 'us', 1);
   }, { signal });
   document.getElementById('sc-them').addEventListener('click', e => {
     if (e.target.closest('#sc-them-dec')) return;
     keepScreenAwake();
-    incrementTableScore(gameCode, roundNumber, myTableId, 'them')
-      .catch(() => showToast("That point didn't save. Check your connection.", 'warning'));
+    tap(roundNumber, 'them', 1);
   }, { signal });
   document.getElementById('sc-us-dec').addEventListener('click', e => {
     e.stopPropagation();
-    decrementTableScore(gameCode, roundNumber, myTableId, 'us')
-      .catch(() => showToast("That point didn't save. Check your connection.", 'warning'));
+    tap(roundNumber, 'us', -1);
   }, { signal });
   document.getElementById('sc-them-dec').addEventListener('click', e => {
     e.stopPropagation();
-    decrementTableScore(gameCode, roundNumber, myTableId, 'them')
-      .catch(() => showToast("That point didn't save. Check your connection.", 'warning'));
+    tap(roundNumber, 'them', -1);
   }, { signal });
   document.getElementById('bunco-btn').addEventListener('click', e => {
     if (e.currentTarget.dataset.claimed === 'true') {

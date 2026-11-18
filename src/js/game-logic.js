@@ -279,19 +279,28 @@ export function submitLiveUpdate(current) {
 }
 
 /**
- * Transaction updater for a point tap (delta 1) or undo (delta -1) on a
- * table. If a tablemate already submitted, the saved score follows the tap,
- * so a point still on its way at submit time isn't lost (#39).
+ * Transaction updater that brings a table up to date with one phone's taps.
+ * Each phone keeps its own running count of taps minus undos (taps/{deviceId})
+ * and sends the whole count, never "+1", so a resend after a dropped
+ * connection or a reload changes nothing (#35). The live score moves by the
+ * difference from what the table last had for this phone. If a tablemate
+ * already submitted, the saved score follows too, so a point still on its way
+ * at submit time isn't lost (#39).
  * @param {object|null} current - the table
- * @param {'us'|'them'} side
- * @param {1|-1} delta
+ * @param {string} deviceId
+ * @param {{ us: number, them: number }} mine - this phone's counts
  * @returns {object} the updated table
  */
-export function tapUpdate(current, side, delta) {
+export function tapSyncUpdate(current, deviceId, mine) {
   const t = current || {};
-  const live = side === 'us' ? 'liveUs' : 'liveThem';
-  const next = Math.max(0, (t[live] || 0) + delta);
-  return { ...t, [live]: next, ...(t.submitted && { [side === 'us' ? 'usScore' : 'themScore']: next }) };
+  const was = t.taps?.[deviceId] || {};
+  const liveUs = Math.max(0, (t.liveUs || 0) + mine.us - (was.us || 0));
+  const liveThem = Math.max(0, (t.liveThem || 0) + mine.them - (was.them || 0));
+  return {
+    ...t, liveUs, liveThem,
+    taps: { ...t.taps, [deviceId]: { us: mine.us, them: mine.them } },
+    ...(t.submitted && { usScore: liveUs, themScore: liveThem }),
+  };
 }
 
 /**
