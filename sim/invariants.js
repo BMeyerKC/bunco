@@ -2,6 +2,12 @@
 // Pure: takes the game record + event list, returns violation strings.
 import { roundWinners, calculateNextRoundSeating, deriveStandings } from '../src/js/game-logic.js';
 
+// Table reads and writes, plus the server's accept/reject replies (they carry no path)
+export const isTableFrame = frame => frame.includes('tables') || frame.includes('"b":{"s":"');
+
+// Most games only trip the event-log counts (#34): no recording needed for those
+export const needsWire = violations => violations.some(v => !/ (started|logged) \d+ times$/.test(v));
+
 /**
  * @param {object} game  games/{code} from the database
  * @param {object[]} events  values of games/{code}/events

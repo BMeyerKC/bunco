@@ -1,6 +1,6 @@
 // tests/sim-invariants.test.js — the bot simulator's rule checks must
 // pass a valid game and catch each kind of corruption.
-import { checkGame } from '../sim/invariants.js';
+import { checkGame, isTableFrame, needsWire } from '../sim/invariants.js';
 import { assignRandomSeats, calculateNextRoundSeating, roundWinners } from '../src/js/game-logic.js';
 
 function validGame() {
@@ -56,4 +56,17 @@ test('catches bot taps that never reached the database', () => {
   const { game, events } = validGame();
   expect(checkGame(game, events, { 2: { 2: { us: 5, them: 21 } } }))
     .toContain('round 2 table 2: bots tapped 5-21 but live score is 4-21');
+});
+
+test('records table traffic and server replies, not other frames', () => {
+  expect(isTableFrame('{"t":"d","d":{"r":7,"a":"p","b":{"p":"/games/AB/rounds/4/tables/2","d":{},"h":"x"}}}')).toBe(true);
+  expect(isTableFrame('{"t":"d","d":{"r":7,"b":{"s":"datastale","d":""}}}')).toBe(true);
+  expect(isTableFrame('{"t":"d","d":{"a":"d","b":{"p":"games/AB/events/x","d":{}}}}')).toBe(false);
+  expect(isTableFrame('0')).toBe(false);
+});
+
+test('saves a recording for real problems but not event-log counts alone', () => {
+  expect(needsWire(['round 2 started 2 times', 'game_ended logged 3 times'])).toBe(false);
+  expect(needsWire([])).toBe(false);
+  expect(needsWire(['round 2 started 2 times', 'round 4 table 2: never submitted'])).toBe(true);
 });
