@@ -5,7 +5,7 @@ describe('captureOrigin', () => {
     delete global.fetch;
   });
 
-  test('maps a successful response to the expected shape', async () => {
+  test('maps a successful response to approximate location, leaving out the IP', async () => {
     global.fetch = jest.fn().mockResolvedValue({
       ok: true,
       json: () => Promise.resolve({
@@ -19,7 +19,6 @@ describe('captureOrigin', () => {
     const result = await captureOrigin();
 
     expect(result).toEqual({
-      ip: '203.0.113.42',
       city: 'Kansas City',
       region: 'Missouri',
       country: 'United States',
@@ -35,7 +34,7 @@ describe('captureOrigin', () => {
 
     const result = await captureOrigin();
 
-    expect(result).toEqual({ ip: null, city: null, region: null, country: null });
+    expect(result).toEqual({ city: null, region: null, country: null });
   });
 
   test('throws when the response is not OK', async () => {

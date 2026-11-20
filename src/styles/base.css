@@ -531,12 +531,25 @@ a.wordmark:hover { color: var(--pen); }
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 4px 12px;
   padding: 10px var(--gutter);
   border-top: 2px solid var(--rule);
   background: var(--paper);
 }
 .site-footer .version-tag { font-size: var(--fs-caption); color: var(--muted); }
+.site-footer:has(.footer-links) { flex-wrap: wrap; }
+@media (max-width: 640px) {
+  .site-footer .version-tag:has(+ .footer-links) { flex-basis: 100%; }
+}
+.footer-links { display: flex; gap: 4px; margin-left: -8px; }
+.footer-links a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tap);
+  padding: 0 8px;
+  font-size: var(--fs-small);
+  font-weight: 700;
+}
 
 .feedback-btn {
   display: inline-flex;
