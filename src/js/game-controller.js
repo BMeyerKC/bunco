@@ -501,6 +501,7 @@ function navigateToScoring(data) {
     half.querySelector('.half-team-label').textContent = sideLabel(side);
     half.querySelector('.side-add')?.setAttribute('aria-label', `Add a point for ${sideLabel(side).toLowerCase()}`);
     document.getElementById(`sc-${side}-dec`).setAttribute('aria-label', `Take a point from ${sideLabel(side).toLowerCase()}`);
+    document.getElementById(`sc-${side}-five`).setAttribute('aria-label', `Add 5 points for ${sideLabel(side).toLowerCase()}`);
   }
 
   const usNameEl = document.getElementById('sc-us-names');
@@ -553,15 +554,31 @@ function attachScoringListeners(roundNumber) {
   const signal = scoringAbortController.signal;
 
   document.getElementById('sc-us').addEventListener('click', e => {
-    if (e.target.closest('#sc-us-dec')) return;
+    if (e.target.closest('#sc-us-dec, #sc-us-five')) return;
     keepScreenAwake();
     tap(roundNumber, 'us', 1);
   }, { signal });
   document.getElementById('sc-them').addEventListener('click', e => {
-    if (e.target.closest('#sc-them-dec')) return;
+    if (e.target.closest('#sc-them-dec, #sc-them-five')) return;
     keepScreenAwake();
     tap(roundNumber, 'them', 1);
   }, { signal });
+  for (const side of ['us', 'them']) {
+    document.getElementById(`sc-${side}-five`).addEventListener('click', e => {
+      e.stopPropagation();
+      keepScreenAwake();
+      tap(roundNumber, side, 5);
+      const at = { round: roundNumber, tableId: myTableId, side };
+      logEvent(gameCode, EVENT.FIVE_ADDED, at).catch(() => {});
+      showToast('Added 5 points.', 'info', {
+        actionLabel: 'Undo',
+        onAction: () => {
+          tap(roundNumber, side, -5);
+          logEvent(gameCode, EVENT.FIVE_UNDONE, at).catch(() => {});
+        },
+      });
+    }, { signal });
+  }
   document.getElementById('sc-us-dec').addEventListener('click', e => {
     e.stopPropagation();
     tap(roundNumber, 'us', -1);

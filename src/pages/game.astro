@@ -142,6 +142,7 @@ import GameLayout from '../layouts/GameLayout.astro';
         <div id="sc-us-score" class="half-score-num" aria-live="polite">0</div>
         <div id="sc-us-tally" class="tally"></div>
         <p class="tap-hint">Tap here to add a point</p>
+        <button type="button" id="sc-us-five" class="half-five-btn" aria-label="Add 5 points for your team">+5</button>
         <button id="sc-us-dec" class="half-dec-btn" aria-label="Take a point from your team">−1</button>
       </div>
 
@@ -154,6 +155,7 @@ import GameLayout from '../layouts/GameLayout.astro';
         <div id="sc-them-score" class="half-score-num" aria-live="polite">0</div>
         <div id="sc-them-tally" class="tally"></div>
         <p class="tap-hint">Tap here to add a point</p>
+        <button type="button" id="sc-them-five" class="half-five-btn" aria-label="Add 5 points for the other team">+5</button>
         <button id="sc-them-dec" class="half-dec-btn" aria-label="Take a point from the other team">−1</button>
       </div>
     </div>
