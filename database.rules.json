@@ -27,6 +27,7 @@
         "city":       { ".validate": "newData.isString() && newData.val().length <= 100" },
         "region":     { ".validate": "newData.isString() && newData.val().length <= 100" },
         "country":    { ".validate": "newData.isString() && newData.val().length <= 100" },
+        "isTest":     { ".validate": "newData.val() === true" },
         "$other":     { ".validate": false }
       }
     },
@@ -44,6 +45,7 @@
         "theme":     { ".validate": "newData.isString() && newData.val().length <= 10" },
         "ua":        { ".validate": "newData.isString() && newData.val().length <= 300" },
         "deviceId":  { ".validate": "newData.isString() && newData.val().length <= 40" },
+        "isTest":    { ".validate": "newData.val() === true" },
         "$other":    { ".validate": false }
       }
     },

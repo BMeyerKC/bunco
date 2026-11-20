@@ -33,6 +33,9 @@ test.describe('quick scorer', () => {
     await adminPage.addInitScript(hash => localStorage.setItem('bunco_admin_unlock', hash), ADMIN_HASH);
     await adminPage.goto('/admin.html');
 
+    // This run's session is flagged as test data, so it only shows once included.
+    await expect(adminPage.locator('#test-count')).not.toBeEmpty();
+    await adminPage.check('#include-test');
     await expect(adminPage.locator('#quick-scorer-list')).not.toContainText('No quick scorer sessions yet.');
     await expect(adminPage.locator('#quick-scorer-list')).not.toContainText('Couldn’t load');
     await expect(adminPage.locator('#quick-scorer-list table')).toBeVisible();

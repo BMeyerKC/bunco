@@ -5,61 +5,111 @@ const version = import.meta.env.PUBLIC_VERSION || 'dev';
 ---
 <Layout title="Bunco Admin" showFeedback={false}>
   <meta slot="head" name="robots" content="noindex" />
-  <div class="tool-page">
-    <h1>Admin</h1>
-
-    <section id="admin-links" class="tool-section">
-      <h2>Quick Links</h2>
-      <div class="tool-row">
-        <a href="/tests.html" class="btn-ink btn-sm">Unit Tests</a>
-        <a href="/playwright-report/index.html" class="btn-ink btn-sm" target="_blank">E2E Report</a>
-        <form id="debug-jump" class="tool-row">
-          <input id="debug-code-input" class="field field-sm"
-                 style="width:100px;text-transform:uppercase;letter-spacing:0.1em;" maxlength="4"
-                 placeholder="CODE" autocomplete="off" />
+  <div class="tool-page dash">
+    <header class="dash-head">
+      <div class="dash-title">
+        <h1>Admin</h1>
+        <span class="dash-version">{version}</span>
+      </div>
+      <nav id="admin-links" class="dash-tools" aria-label="Admin tools">
+        <form id="debug-jump" class="dash-jump">
+          <label class="visually-hidden" for="debug-code-input">Game code</label>
+          <input id="debug-code-input" class="field field-sm dash-code" maxlength="4"
+                 placeholder="CODE" autocomplete="off" aria-describedby="debug-code-error" />
           <button class="btn-ink btn-sm" type="submit">Open debug log</button>
         </form>
+        <label class="dash-toggle" for="include-test" title="Games, quick sessions and feedback created by automated test runs">
+          <input id="include-test" type="checkbox" />
+          Include test data <span id="test-count" class="dash-count"></span>
+        </label>
+        <a href="/tests.html" class="btn-quiet btn-sm">Unit tests</a>
+        <a href="/playwright-report/index.html" class="btn-quiet btn-sm" target="_blank">E2E report</a>
+      </nav>
+      <p id="debug-code-error" class="tool-error dash-jump-error" aria-live="polite"></p>
+    </header>
+
+    <nav class="dash-nav" aria-label="Sections">
+      <a href="#admin-games">Games <span id="nav-games" class="dash-count"></span></a>
+      <a href="#admin-quick-scorer">Quick sessions <span id="nav-sessions" class="dash-count"></span></a>
+      <a href="#admin-places">Places</a>
+      <a href="#admin-feedback">Feedback <span id="nav-feedback" class="dash-count"></span></a>
+    </nav>
+
+    <section id="admin-stats" class="dash-kpis" aria-label="Last 7 days">
+      <div class="kpi">
+        <div class="kpi-label">Full games, last 7 days</div>
+        <div id="stat-games" class="kpi-value">–</div>
+        <div id="stat-games-delta" class="kpi-delta"></div>
       </div>
-      <p id="debug-code-error" class="tool-error"></p>
+      <div class="kpi">
+        <div class="kpi-label">Quick sessions, last 7 days</div>
+        <div id="stat-sessions" class="kpi-value">–</div>
+        <div id="stat-sessions-delta" class="kpi-delta"></div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Players in full games, last 7 days</div>
+        <div id="stat-players" class="kpi-value">–</div>
+        <div id="stat-players-delta" class="kpi-delta"></div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Typical quick session</div>
+        <div id="stat-duration" class="kpi-value">–</div>
+        <div class="kpi-delta">median, last 7 days</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Full games in progress</div>
+        <div id="stat-active" class="kpi-value">–</div>
+        <div class="kpi-delta">started in the last 24 hours</div>
+      </div>
     </section>
 
-    <section id="admin-stats" class="tool-section">
-      <h2>Stats</h2>
-      <div class="tool-row">
-        <div class="stat-tile">
-          <div id="stat-active" class="stat-tile-value">–</div>
-          <div class="stat-tile-label">Active now (24h)</div>
+    <section class="dash-charts" aria-label="Activity, last 14 days">
+      <figure class="dash-panel">
+        <figcaption class="panel-head">
+          <h2>Full games per day</h2>
+        </figcaption>
+        <div id="chart-games" class="day-chart"><p class="dash-empty">Loading…</p></div>
+      </figure>
+      <figure class="dash-panel">
+        <figcaption class="panel-head">
+          <h2>Quick sessions per day</h2>
+        </figcaption>
+        <div id="chart-sessions" class="day-chart"><p class="dash-empty">Loading…</p></div>
+      </figure>
+    </section>
+
+    <section id="admin-games" class="dash-panel">
+      <div class="panel-head">
+        <h2>Recent full games</h2>
+        <span id="games-sub" class="panel-sub"></span>
+      </div>
+      <div id="games-list" class="table-scroll"><p class="dash-empty">Loading…</p></div>
+    </section>
+
+    <div class="dash-split">
+      <section id="admin-quick-scorer" class="dash-panel">
+        <div class="panel-head">
+          <h2>Quick scorer sessions</h2>
+          <span id="sessions-sub" class="panel-sub"></span>
         </div>
-        <div class="stat-tile">
-          <div id="stat-recent" class="stat-tile-value">–</div>
-          <div class="stat-tile-label">Recent games shown</div>
+        <div id="quick-scorer-list" class="table-scroll"><p class="dash-empty">Loading…</p></div>
+      </section>
+
+      <section id="admin-places" class="dash-panel">
+        <div class="panel-head">
+          <h2>Where people play</h2>
+          <span class="panel-sub">Games and quick sessions loaded</span>
         </div>
-        <div class="stat-tile">
-          <div class="stat-tile-value">{version}</div>
-          <div class="stat-tile-label">App version</div>
-        </div>
-      </div>
-    </section>
+        <div id="places-list"><p class="dash-empty">Loading…</p></div>
+      </section>
+    </div>
 
-    <section id="admin-feedback" class="tool-section">
-      <h2>Feedback</h2>
-      <div id="feedback-list">
-        <p style="color:var(--very-muted);">Loading…</p>
+    <section id="admin-feedback" class="dash-panel">
+      <div class="panel-head">
+        <h2>Feedback</h2>
+        <span id="feedback-sub" class="panel-sub"></span>
       </div>
-    </section>
-
-    <section id="admin-games" class="tool-section">
-      <h2>Recent Games</h2>
-      <div id="games-list" class="table-scroll">
-        <p style="color:var(--very-muted);">Loading…</p>
-      </div>
-    </section>
-
-    <section id="admin-quick-scorer">
-      <h2>Quick Scorer Sessions</h2>
-      <div id="quick-scorer-list" class="table-scroll">
-        <p style="color:var(--very-muted);">Loading…</p>
-      </div>
+      <div id="feedback-list"><p class="dash-empty">Loading…</p></div>
     </section>
   </div>
   <script>
