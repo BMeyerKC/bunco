@@ -1,4 +1,4 @@
-import { dailyCounts, periodCounts, median, topPlaces, startOfDay, DAY_MS } from '../src/js/admin-stats.js';
+import { dailyCounts, periodCounts, median, topPlaces, startOfDay, DAY_MS, visibleRecords } from '../src/js/admin-stats.js';
 
 // Mid-afternoon local time, so "today" has room on both sides.
 const NOW = new Date(2026, 10, 19, 15, 30).getTime();
@@ -68,5 +68,30 @@ describe('topPlaces', () => {
   test('respects the limit', () => {
     const rows = ['A', 'B', 'C'].map(location => ({ location }));
     expect(topPlaces(rows, [], 2)).toHaveLength(2);
+  });
+});
+
+describe('visibleRecords', () => {
+  const game     = { code: 'AAAA', meta: { createdAt: 1 } };
+  const testGame = { code: 'BBBB', meta: { createdAt: 2, isTest: true } };
+  const session     = { id: 's1', startedAt: 1 };
+  const testSession = { id: 's2', startedAt: 2, isTest: true };
+  const feedback     = { id: 'f1', message: 'hi' };
+  const testFeedback = { id: 'f2', message: '[e2e] check', isTest: true };
+
+  test('drops records flagged by a test run, whether the flag sits on the record or its meta', () => {
+    expect(visibleRecords([game, testGame], false)).toEqual([game]);
+    expect(visibleRecords([testSession, session], false)).toEqual([session]);
+    expect(visibleRecords([feedback, testFeedback], false)).toEqual([feedback]);
+  });
+
+  test('keeps everything when test data is included', () => {
+    const all = [game, testGame, session, testSession];
+    expect(visibleRecords(all, true)).toEqual(all);
+  });
+
+  test('keeps unflagged records, including ones with a falsy or non-boolean flag', () => {
+    const odd = [{ isTest: false }, { meta: {} }, { isTest: 'true' }];
+    expect(visibleRecords(odd, false)).toEqual(odd);
   });
 });

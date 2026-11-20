@@ -18,6 +18,10 @@ const version = import.meta.env.PUBLIC_VERSION || 'dev';
                  placeholder="CODE" autocomplete="off" aria-describedby="debug-code-error" />
           <button class="btn-ink btn-sm" type="submit">Open debug log</button>
         </form>
+        <label class="dash-toggle" for="include-test" title="Games, quick sessions and feedback created by automated test runs">
+          <input id="include-test" type="checkbox" />
+          Include test data <span id="test-count" class="dash-count"></span>
+        </label>
         <a href="/tests.html" class="btn-quiet btn-sm">Unit tests</a>
         <a href="/playwright-report/index.html" class="btn-quiet btn-sm" target="_blank">E2E report</a>
       </nav>

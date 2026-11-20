@@ -25,6 +25,11 @@
 .dash-jump { display: flex; gap: 6px; margin-right: 6px; }
 .dash-code { width: 6.5em; text-transform: uppercase; letter-spacing: 0.12em; font-weight: 800; }
 .dash-code::placeholder { letter-spacing: 0.08em; font-weight: 700; }
+.dash-toggle {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 8px;
+  color: var(--ink-soft); font-size: var(--fs-small); font-weight: 700; cursor: pointer;
+}
+.dash-toggle input { width: 18px; height: 18px; margin: 0; accent-color: var(--pen); }
 .dash-jump-error { flex-basis: 100%; text-align: right; margin: 0; min-height: 0; }
 .dash-jump-error:empty { display: none; }
 

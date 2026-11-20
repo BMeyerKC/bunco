@@ -40,6 +40,10 @@ const emulatorPort = ['localhost', '127.0.0.1'].includes(globalThis.location?.ho
   && globalThis.localStorage?.getItem('bunco_db_emulator');
 if (emulatorPort) connectDatabaseEmulator(db, '127.0.0.1', Number(emulatorPort));
 
+// Automated browsers (Playwright e2e runs) mark what they create so the
+// admin dashboard can leave it out of its stats.
+const testTag = globalThis.navigator?.webdriver ? { isTest: true } : {};
+
 // Logging helper
 function logSend(path, data) {
   console.log(`[FB SEND] ${path}`, data);
@@ -60,6 +64,7 @@ export async function createGame(code, hostDeviceId, numTables, ghostSlots) {
       gameCalledBy: null,
       hostDeviceId,
       createdAt: serverTimestamp(),
+      ...testTag,
     },
     players: {},
     rounds: {},
@@ -301,7 +306,7 @@ export async function getOriginAudits() {
 export async function startQuickScorerSession(origin = {}) {
   const sessionRef = push(ref(db, 'quickScorerSessions'));
   const id = sessionRef.key;
-  const payload = { startedAt: serverTimestamp(), ...origin };
+  const payload = { startedAt: serverTimestamp(), ...origin, ...testTag };
 
   logSend(`quickScorerSessions/${id}`, payload);
   await set(sessionRef, payload);
@@ -341,7 +346,7 @@ export async function submitFeedback(feedback, contact = null) {
   const id = feedbackRef.key;
 
   logSend(`feedback/${id}`, feedback);
-  await set(feedbackRef, { ...feedback, createdAt: serverTimestamp() });
+  await set(feedbackRef, { ...feedback, ...testTag, createdAt: serverTimestamp() });
 
   if (contact) {
     // Never log the value — this node exists precisely to keep it private.

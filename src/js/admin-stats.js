@@ -89,3 +89,15 @@ export function topPlaces(gameRows, sessionRows, limit) {
     .sort((a, b) => b.total - a.total || a.place.localeCompare(b.place))
     .slice(0, limit);
 }
+
+/**
+ * Records to show on the dashboard. Automated test runs flag what they
+ * write with `isTest` (games keep it in `meta`); those are left out unless
+ * `includeTest` is set. Records written before the flag existed stay counted.
+ * @param {object[]} records  raw games, quick sessions or feedback items
+ * @param {boolean} includeTest
+ */
+export function visibleRecords(records, includeTest) {
+  if (includeTest) return records;
+  return records.filter(r => r.isTest !== true && r.meta?.isTest !== true);
+}

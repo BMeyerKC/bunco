@@ -33,11 +33,21 @@ test.describe('feedback widget', () => {
   test('submitting sends the feedback and confirms', async ({ page }) => {
     await page.goto('/');
     await page.click('#feedback-fab');
-    await page.fill('#feedback-message', `[e2e] automated check ${Date.now()}`);
+    const message = `[e2e] automated check ${Date.now()}`;
+    await page.fill('#feedback-message', message);
     await page.click('#feedback-send');
 
     await expect(page.locator('#bunco-toast')).toHaveText('Feedback sent. Thank you!');
     await expect(page.locator('#feedback-modal')).not.toBeVisible();
+
+    // The admin dashboard hides it as test data until asked to include it.
+    const admin = await page.context().newPage();
+    await admin.addInitScript(hash => localStorage.setItem('bunco_admin_unlock', hash), ADMIN_HASH);
+    await admin.goto('/admin.html');
+    await expect(admin.locator('#feedback-list')).not.toContainText('Loading…');
+    await expect(admin.locator('#feedback-list')).not.toContainText(message);
+    await admin.check('#include-test');
+    await expect(admin.locator('#feedback-list')).toContainText(message);
   });
 
   test('the pill is present on the scorer page', async ({ page }) => {

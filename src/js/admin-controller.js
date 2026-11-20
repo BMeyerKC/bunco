@@ -2,7 +2,7 @@ import { ensureAdminAccess } from './admin-gate.js';
 import { getRecentGames, getOriginAudits, getFeedback, getQuickScorerSessions } from './firebase.js';
 import { buildGameRows } from './game-logic.js';
 import { buildQuickScorerRows } from './quick-scorer-logic.js';
-import { DAY_MS, dailyCounts, periodCounts, median, topPlaces, startOfDay } from './admin-stats.js';
+import { DAY_MS, dailyCounts, periodCounts, median, topPlaces, startOfDay, visibleRecords } from './admin-stats.js';
 
 // shortcut: dashboard stats come from the newest N records, not a date query;
 // when a limit is hit the charts mark the days they can't vouch for. Switch to
@@ -16,15 +16,35 @@ const ROWS_SHOWN     = 12;
 const FEEDBACK_SHOWN = 5;
 const SESSION_BAR_MIN = 60;
 
-// undefined = still loading, null = failed to load
-const state = { games: undefined, sessions: undefined };
+// Raw records as fetched. undefined = still loading, null = failed to load.
+const state = { games: undefined, origins: {}, sessions: undefined, feedback: undefined, includeTest: false };
+
+const shown = records => visibleRecords(records, state.includeTest);
 
 init();
 
 async function init() {
   await ensureAdminAccess();
   wireDebugJump();
+  wireTestToggle();
   await Promise.allSettled([loadGames(), loadQuickScorerSessions(), loadFeedback()]);
+}
+
+function wireTestToggle() {
+  document.getElementById('include-test').addEventListener('change', (e) => {
+    state.includeTest = e.target.checked;
+    renderAll();
+  });
+}
+
+function renderAll() {
+  if (state.games) renderGames(buildGameRows(shown(state.games), state.origins), document.getElementById('games-list'));
+  if (state.sessions) renderQuickScorerSessions(buildQuickScorerRows(shown(state.sessions)), document.getElementById('quick-scorer-list'));
+  if (state.feedback) renderFeedback(shown(state.feedback), document.getElementById('feedback-list'));
+  renderOverview();
+  const hidden = [state.games, state.sessions, state.feedback]
+    .reduce((n, list) => n + (list ? list.length - visibleRecords(list, false).length : 0), 0);
+  document.getElementById('test-count').textContent = hidden ? String(hidden) : '';
 }
 
 function wireDebugJump() {
@@ -50,43 +70,41 @@ async function loadGames() {
   const listEl = document.getElementById('games-list');
   try {
     const games = await getRecentGames(GAME_LIMIT);
-    const origins = await getOriginAudits().catch(err => {
+    state.origins = await getOriginAudits().catch(err => {
       console.error('[admin] failed to load origin audits', err);
       return {};
     });
-    state.games = buildGameRows(games, origins);
-    renderGames(state.games, listEl);
+    state.games = games;
   } catch (err) {
     console.error('[admin] failed to load games', err);
     state.games = null;
     showLoadError(listEl, 'games', loadGames);
   }
-  renderOverview();
+  renderAll();
 }
 
 async function loadQuickScorerSessions() {
   const listEl = document.getElementById('quick-scorer-list');
   try {
-    const sessions = await getQuickScorerSessions(SESSION_LIMIT);
-    state.sessions = buildQuickScorerRows(sessions);
-    renderQuickScorerSessions(state.sessions, listEl);
+    state.sessions = await getQuickScorerSessions(SESSION_LIMIT);
   } catch (err) {
     console.error('[admin] failed to load quick scorer sessions', err);
     state.sessions = null;
     showLoadError(listEl, 'quick scorer sessions', loadQuickScorerSessions);
   }
-  renderOverview();
+  renderAll();
 }
 
 async function loadFeedback() {
   const listEl = document.getElementById('feedback-list');
   try {
-    const items = await getFeedback(FEEDBACK_LIMIT);
-    renderFeedback(items, listEl);
+    state.feedback = await getFeedback(FEEDBACK_LIMIT);
   } catch (err) {
     console.error('[admin] failed to load feedback', err);
+    state.feedback = null;
     showLoadError(listEl, 'feedback', loadFeedback);
   }
+  renderAll();
 }
 
 function showLoadError(el, what, retry) {
@@ -108,20 +126,22 @@ function showLoadError(el, what, retry) {
 // ─── Overview: stats, charts, places ─────────────────────────
 
 /**
- * Oldest moment the loaded rows fully cover. If a fetch came back at its
- * limit, anything older than its oldest row may be missing.
+ * Oldest moment the loaded records fully cover. If a fetch came back at its
+ * limit, anything older than its oldest record may be missing. Takes every
+ * fetched record's timestamp, test data included, since that's what the limit counted.
  */
-function coveredSince(rows, limit, key) {
-  if (rows.length < limit) return 0;
-  return rows[rows.length - 1][key] || 0;
+function coveredSince(stamps, limit) {
+  const known = stamps.filter(Boolean);
+  return stamps.length < limit || known.length === 0 ? 0 : Math.min(...known);
 }
 
 function renderOverview() {
   const now = Date.now();
-  const { games, sessions } = state;
+  const games    = state.games && buildGameRows(shown(state.games), state.origins);
+  const sessions = state.sessions && buildQuickScorerRows(shown(state.sessions));
 
   if (games) {
-    const since = coveredSince(games, GAME_LIMIT, 'createdAt');
+    const since = coveredSince(state.games.map(g => g.meta?.createdAt), GAME_LIMIT);
     const stamps = games.map(r => r.createdAt);
     renderKpi('games', periodCounts(stamps, KPI_DAYS, now), since, now);
 
@@ -139,7 +159,7 @@ function renderOverview() {
   }
 
   if (sessions) {
-    const since = coveredSince(sessions, SESSION_LIMIT, 'startedAt');
+    const since = coveredSince(state.sessions.map(s => s.startedAt), SESSION_LIMIT);
     const stamps = sessions.map(r => r.startedAt);
     renderKpi('sessions', periodCounts(stamps, KPI_DAYS, now), since, now);
 
