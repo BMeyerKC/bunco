@@ -554,6 +554,9 @@ a.wordmark:hover { color: var(--pen); }
   cursor: pointer;
 }
 .feedback-btn:hover { background: var(--pen-soft); }
+/* One footer row on phones: neither label wraps; a long version label truncates. */
+.site-footer .version-tag { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.feedback-btn { flex-shrink: 0; white-space: nowrap; }
 
 /* ── Toasts (ui.js showToast) ── */
 .app-toast {
