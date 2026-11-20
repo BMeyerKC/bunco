@@ -39,7 +39,7 @@ The app facilitates a live session between people who trust each other; it does 
 - Standings are a derived view over Round Results, not stored state (ADR-0002).
 - Host is a UI convention tied to the creating device, not enforced by permissions (ADR-0003). There is no host transfer.
 - Ghost players fill empty seats and can be claimed by a real player.
-- House rules, owner-confirmed: the side that rolls a Bunco wins the table whatever the tapped score; ghosts never roll (a human rolls for them) and cannot earn a Bunco; ties are rolled off before a score is submitted. Ask the owner before inventing any other rule.
+- House rules, owner-confirmed: the side that rolls a Bunco wins the table whatever the tapped score; ghosts never roll (a human rolls for them) and cannot earn a Bunco; three of a kind off the round number is a baby Bunco worth 5 points, and so is a ghost's three of the round number; ties are rolled off before a score is submitted. Ask the owner before inventing any other rule.
 - Identity is per device via localStorage. No accounts, no login.
 - Stack: Astro static site, Firebase Realtime Database, no CSS framework.
 - Known gaps: host cannot edit or erase a Bunco recorded by accident; no countdown between rounds; Winners Move and Head Table rotation are not built.

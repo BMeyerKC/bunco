@@ -44,7 +44,7 @@ A player rolling three-of-a-kind on their called number, worth bonus credit and 
 _Known gap_: the host needs the ability to edit or erase a Bunco recorded by accident. Not yet built.
 
 **Baby Bunco**:
-Three of a kind that does *not* match the round number (in round 5, three 4s). Worth 5 points, added with the +5 button. It is only points: it does not win the table, trigger a Round Called, or count as a Bunco in Standings.
+Three of a kind that does *not* match the round number (in round 5, three 4s). Worth 5 points, added with the +5 button. It is only points: it does not win the table, trigger a Round Called, or count as a Bunco in Standings. A ghost can't earn a Bunco, so three of the round number rolled for a ghost is also a Baby Bunco.
 
 **Standings**:
 The cumulative wins, losses, points, and buncos for each player across the game so far. A *derived view* over all Round Results to date — recomputed on read, not persisted as its own stored value. See ADR-0002.
