@@ -7,7 +7,7 @@ afterEach(() => {
 
 describe('startQuickScorerSession', () => {
   test('resolves to a push id', async () => {
-    const id = await startQuickScorerSession({ ip: '1.2.3.4', city: 'X', region: 'Y', country: 'Z' });
+    const id = await startQuickScorerSession({ city: 'X', region: 'Y', country: 'Z' });
     expect(typeof id).toBe('string');
     expect(id.length).toBeGreaterThan(0);
   });

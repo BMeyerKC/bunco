@@ -1,0 +1,87 @@
+---
+import Layout from '../layouts/Layout.astro';
+import '../styles/legal.css';
+---
+<Layout title="Privacy policy | Bunco Score Keeper" showLegalLinks>
+  <Fragment slot="head">
+    <meta name="description" content="What Bunco Score Keeper collects, why, who can see it, and how to have your information deleted." />
+    <link rel="canonical" href="https://bunco.io/privacy.html" />
+  </Fragment>
+
+  <article class="page legal">
+    <h1>Privacy policy</h1>
+    <p class="legal-updated">Last updated November 17, 2026</p>
+
+    <p>Bunco Score Keeper at bunco.io is run by Brandon Meyer ("we"). This policy explains what the site collects, why, and who can see it.</p>
+
+    <section class="index-card legal-summary" aria-labelledby="privacy-summary">
+      <h2 id="privacy-summary">The short version</h2>
+      <ul>
+        <li>There are no accounts or ads, and we don't sell your information.</li>
+        <li>Anyone can read player names and scores, so use a first name or nickname.</li>
+        <li>We save your approximate location when you host a game or open the Quick Scorer.</li>
+        <li>Email <a href="mailto:privacy@bunco.io">privacy@bunco.io</a> to have your information deleted.</li>
+      </ul>
+    </section>
+
+    <h2 class="ruled-heading">What we collect</h2>
+    <dl>
+      <dt>Game details</dt>
+      <dd>The game code, player names, seating, scores, Buncos, and the times things happen during a game.</dd>
+
+      <dt>Device ID</dt>
+      <dd>A random ID created in your browser. It connects your phone to your game and score taps, and doesn't contain your name or contact details.</dd>
+
+      <dt>Approximate location</dt>
+      <dd>When someone hosts a game or opens the Quick Scorer, the site uses your IP address to look up your city, region, and country. We save that location with the game or visit, but we don't save your IP address. Records from before this policy may include an IP address.</dd>
+
+      <dt>Quick Scorer visits</dt>
+      <dd>When a visit started and when it was last active. The scores you tap in the Quick Scorer aren't sent to us.</dd>
+
+      <dt>Feedback</dt>
+      <dd>Your message, the page and game code you were on, the app version, your light or dark setting, your browser and device type, and your device ID. We only have your name or email if you choose to add it.</dd>
+    </dl>
+
+    <h2 class="ruled-heading">What stays on your phone</h2>
+    <p>Your browser remembers your theme, device ID, which player you are, your last game code, and score taps that haven't been sent yet. This lets you rejoin a game after a reload. Clearing this site's data in your browser removes it.</p>
+    <p>We don't use cookies for advertising or tracking, and the site doesn't show ads.</p>
+
+    <h2 class="ruled-heading">How we use it</h2>
+    <ul>
+      <li>To run your game and keep every phone in sync.</li>
+      <li>To understand how much the site is used and roughly where.</li>
+      <li>To read feedback, reply when you ask us to, and fix problems.</li>
+    </ul>
+
+    <h2 class="ruled-heading">Who can see it</h2>
+    <p><strong>Game details, device IDs, location records, and feedback messages are not private.</strong> They are stored without a login, so anyone with the technical know-how can read them, even without your game code. Please don't put anything sensitive in a player name or feedback message.</p>
+    <p>A name or email you add to feedback is stored separately and isn't public.</p>
+
+    <h2 class="ruled-heading">Services we rely on</h2>
+    <p>These companies receive your IP address when your browser connects to them, and they handle it under their own privacy policies:</p>
+    <ul>
+      <li><strong>Google Firebase</strong> stores game and feedback information.</li>
+      <li><strong>GitHub Pages</strong> hosts the website.</li>
+      <li><strong>Google Fonts</strong> delivers the site's fonts.</li>
+      <li><strong>ipapi.co</strong> looks up approximate location.</li>
+      <li><strong>jsDelivr</strong> delivers the code that draws a game's QR code.</li>
+    </ul>
+    <p>These services may process information in the United States and other countries. We don't sell personal information or share it for targeted advertising. We may disclose information if the law requires it.</p>
+
+    <h2 class="ruled-heading">How long we keep it</h2>
+    <p>Nothing is deleted automatically. Information stays until we remove it or you ask us to.</p>
+
+    <h2 class="ruled-heading">Your choices</h2>
+    <p>You can ask us to show, correct, or delete information about you. Email <a href="mailto:privacy@bunco.io">privacy@bunco.io</a> and include the game code if you have it. Please don't use the feedback form for this, because feedback messages aren't private.</p>
+    <p>Depending on where you live, you may have other privacy rights. Contact us and we'll help.</p>
+
+    <h2 class="ruled-heading">Children</h2>
+    <p>Bunco Score Keeper isn't directed at children under 13, and we don't knowingly collect their personal information. If you think a child has given us information, email us and we'll delete it.</p>
+
+    <h2 class="ruled-heading">Changes to this policy</h2>
+    <p>If this policy changes, we'll post the new version here and update the date at the top.</p>
+
+    <h2 class="ruled-heading">Contact</h2>
+    <p>Questions? Email Brandon Meyer at <a href="mailto:privacy@bunco.io">privacy@bunco.io</a>.</p>
+  </article>
+</Layout>

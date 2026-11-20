@@ -180,7 +180,7 @@ The scale is about 1.25 from a 17px body: 13 / 15 / 17 / 21 / 26 / 33 / 42 / 52.
 
 One centered column, 34rem wide, with a 16px gutter and 24px top and 48px bottom padding. The body is a flex column so the footer sits at the bottom of short pages. Vertical rhythm is a 16px stack between siblings, with 20 to 28px between sections.
 
-The shared shell is a 56px top bar in normal flow (wordmark or Home link left, theme toggle right) and a slim footer (version and Feedback), each separated from the page by a 2px ruled line. Nothing is fixed over content.
+The shared shell is a 56px top bar in normal flow (wordmark or Home link left, theme toggle right) and a slim footer (version and Feedback, plus Privacy and Terms links on the home and legal pages only), each separated from the page by a 2px ruled line. Nothing is fixed over content.
 
 The scoring board is the exception to the column: it fills the viewport as two equal halves split by a dashed rule, each half one large tap target, with its own bar above and action bar below that respects the safe-area inset.
 

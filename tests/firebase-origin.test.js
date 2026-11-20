@@ -3,7 +3,7 @@ import { logGameOrigin, getOriginAudits } from '../src/js/firebase.js';
 describe('logGameOrigin', () => {
   test('resolves without throwing', async () => {
     await expect(
-      logGameOrigin('ABCD', { ip: '1.2.3.4', city: 'X', region: 'Y', country: 'Z' })
+      logGameOrigin('ABCD', { city: 'X', region: 'Y', country: 'Z' })
     ).resolves.toBeUndefined();
   });
 });
