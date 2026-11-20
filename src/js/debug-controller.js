@@ -12,6 +12,8 @@ const EVENT_COLORS = {
   bunco_undone:    '#991b1b',
   game_ended:      '#fbbf24',
   standings_saved: '#0d9488',
+  five_added:      '#0284c7',
+  five_undone:     '#075985',
 };
 
 const code     = new URLSearchParams(window.location.search).get('code')?.toUpperCase();

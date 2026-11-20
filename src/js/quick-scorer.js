@@ -35,6 +35,16 @@ for (const [key, side] of Object.entries(sides)) {
     keepScreenAwake();
     render();
   });
+  half.querySelector('.half-five-btn').addEventListener('click', () => {
+    side.score += 5;
+    pop(document.getElementById(side.num));
+    keepScreenAwake();
+    render();
+    showToast(`Added 5 for ${key === 'us' ? 'Us' : 'Them'}.`, 'info', {
+      actionLabel: 'Undo',
+      onAction: () => { side.score = Math.max(0, side.score - 5); render(); },
+    });
+  });
   half.querySelector('.half-dec-btn').addEventListener('click', () => {
     if (side.score > 0) side.score--;
     render();

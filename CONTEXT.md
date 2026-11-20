@@ -43,6 +43,9 @@ _Known limitation_: no host-transfer mechanism exists. If the host's device is l
 A player rolling three-of-a-kind on their called number, worth bonus credit and triggering a Round Called for their table. Scoped **per table** — each table can independently credit its own Bunco in a round; one table's Bunco does not block another table's Bunco in the same round. `recordBunco` claims against a per-table node (`rounds/{round}/bunco/{tableId}`), so the transaction's first-writer-wins semantics apply within a table, not game-wide.
 _Known gap_: the host needs the ability to edit or erase a Bunco recorded by accident. Not yet built.
 
+**Baby Bunco**:
+Three of a kind that does *not* match the round number (in round 5, three 4s). Worth 5 points, added with the +5 button. It is only points: it does not win the table, trigger a Round Called, or count as a Bunco in Standings. A ghost can't earn a Bunco, so three of the round number rolled for a ghost is also a Baby Bunco.
+
 **Standings**:
 The cumulative wins, losses, points, and buncos for each player across the game so far. A *derived view* over all Round Results to date — recomputed on read, not persisted as its own stored value. See ADR-0002.
 _Avoid_: Treating standings as stored/authoritative state to be incrementally updated (the current implementation does this and has a known double-count race — see ADR-0002)

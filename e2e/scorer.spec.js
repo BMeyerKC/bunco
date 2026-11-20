@@ -13,6 +13,16 @@ test.describe('quick scorer', () => {
     await expect(page.locator('#them-score')).toHaveText('1');
   });
 
+  test('+5 adds five points, and Undo takes them back', async ({ page }) => {
+    await page.goto('/scorer.html');
+    await page.click('#us-half');
+    await page.click('#us-five');
+    await expect(page.locator('#us-score')).toHaveText('6');
+
+    await page.click('.app-toast-action');
+    await expect(page.locator('#us-score')).toHaveText('1');
+  });
+
   test('a visit starts a quick scorer session visible in admin', async ({ page }) => {
     await page.goto('/scorer.html');
     // startQuickScorerSession() fires once geo capture settles (or fails) —
