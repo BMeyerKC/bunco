@@ -286,7 +286,7 @@ describe('buildGameRows', () => {
 
   test('tolerates missing meta and players', () => {
     const rows = buildGameRows([{ code: 'BARE' }]);
-    expect(rows[0]).toEqual({ code: 'BARE', createdAt: 0, status: 'Unknown', playerCount: 0, location: null });
+    expect(rows[0]).toEqual({ code: 'BARE', createdAt: 0, status: 'Unknown', round: 0, playerCount: 0, location: null });
   });
 
   test('returns empty array for empty or missing input', () => {

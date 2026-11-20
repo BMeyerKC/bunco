@@ -37,10 +37,14 @@ test.describe('admin dashboard content', () => {
     await page.goto('/admin.html');
   });
 
-  test('renders stats and the recent games section', async ({ page }) => {
+  test('renders stats, charts and the recent games section', async ({ page }) => {
     await expect(page.locator('#stat-active')).not.toHaveText('–');
-    await expect(page.locator('#stat-recent')).not.toHaveText('–');
+    await expect(page.locator('#stat-games')).not.toHaveText('–');
+    await expect(page.locator('#stat-sessions')).not.toHaveText('–');
+    await expect(page.locator('#chart-games .dc-col')).toHaveCount(14);
+    await expect(page.locator('#chart-sessions .dc-col')).toHaveCount(14);
     await expect(page.locator('#games-list')).not.toContainText('Loading…');
+    await expect(page.locator('#places-list')).not.toContainText('Loading…');
   });
 
   test('renders the quick scorer sessions section', async ({ page }) => {

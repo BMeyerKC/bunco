@@ -217,7 +217,8 @@ export function gameStatus(meta) {
  * @param {Array<{ code: string, meta?: object, players?: object }>} games
  * @param {Object<string, { city?: string|null, region?: string|null, country?: string|null }>} [origins]
  *   keyed by game code, e.g. from getOriginAudits()
- * @returns {Array<{ code: string, createdAt: number, status: string, playerCount: number, location: string|null }>}
+ * @returns {Array<{ code: string, createdAt: number, status: string, round: number, playerCount: number, location: string|null }>}
+ *   round is meta.currentRound (0 = waiting, 7+ = past the last round)
  *   sorted newest-first by createdAt
  */
 export function buildGameRows(games, origins = {}) {
@@ -229,6 +230,7 @@ export function buildGameRows(games, origins = {}) {
         code: g.code,
         createdAt: g.meta?.createdAt ?? 0,
         status: gameStatus(g.meta),
+        round: g.meta?.currentRound ?? 0,
         playerCount: Object.values(g.players || {}).filter(p => !p.isGhost).length,
         location,
       };
