@@ -1,6 +1,7 @@
 import { watchGame, watchAllTableScores, submitTableScore, startRound, getRoundAssignments, saveRoundAssignments, EVENT, logEvent } from './firebase.js';
 import { getParam, getDeviceId, forgetActiveGame } from './ui.js';
-import { buildTableLayout, calculateNextRoundSeating, roundWinners, deriveStandings } from './game-logic.js';
+import { buildTableLayout, calculateNextRoundSeating, roundWinners, deriveStandings, seatMoves } from './game-logic.js';
+import { seatDiagramSvg } from './seat-diagram.js';
 import { renderTableCards } from './table-cards.js';
 import { initCodeEntry } from './code-entry.js';
 
@@ -149,6 +150,15 @@ if (!code) {
     }
 
     section.style.display = '';
+    // Who moves where next round — same seats checkAndAdvanceRound() will save
+    let diagram = '';
+    if (round < 6) {
+      const assignments = data.rounds?.[round]?.assignments || {};
+      const results = roundWinners(tables, assignments, data.rounds?.[round]?.buncos || {}, numTables);
+      const next = data.rounds?.[round + 1]?.assignments || calculateNextRoundSeating(assignments, results, numTables);
+      diagram = seatDiagramSvg(seatMoves(data.players || {}, assignments, results, next, numTables), { round });
+    }
+    document.getElementById('advance-seat-diagram').innerHTML = diagram;
     const btn = document.getElementById('advance-round-btn');
     if (!isAdvancing) {
       btn.textContent = advanceButtonLabel(round);
