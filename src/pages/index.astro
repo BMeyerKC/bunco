@@ -1,7 +1,16 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import { tallyHtml } from '../js/tally.js';
+import { calculateNextRoundSeating, seatMoves } from '../js/game-logic.js';
+import { seatDiagramSvg } from '../js/seat-diagram.js';
+import { SAMPLE_NIGHT as S } from '../js/sample-night.js';
 import '../styles/home.css';
+
+// Drawn with the real seating code, so the picture can't drift from the rule.
+const sampleSvg = seatDiagramSvg(
+  seatMoves(S.players, S.assignments, S.results, calculateNextRoundSeating(S.assignments, S.results, S.numTables), S.numTables),
+  { round: 2 },
+);
 ---
 <Layout title="Bunco Score Keeper — Free Online Bunco Game" isHome showLegalLinks>
   <Fragment slot="head">
@@ -145,6 +154,10 @@ import '../styles/home.css';
         <li><strong>Call game.</strong> The first table to reach 21 points calls "Game!" All other tables finish their current roll, then stop and tally scores.</li>
         <li><strong>Rotate and repeat.</strong> Losing teams stay at their table. Winning teams (except at Table 1) advance up toward Table 1. The losing team at Table 1 drops all the way down to the last table. Play 6 rounds total.</li>
       </ol>
+      <figure class="rules-figure">
+        <Fragment set:html={sampleSvg} />
+        <figcaption>Round 2 to round 3 with 12 players. Winners at Table 1 stay; everywhere else winners move up. Losers at Table 1 drop to the last table.</figcaption>
+      </figure>
     </section>
 
     <section class="rules" aria-labelledby="ref-title">

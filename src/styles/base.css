@@ -689,3 +689,5 @@ a.wordmark:hover { color: var(--pen); }
 .seat-diagram .sd-head.is-stay { fill: var(--ink-soft); }
 .seat-diagram .sd-arrow.is-mine { stroke-width: 3.5; opacity: 1; }
 .seat-diagram .is-faded { opacity: .3; }
+.rules-figure { margin: 16px 0 0; }
+.rules-figure figcaption { margin-top: 8px; font-size: var(--fs-small); color: var(--ink-soft); text-align: center; }
