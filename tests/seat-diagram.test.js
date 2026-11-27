@@ -54,6 +54,24 @@ test('one name per line, never squeezed to fit', () => {
   expect(lines.filter(l => l.includes(','))).toHaveLength(0);
 });
 
+test('a pair that stays gets a straight, level line', () => {
+  document.body.innerHTML = seatDiagramSvg(sm, { round: 2 });
+  const stays = [...document.querySelectorAll('.sd-arrow.is-stay')].map(p => p.getAttribute('d'));
+  expect(stays).toHaveLength(3);
+  for (const d of stays) expect(d).toMatch(/^M[\d.]+,([\d.]+) L[\d.]+,\1$/);
+});
+
+test('incoming arrows land clear of the stay line at the same table', () => {
+  document.body.innerHTML = seatDiagramSvg(sm, { round: 2 });
+  const endY = p => Number(p.getAttribute('d').split(/[ ,]/).pop());
+  const startY = p => Number(p.getAttribute('d').split(/[ ,]/)[1]);
+  const stays = [...document.querySelectorAll('.sd-arrow.is-stay')];
+  const moving = [...document.querySelectorAll('.sd-arrow:not(.is-stay)')];
+  for (const m of moving) {
+    for (const s of stays) expect(Math.abs(endY(m) - startY(s))).toBeGreaterThanOrEqual(30);
+  }
+});
+
 test('winning pairs sit on the highlighter, one per table', () => {
   document.body.innerHTML = seatDiagramSvg(sm, { round: 2 });
   expect(document.querySelectorAll('.sd-won')).toHaveLength(3);

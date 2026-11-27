@@ -84,9 +84,14 @@ export function seatDiagramSvg(sm, { round = 1, highlightId } = {}) {
       + '</g>';
   }).join('');
 
+  // A pair that stays gets a straight, level line. Pairs arriving at a table
+  // land on the other half of its box, clear of that stay line.
+  const lineY = outcome => (outcome === 'won' ? 62 : 116);
+  const stayAt = t => sm.moves.find(m => m.direction === 'stay' && m.toTable === t);
   const arrows = sm.moves.map(m => {
-    const y1 = top(m.fromTable) + (m.outcome === 'won' ? 62 : 116);
-    const y2 = top(m.toTable) + (m.direction === 'stay' ? 50 : 104);
+    const y1 = top(m.fromTable) + lineY(m.outcome);
+    const y2 = m.direction === 'stay' ? y1
+      : top(m.toTable) + (stayAt(m.toTable)?.outcome === 'lost' ? 50 : 104);
     const x1 = LEFT.x + LEFT.w + 2, x2 = RIGHT.x - 4;
     const d = y1 === y2 ? `M${x1},${y1} L${x2},${y2}` : `M${x1},${y1} C${x1 + 24},${y1} ${x2 - 24},${y2} ${x2},${y2}`;
     return `<path class="sd-arrow is-${m.direction}${fade(m === mine)}${m === mine ? ' is-mine' : ''}" d="${d}" marker-end="url(#sd-ah-${m.direction})"/>`;
