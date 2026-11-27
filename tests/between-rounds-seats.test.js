@@ -13,7 +13,7 @@ beforeEach(() => {
       <p id="br-move-why"></p>
       <dd id="br-next-teammate"></dd><dd id="br-next-opponents"></dd>
     </div>
-    <div id="br-seat-diagram"></div>`;
+    <section id="br-seat-room" hidden><div id="br-seat-diagram"></div></section>`;
 });
 
 test('fills the card for a seated player and highlights them', () => {
@@ -45,4 +45,10 @@ test('a null result (round 6) hides the card and clears the diagram', () => {
   renderBetweenRoundsSeats(document.body, null, { round: 6, playerId: 'p5' });
   expect(document.getElementById('br-next-seat').hidden).toBe(true);
   expect(document.getElementById('br-seat-diagram').innerHTML).toBe('');
+  expect(document.getElementById('br-seat-room').hidden).toBe(true);
+});
+
+test('the room section shows whenever there is a next round', () => {
+  renderBetweenRoundsSeats(document.body, sm, { round: 2, playerId: null });
+  expect(document.getElementById('br-seat-room').hidden).toBe(false);
 });

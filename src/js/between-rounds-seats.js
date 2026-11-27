@@ -20,4 +20,6 @@ export function renderBetweenRoundsSeats(root, sm, { round, playerId }) {
     $('br-next-opponents').textContent = move.nextOpponents.join(' & ') || '—';
   }
   if (diagram) diagram.innerHTML = sm ? seatDiagramSvg(sm, { round, highlightId: move ? playerId : undefined }) : '';
+  const room = $('br-seat-room');
+  if (room) room.hidden = !sm;
 }

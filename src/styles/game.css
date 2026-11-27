@@ -628,5 +628,10 @@
 /* Between rounds: "your move" card + room diagram */
 .seat-card-move { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; font-size: var(--fs-h3); }
 .head-pill { font-family: var(--font-body); font-size: var(--fs-small); font-weight: 800;
-  color: var(--pen); background: var(--pen-soft); border-radius: 999px; padding: 2px 10px; }
+  color: var(--pen); background: var(--pen-soft); border-radius: var(--wobble-sm); padding: 2px 12px; }
+.seat-card-why { font-size: var(--fs-body); color: var(--ink-soft); margin: 0 0 12px; }
+.br-seat-room .section-title { margin: 4px 0 10px; }
+.br-start { margin: 20px 0; }
 .br-seat-diagram { margin: 0 0 20px; }
+/* Inside the host's advance card, use the padding too so names stay 15px+ */
+.advance-card .br-seat-diagram { margin-inline: -12px; }

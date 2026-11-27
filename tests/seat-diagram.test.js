@@ -38,9 +38,29 @@ test('highlight fades everything but the player path and bolds the name', () => 
   expect(document.querySelectorAll('.sd-arrow:not(.is-faded)')).toHaveLength(1);
 });
 
-test('ghost names carry the ghost marker', () => {
-  document.body.innerHTML = seatDiagramSvg(ghostSm, { round: 2 });
-  expect(document.querySelectorAll('.sd-ghost').length).toBeGreaterThan(0);
+test('ghost names are marked by class, not an emoji', () => {
+  const svg = seatDiagramSvg(ghostSm, { round: 2 });
+  expect(svg).not.toContain('👻');
+  document.body.innerHTML = svg;
+  expect(document.querySelectorAll('.sd-ghost').length).toBe(8); // p9-p12, before and after
+});
+
+test('one name per line, never squeezed to fit', () => {
+  const svg = seatDiagramSvg(seatMoves({ ...players, p6: { name: 'Bernadette-Anne', isGhost: false } }, a, results, next, 3), { round: 2 });
+  expect(svg).not.toContain('textLength');
+  document.body.innerHTML = svg;
+  const lines = [...document.querySelectorAll('.sd-name')].map(t => t.textContent);
+  expect(lines).toContain('Bernadett…');
+  expect(lines.filter(l => l.includes(','))).toHaveLength(0);
+});
+
+test('winning pairs sit on the highlighter, one per table', () => {
+  document.body.innerHTML = seatDiagramSvg(sm, { round: 2 });
+  expect(document.querySelectorAll('.sd-won')).toHaveLength(3);
+});
+
+test('spoken summary capitalizes table names like the screen', () => {
+  expect(seatDiagramSvg(sm, { round: 2 })).toContain('move up from Table 2 to Table 1');
 });
 
 test('describeMove copy', () => {
