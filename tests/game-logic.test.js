@@ -58,23 +58,45 @@ describe('calculateNextRoundSeating', () => {
     p8: { tableId: 2, side: 'them', seat: 2 },
   };
 
-  test('losers from table 2 rotate to table 1', () => {
+  test('winners at table 2 move up to table 1, losers stay', () => {
     const results = { 1: { winner: 'us' }, 2: { winner: 'them' } };
     const next = calculateNextRoundSeating(assignments, results, 2);
-    // p7, p8 won at table 2 — stay at table 2
-    expect(next['p7'].tableId).toBe(2);
-    expect(next['p8'].tableId).toBe(2);
-    // p5, p6 lost at table 2 — rotate to table 1
-    expect(next['p5'].tableId).toBe(1);
-    expect(next['p6'].tableId).toBe(1);
+    // p7, p8 won at table 2 — move up to table 1
+    expect(next['p7'].tableId).toBe(1);
+    expect(next['p8'].tableId).toBe(1);
+    // p5, p6 lost at table 2 — stay at table 2
+    expect(next['p5'].tableId).toBe(2);
+    expect(next['p6'].tableId).toBe(2);
   });
 
-  test('losers from table 1 rotate to the last table', () => {
+  test('table 1 keeps its winners and drops its losers to the last table', () => {
     const results = { 1: { winner: 'them' }, 2: { winner: 'us' } };
     const next = calculateNextRoundSeating(assignments, results, 2);
-    // p1, p2 lost at table 1 — rotate to table 2 (last table)
+    expect(next['p3'].tableId).toBe(1);
+    expect(next['p4'].tableId).toBe(1);
     expect(next['p1'].tableId).toBe(2);
     expect(next['p2'].tableId).toBe(2);
+  });
+
+  test('Head Table across 3 tables keeps four at every table', () => {
+    const three = { ...assignments,
+      p9:  { tableId: 3, side: 'us',   seat: 1 },
+      p10: { tableId: 3, side: 'us',   seat: 2 },
+      p11: { tableId: 3, side: 'them', seat: 1 },
+      p12: { tableId: 3, side: 'them', seat: 2 },
+    };
+    const results = { 1: { winner: 'us' }, 2: { winner: 'us' }, 3: { winner: 'them' } };
+    const next = calculateNextRoundSeating(three, results, 3);
+    const table = (...ids) => ids.map(id => next[id].tableId);
+    expect(table('p1', 'p2')).toEqual([1, 1]);   // table 1 winners stay
+    expect(table('p3', 'p4')).toEqual([3, 3]);   // table 1 losers drop to the last table
+    expect(table('p5', 'p6')).toEqual([1, 1]);   // table 2 winners move up
+    expect(table('p7', 'p8')).toEqual([2, 2]);   // table 2 losers stay
+    expect(table('p11', 'p12')).toEqual([2, 2]); // table 3 winners move up
+    expect(table('p9', 'p10')).toEqual([3, 3]);  // table 3 losers stay
+    for (let t = 1; t <= 3; t++) {
+      expect(Object.values(next).filter(a => a.tableId === t)).toHaveLength(4);
+    }
   });
 
   test('winners split across sides', () => {

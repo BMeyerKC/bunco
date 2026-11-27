@@ -115,7 +115,7 @@ runner.test('determineWinner picks them on higher score', (t) => {
 
 // ─── calculateNextRoundSeating ──────────────────────────────
 
-runner.test('calculateNextRoundSeating rotates losers', (t) => {
+runner.test('calculateNextRoundSeating follows the Head Table rule', (t) => {
   const currentAssignments = {
     p1: { tableId: 1, side: 'us', seat: 1 },
     p2: { tableId: 1, side: 'us', seat: 2 },
@@ -132,19 +132,19 @@ runner.test('calculateNextRoundSeating rotates losers', (t) => {
   };
   const next = calculateNextRoundSeating(currentAssignments, roundResults, 2);
 
-  // Winners stay at same table
+  // Table 1 winners stay
   t.assertEqual(next.p1.tableId, 1, 'Winner p1 stays at table 1');
   t.assertEqual(next.p2.tableId, 1, 'Winner p2 stays at table 1');
-  t.assertEqual(next.p5.tableId, 2, 'Winner p5 stays at table 2');
-  t.assertEqual(next.p6.tableId, 2, 'Winner p6 stays at table 2');
 
-  // Losers from table 1 go to last table (2)
-  t.assertEqual(next.p3.tableId, 2, 'Loser p3 rotates to last table');
-  t.assertEqual(next.p4.tableId, 2, 'Loser p4 rotates to last table');
+  // Table 1 losers drop to the last table (2)
+  t.assertEqual(next.p3.tableId, 2, 'Loser p3 drops to last table');
+  t.assertEqual(next.p4.tableId, 2, 'Loser p4 drops to last table');
 
-  // Losers from table 2 go to table 1
-  t.assertEqual(next.p7.tableId, 1, 'Loser p7 rotates toward table 1');
-  t.assertEqual(next.p8.tableId, 1, 'Loser p8 rotates toward table 1');
+  // Table 2 winners move up to table 1, losers stay
+  t.assertEqual(next.p5.tableId, 1, 'Winner p5 moves up to table 1');
+  t.assertEqual(next.p6.tableId, 1, 'Winner p6 moves up to table 1');
+  t.assertEqual(next.p7.tableId, 2, 'Loser p7 stays at table 2');
+  t.assertEqual(next.p8.tableId, 2, 'Loser p8 stays at table 2');
 });
 
 runner.test('calculateNextRoundSeating assigns winners to seat 1', (t) => {
@@ -161,7 +161,7 @@ runner.test('calculateNextRoundSeating assigns winners to seat 1', (t) => {
   t.assertEqual(next.p2.seat, 1, 'Winner p2 assigned to seat 1');
 });
 
-runner.test('calculateNextRoundSeating assigns incoming losers to seat 2', (t) => {
+runner.test('calculateNextRoundSeating assigns incoming players to seat 2', (t) => {
   const currentAssignments = {
     p1: { tableId: 1, side: 'us', seat: 1 },
     p2: { tableId: 1, side: 'us', seat: 2 },
@@ -175,10 +175,9 @@ runner.test('calculateNextRoundSeating assigns incoming losers to seat 2', (t) =
   const roundResults = { 1: { winner: 'us' }, 2: { winner: 'them' } };
   const next = calculateNextRoundSeating(currentAssignments, roundResults, 2);
 
-  // Losers from table 2 move to table 1
-  const incomingPlayers = [p => next[p].tableId === 1 && next[p].seat === 2];
-  t.assertEqual(next.p5.seat, 2, 'Incoming p5 assigned to seat 2');
-  t.assertEqual(next.p6.seat, 2, 'Incoming p6 assigned to seat 2');
+  // Winners from table 2 move up to table 1
+  t.assertEqual(next.p7.seat, 2, 'Incoming p7 assigned to seat 2');
+  t.assertEqual(next.p8.seat, 2, 'Incoming p8 assigned to seat 2');
 });
 
 runner.test('calculateNextRoundSeating handles 2 tables with all us wins', (t) => {
@@ -202,13 +201,13 @@ runner.test('calculateNextRoundSeating handles 2 tables with all us wins', (t) =
   t.assertEqual(next.p3.tableId, 2, 'Table 1 them losers go to table 2');
   t.assertEqual(next.p4.tableId, 2, 'Table 1 them losers go to table 2');
 
-  // Table 2 losers (them) go to table 1
-  t.assertEqual(next.p7.tableId, 1, 'Table 2 them losers go to table 1');
-  t.assertEqual(next.p8.tableId, 1, 'Table 2 them losers go to table 1');
+  // Table 2 losers (them) stay at table 2
+  t.assertEqual(next.p7.tableId, 2, 'Table 2 them losers stay at table 2');
+  t.assertEqual(next.p8.tableId, 2, 'Table 2 them losers stay at table 2');
 
-  // Winners stay at their tables
+  // Table 1 winners stay; table 2 winners move up
   t.assertEqual(next.p1.tableId, 1, 'Table 1 us winner stays at table 1');
-  t.assertEqual(next.p5.tableId, 2, 'Table 2 us winner stays at table 2');
+  t.assertEqual(next.p5.tableId, 1, 'Table 2 us winner moves up to table 1');
 });
 
 runner.test('calculateNextRoundSeating handles 2 tables with split wins', (t) => {
@@ -231,8 +230,9 @@ runner.test('calculateNextRoundSeating handles 2 tables with split wins', (t) =>
   // Table 1 losers (them) go to table 2
   t.assertEqual(next.p3.tableId, 2, 'Table 1 them losers go to table 2');
 
-  // Table 2 losers (us) go to table 1
-  t.assertEqual(next.p5.tableId, 1, 'Table 2 us losers go to table 1');
+  // Table 2 losers (us) stay; winners (them) move up
+  t.assertEqual(next.p5.tableId, 2, 'Table 2 us losers stay at table 2');
+  t.assertEqual(next.p7.tableId, 1, 'Table 2 them winners move up to table 1');
 });
 
 runner.test('calculateNextRoundSeating handles 3 tables', (t) => {
@@ -261,13 +261,13 @@ runner.test('calculateNextRoundSeating handles 3 tables', (t) => {
   t.assertEqual(next.p3.tableId, 3, 'Table 1 losers go to table 3');
   t.assertEqual(next.p4.tableId, 3, 'Table 1 losers go to table 3');
 
-  // Losers from table 2 go to table 1
-  t.assertEqual(next.p7.tableId, 1, 'Table 2 losers go to table 1');
-  t.assertEqual(next.p8.tableId, 1, 'Table 2 losers go to table 1');
+  // Table 2: winners move up to table 1, losers stay
+  t.assertEqual(next.p5.tableId, 1, 'Table 2 winners move up to table 1');
+  t.assertEqual(next.p7.tableId, 2, 'Table 2 losers stay at table 2');
 
-  // Losers from table 3 go to table 2
-  t.assertEqual(next.p9.tableId, 2, 'Table 3 losers go to table 2');
-  t.assertEqual(next.p10.tableId, 2, 'Table 3 losers go to table 2');
+  // Table 3: winners (them) move up to table 2, losers stay
+  t.assertEqual(next.p11.tableId, 2, 'Table 3 winners move up to table 2');
+  t.assertEqual(next.p9.tableId, 3, 'Table 3 losers stay at table 3');
 });
 
 // ─── updateStandings ────────────────────────────────────────
@@ -438,22 +438,23 @@ runner.test('calculateNextRoundSeating handles 4 tables', (t) => {
 
   const next = calculateNextRoundSeating(currentAssignments, roundResults, 4);
 
-  // Verify loser rotation for 4 tables
-  // Table 1 losers (them: p3, p4) go to table 4
+  // Head Table rotation for 4 tables
+  // Table 1: winners (us: p1, p2) stay, losers (them: p3, p4) drop to table 4
+  t.assertEqual(next.p1.tableId, 1, 'Table 1 us winners stay at table 1');
   t.assertEqual(next.p3.tableId, 4, 'Table 1 them losers go to table 4');
   t.assertEqual(next.p4.tableId, 4, 'Table 1 them losers go to table 4');
 
-  // Table 2 losers (us: p5, p6) go to table 1
-  t.assertEqual(next.p5.tableId, 1, 'Table 2 us losers go to table 1');
-  t.assertEqual(next.p6.tableId, 1, 'Table 2 us losers go to table 1');
+  // Table 2: winners (them: p7, p8) move up to 1, losers (us: p5, p6) stay
+  t.assertEqual(next.p7.tableId, 1, 'Table 2 them winners go to table 1');
+  t.assertEqual(next.p5.tableId, 2, 'Table 2 us losers stay at table 2');
 
-  // Table 3 losers (them: p11, p12) go to table 2
-  t.assertEqual(next.p11.tableId, 2, 'Table 3 them losers go to table 2');
-  t.assertEqual(next.p12.tableId, 2, 'Table 3 them losers go to table 2');
+  // Table 3: winners (us: p9, p10) move up to 2, losers (them: p11, p12) stay
+  t.assertEqual(next.p9.tableId, 2, 'Table 3 us winners go to table 2');
+  t.assertEqual(next.p11.tableId, 3, 'Table 3 them losers stay at table 3');
 
-  // Table 4 losers (us: p13, p14) go to table 3
-  t.assertEqual(next.p13.tableId, 3, 'Table 4 us losers go to table 3');
-  t.assertEqual(next.p14.tableId, 3, 'Table 4 us losers go to table 3');
+  // Table 4: winners (them: p15, p16) move up to 3, losers (us: p13, p14) stay
+  t.assertEqual(next.p15.tableId, 3, 'Table 4 them winners go to table 3');
+  t.assertEqual(next.p13.tableId, 4, 'Table 4 us losers stay at table 4');
 
   // Verify all players are still assigned
   const assignedCount = Object.keys(next).length;

@@ -41,7 +41,7 @@ export function checkGame(game, events = [], expected = {}) {
       if (us !== 2 || sides.length !== 4) v.push(`${at} table ${t}: ${us} us / ${sides.length - us} them`);
     }
 
-    // Losers Move: this round's seats follow from last round's results
+    // Head Table: this round's seats follow from last round's results
     if (r > 1) {
       const prev = game.rounds?.[r - 1] || {};
       const want = calculateNextRoundSeating(
