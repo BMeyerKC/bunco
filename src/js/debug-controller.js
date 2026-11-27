@@ -1,4 +1,9 @@
-import { watchEvents } from './firebase.js';
+import { watchEvents, watchGame } from './firebase.js';
+import { roundWinners, calculateNextRoundSeating, seatMoves, seatMismatches } from './game-logic.js';
+import { seatDiagramSvg } from './seat-diagram.js';
+
+const esc = s => String(s)
+  .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
 const EVENT_COLORS = {
   game_created:    '#7c3aed',
@@ -35,6 +40,28 @@ if (!code) {
     }
     timeline.scrollTop = timeline.scrollHeight;
   });
+  watchGame(code, data => {
+    document.getElementById('seat-history').innerHTML = data ? seatHistoryHtml(data) : '';
+  });
+}
+
+// One before → after diagram per round change, drawn from the STORED seats,
+// plus a red line naming anyone the Head Table rule would have seated elsewhere.
+function seatHistoryHtml(data) {
+  const rounds = data.rounds || {};
+  const players = data.players || {};
+  const n = data.meta?.tables || 0;
+  let html = '';
+  for (let r = 1; r <= 5; r++) {
+    const cur = rounds[r]?.assignments, next = rounds[r + 1]?.assignments;
+    if (!cur || !next) continue;
+    const results = roundWinners(rounds[r].tables, cur, rounds[r].buncos, n);
+    const off = seatMismatches(next, calculateNextRoundSeating(cur, results, n));
+    html += `<h2 class="section-title">Round ${r} → ${r + 1}</h2>`
+      + seatDiagramSvg(seatMoves(players, cur, results, next, n), { round: r })
+      + (off.length ? `<p class="field-error">Seated off-rule: ${esc(off.map(id => players[id]?.name ?? id).join(', '))}</p>` : '');
+  }
+  return html;
 }
 
 function renderEvent(event) {
