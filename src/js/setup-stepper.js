@@ -38,7 +38,8 @@ export function initSetupStepper() {
     document.getElementById('setup-plan-text').textContent = plan.ghosts
       ? `${plural(plan.tables, 'table', 'tables')}, with ${plural(plan.ghosts, 'ghost seat', 'ghost seats')} to fill.`
       : `${plural(plan.tables, 'table', 'tables')}, every seat filled.`;
-    document.getElementById('setup-ghost-note').hidden = plan.ghosts === 0;
+    // visibility, not hidden: keep the note's space so the layout doesn't jump
+    document.getElementById('setup-ghost-note').style.visibility = plan.ghosts ? '' : 'hidden';
   };
 
   dec.addEventListener('click', () => render(Number(input.value) - 1));
