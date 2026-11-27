@@ -5,7 +5,8 @@ import { createGame, addPlayer, claimGhostSeat, watchGame, getGame, saveRoundAss
          EVENT, logEvent, logGameOrigin } from './firebase.js';
 import { captureOrigin } from './geo.js';
 import { generateGameCode, assignRandomSeats,
-         calculateNextRoundSeating, roundWinners, deriveStandings, buildTableLayout } from './game-logic.js';
+         calculateNextRoundSeating, roundWinners, deriveStandings, buildTableLayout, seatMoves } from './game-logic.js';
+import { renderBetweenRoundsSeats } from './between-rounds-seats.js';
 import { showView, showToast, getParam, getDeviceId, rememberActiveGame } from './ui.js';
 import { renderTableCards } from './table-cards.js';
 import { renderTally, TARGET } from './tally.js';
@@ -885,33 +886,14 @@ function showBetweenRoundsView(data) {
     `).join('');
   }
 
-  // Next seat (rounds 1–5 only)
-  const nextSeatEl = document.getElementById('br-next-seat');
-  if (nextSeatEl) {
-    if (round < 6 && myPlayerId) {
-      const nextAssignments = data.rounds?.[round + 1]?.assignments ||
-        calculateNextRoundSeating(assignments, roundResults, numTables);
-      const myNext = nextAssignments[myPlayerId];
-      if (myNext) {
-        document.getElementById('br-next-table').textContent = `Table ${myNext.tableId}`;
-        const teammate = Object.entries(nextAssignments).find(([id, a]) =>
-          id !== myPlayerId && a.tableId === myNext.tableId && a.side === myNext.side
-        );
-        const opponents = Object.entries(nextAssignments).filter(([, a]) =>
-          a.tableId === myNext.tableId && a.side !== myNext.side
-        );
-        document.getElementById('br-next-teammate').textContent =
-          teammate ? (players[teammate[0]]?.name || '—') : '—';
-        document.getElementById('br-next-opponents').textContent =
-          opponents.map(([id]) => players[id]?.name).filter(Boolean).join(' & ') || '—';
-        nextSeatEl.style.display = '';
-      } else {
-        nextSeatEl.style.display = 'none';
-      }
-    } else {
-      nextSeatEl.style.display = 'none';
-    }
+  // Your move + room diagram (rounds 1–5 only). Same next seats the host will save.
+  let sm = null;
+  if (round < 6) {
+    const nextAssignments = data.rounds?.[round + 1]?.assignments ||
+      calculateNextRoundSeating(assignments, roundResults, numTables);
+    sm = seatMoves(players, assignments, roundResults, nextAssignments, numTables);
   }
+  renderBetweenRoundsSeats(document.getElementById('view-between-rounds'), sm, { round, playerId: myPlayerId });
 
   // Host button / non-host waiting message
   const startBtn = document.getElementById('br-start-next-btn');

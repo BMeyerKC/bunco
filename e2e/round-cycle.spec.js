@@ -33,6 +33,7 @@ test("full round cycle: submitting scores advances through between-rounds to rou
     await session.hostPage
       .locator("#view-between-rounds")
       .waitFor({ state: "visible" });
+    await expect(session.hostPage.locator("#br-seat-diagram svg.seat-diagram")).toBeVisible();
 
     // Button is initially "Preparing…" while next-round Firebase writes complete,
     // then flips to "Start round 2" and enables.

@@ -194,15 +194,21 @@ import GameLayout from '../layouts/GameLayout.astro';
     <h1 id="br-round-title"></h1>
     <p class="lead">Every table is in.</p>
 
-    <!-- Next seat (hidden on round 6) — first, because it's what players need to act on -->
-    <div id="br-next-seat" class="index-card seat-card" style="display:none;">
-      <p class="seat-card-label">Your next seat</p>
-      <h2 id="br-next-table" class="seat-card-table"></h2>
+    <!-- Your move (hidden on round 6) — first, because it's what players need to act on -->
+    <div id="br-next-seat" class="index-card seat-card" hidden>
+      <p class="seat-card-label">Your move</p>
+      <h2 class="seat-card-table seat-card-move">
+        <span id="br-move-headline"></span>
+        <span id="br-move-head-pill" class="head-pill" hidden>★ Head table</span>
+      </h2>
+      <p id="br-move-why" class="helper"></p>
       <dl class="seat-card-people">
         <dt>Partner</dt><dd id="br-next-teammate"></dd>
         <dt>Against</dt><dd id="br-next-opponents"></dd>
       </dl>
     </div>
+    <!-- Whole room: last round's results → next round's seats -->
+    <div id="br-seat-diagram" class="br-seat-diagram"></div>
 
     <section class="sheet-box br-standings">
       <h2 class="br-standings-title">Standings so far</h2>
