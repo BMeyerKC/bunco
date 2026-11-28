@@ -16,7 +16,86 @@ import {
   submitLiveUpdate,
   tapSyncUpdate,
   deriveStandings,
+  seatMoves,
+  yourMove,
+  seatMismatches,
 } from '../src/js/game-logic.js';
+import { SAMPLE_NIGHT } from '../src/js/sample-night.js';
+
+describe('seat moves (sample night, end of round 2)', () => {
+  const { players, assignments: a, results } = SAMPLE_NIGHT;
+  const next = calculateNextRoundSeating(a, results, 3);
+  const sm = seatMoves(players, a, results, next, 3);
+
+  describe('seatMoves', () => {
+    test('splits each table into won and lost pairs', () => {
+      expect(sm.before[0].won.map(p => p.name)).toEqual(['Ann', 'Beth']);
+      expect(sm.before[0].lost.map(p => p.name)).toEqual(['Cara', 'Dot']);
+    });
+
+    test('one move per pair with geometric direction', () => {
+      expect(sm.moves).toHaveLength(6);
+      const m = (from, outcome) => sm.moves.find(x => x.fromTable === from && x.outcome === outcome);
+      expect(m(1, 'won')).toMatchObject({ toTable: 1, direction: 'stay' });
+      expect(m(1, 'lost')).toMatchObject({ toTable: 3, direction: 'down' });
+      expect(m(2, 'won')).toMatchObject({ toTable: 1, direction: 'up' });
+      expect(m(2, 'lost')).toMatchObject({ toTable: 2, direction: 'stay' });
+    });
+
+    test('after lists next-round partners by side', () => {
+      expect(sm.after[0].us.map(p => p.name).sort()).toEqual(['Ann', 'Eve']);
+    });
+
+    test('a pair split across tables (bad data) yields one move per player', () => {
+      const bad = { ...next, p2: { ...next.p2, tableId: 2 } };
+      const split = seatMoves(players, a, results, bad, 3);
+      expect(split.moves.filter(x => x.fromTable === 1 && x.outcome === 'won')).toHaveLength(2);
+    });
+
+    test('ghosts carry isGhost and an all-ghost table still has two moves', () => {
+      const ghosts = { ...players, p9: { name: 'G1', isGhost: true }, p10: { name: 'G2', isGhost: true },
+                       p11: { name: 'G3', isGhost: true }, p12: { name: 'G4', isGhost: true } };
+      const g = seatMoves(ghosts, a, results, next, 3);
+      expect(g.before[2].won.every(p => p.isGhost)).toBe(true);
+      expect(g.moves.filter(x => x.fromTable === 3)).toHaveLength(2);
+    });
+  });
+
+  describe('yourMove', () => {
+    test('winner at table 2 moves up with last partner and new seats', () => {
+      expect(yourMove(sm, 'p5')).toEqual({ direction: 'up', fromTable: 2, toTable: 1, outcome: 'won',
+        lastPartner: 'Fay', nextPartner: 'Ann', nextOpponents: ['Beth', 'Fay'] });
+    });
+
+    test('table 1 loser drops to the last table', () => {
+      expect(yourMove(sm, 'p3')).toMatchObject({ direction: 'down', toTable: 3, outcome: 'lost' });
+    });
+
+    test('table 1 winner stays', () => {
+      expect(yourMove(sm, 'p1')).toMatchObject({ direction: 'stay', toTable: 1 });
+    });
+
+    test('returns null for an unseated id', () => {
+      expect(yourMove(sm, 'nobody')).toBeNull();
+    });
+
+    test('returns null when the player is missing from next round', () => {
+      const { p5, ...rest } = next;
+      expect(yourMove(seatMoves(players, a, results, rest, 3), 'p5')).toBeNull();
+    });
+  });
+
+  describe('seatMismatches', () => {
+    test('lists ids whose table or side differ', () => {
+      const wrong = { ...next, p1: { ...next.p1, tableId: 2 } };
+      expect(seatMismatches(wrong, next)).toEqual(['p1']);
+    });
+
+    test('empty when equal', () => {
+      expect(seatMismatches(next, next)).toEqual([]);
+    });
+  });
+});
 
 describe('generateGameCode', () => {
   test('returns a 4-character string', () => {

@@ -194,24 +194,35 @@ import GameLayout from '../layouts/GameLayout.astro';
     <h1 id="br-round-title"></h1>
     <p class="lead">Every table is in.</p>
 
-    <!-- Next seat (hidden on round 6) — first, because it's what players need to act on -->
-    <div id="br-next-seat" class="index-card seat-card" style="display:none;">
-      <p class="seat-card-label">Your next seat</p>
-      <h2 id="br-next-table" class="seat-card-table"></h2>
+    <!-- Your move (hidden on round 6) — first, because it's what players need to act on -->
+    <div id="br-next-seat" class="index-card seat-card" hidden>
+      <p class="seat-card-label">Your move</p>
+      <h2 class="seat-card-table seat-card-move">
+        <span id="br-move-headline"></span>
+        <span id="br-move-head-pill" class="head-pill" hidden>★ Head table</span>
+      </h2>
+      <p id="br-move-why" class="seat-card-why"></p>
       <dl class="seat-card-people">
         <dt>Partner</dt><dd id="br-next-teammate"></dd>
         <dt>Against</dt><dd id="br-next-opponents"></dd>
       </dl>
     </div>
 
+    <!-- Whole room: last round's results → next round's seats (hidden after round 6) -->
+    <section id="br-seat-room" class="br-seat-room" aria-labelledby="br-seat-room-title" hidden>
+      <h2 id="br-seat-room-title" class="section-title">Where everyone goes</h2>
+      <div id="br-seat-diagram"></div>
+    </section>
+
+    <!-- Host: start next round, right after checking the moves. Others: waiting message. -->
+    <button id="br-start-next-btn" class="btn-pen btn-block br-start" style="display:none;"></button>
+    <p id="br-waiting-msg" class="helper center-text br-start" style="display:none;">The host will start the next round.</p>
+
     <section class="sheet-box br-standings">
       <h2 class="br-standings-title">Standings so far</h2>
       <div id="br-standings-list"></div>
     </section>
 
-    <!-- Host: start next round. Others: waiting message. -->
-    <button id="br-start-next-btn" class="btn-pen btn-block" style="display:none;"></button>
-    <p id="br-waiting-msg" class="helper center-text" style="display:none;">The host will start the next round.</p>
     <a id="br-standings-link" href="standings.html" class="btn-quiet btn-block">See full standings</a>
   </div>
 

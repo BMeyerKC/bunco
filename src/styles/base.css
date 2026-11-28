@@ -667,3 +667,35 @@ a.wordmark:hover { color: var(--pen); }
 }
 @keyframes caretBlink { 50% { opacity: 0; } }
 .code-slots:has(input[aria-invalid="true"]) .code-slot { border-color: var(--margin); }
+
+/* Seat diagram — before → after moves between rounds (js/seat-diagram.js) */
+/* Sizes are viewBox units; the 270-wide viewBox scales them up on a phone,
+   so 13.5 renders at 15px+ even inside a padded card. */
+.seat-diagram { display: block; width: 100%; max-width: 420px; height: auto; margin: 0 auto;
+  font-family: var(--font-body); font-size: 13.5px; }
+.seat-diagram text { fill: var(--ink); }
+.seat-diagram .sd-col { fill: var(--ink-soft); font-weight: 700; }
+.seat-diagram .sd-title { font-family: var(--font-hand); font-size: 17px; font-weight: 700; }
+.seat-diagram .sd-label { fill: var(--ink-soft); font-weight: 700; }
+.seat-diagram .sd-box { fill: var(--card); stroke: var(--rule); stroke-width: 1.5; }
+.seat-diagram .sd-box.is-head { stroke: var(--pen); stroke-width: 2; }
+.seat-diagram .sd-won { fill: var(--marker-soft); }
+.seat-diagram .sd-ghost { fill: var(--muted); font-style: italic; }
+.seat-diagram .sd-me { fill: var(--pen); font-weight: 800; }
+/* Direction by path and line style, never red: red belongs to BUNCO! */
+.seat-diagram .sd-arrow { fill: none; stroke-width: 2; }
+.seat-diagram .sd-arrow.is-up { stroke: var(--pen); }
+.seat-diagram .sd-arrow.is-down { stroke: var(--ink-soft); stroke-dasharray: 5 4; }
+.seat-diagram .sd-arrow.is-stay { stroke: var(--ink-soft); }
+.seat-diagram .sd-head { stroke: none; }
+.seat-diagram .sd-head.is-up { fill: var(--pen); }
+.seat-diagram .sd-head.is-down,
+.seat-diagram .sd-head.is-stay { fill: var(--ink-soft); }
+.seat-diagram .sd-arrow.is-mine { stroke-width: 3.5; }
+/* Faded = quieter but still readable, so a host who plays can check the room */
+.seat-diagram .sd-table.is-faded text { fill: var(--muted); }
+.seat-diagram .sd-table.is-faded .sd-box { stroke: var(--rule); stroke-width: 1.5; }
+.seat-diagram .sd-table.is-faded .sd-won { fill: none; }
+.seat-diagram .sd-arrow.is-faded { opacity: .4; }
+.rules-figure { margin: 16px 0 0; }
+.rules-figure figcaption { margin-top: 10px; font-size: var(--fs-body); color: var(--ink-soft); }

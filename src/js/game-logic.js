@@ -120,6 +120,79 @@ export function roundWinners(tables, assignments, buncos, numTables) {
 }
 
 /**
+ * Who sat where, who won, and where each pair goes next — the data behind
+ * the before → after seat diagram. Direction is geometric (lower table
+ * number = up), not taken from the rotation rule, so bad seating shows up.
+ *
+ * @param {{ [id: string]: { name: string, isGhost?: boolean } }} players
+ * @param {{ [id: string]: { tableId, side, seat } }} assignments  this round
+ * @param {{ [tableId: number]: { winner: 'us'|'them' } }} results  from roundWinners()
+ * @param {{ [id: string]: { tableId, side, seat } }} nextAssignments
+ * @param {number} numTables
+ */
+export function seatMoves(players, assignments, results, nextAssignments, numTables) {
+  const person = id => ({ id, name: players[id]?.name ?? '?', isGhost: !!players[id]?.isGhost });
+  const atSide = (seats, t, side) => Object.entries(seats)
+    .filter(([, a]) => a.tableId === t && a.side === side)
+    .sort(([, a], [, b]) => a.seat - b.seat)
+    .map(([id]) => person(id));
+
+  const before = [], after = [], moves = [];
+  for (let t = 1; t <= numTables; t++) {
+    const winner = results[t]?.winner ?? 'us';
+    const won  = atSide(assignments, t, winner);
+    const lost = atSide(assignments, t, winner === 'us' ? 'them' : 'us');
+    before.push({ tableId: t, won, lost });
+    after.push({ tableId: t, us: atSide(nextAssignments, t, 'us'), them: atSide(nextAssignments, t, 'them') });
+
+    for (const [outcome, pair] of [['won', won], ['lost', lost]]) {
+      const byDest = new Map();
+      for (const p of pair) {
+        const to = nextAssignments[p.id]?.tableId;
+        if (to == null) continue;
+        if (!byDest.has(to)) byDest.set(to, []);
+        byDest.get(to).push(p);
+      }
+      for (const [toTable, people] of byDest) {
+        const direction = toTable < t ? 'up' : toTable > t ? 'down' : 'stay';
+        moves.push({ fromTable: t, toTable, outcome, direction, people });
+      }
+    }
+  }
+  return { before, after, moves };
+}
+
+/**
+ * One player's move from a seatMoves() result, or null if they aren't in
+ * both rounds.
+ */
+export function yourMove(sm, playerId) {
+  const move = sm.moves.find(m => m.people.some(p => p.id === playerId));
+  const table = move && sm.after[move.toTable - 1];
+  if (!table) return null;
+  const mySide = table.us.some(p => p.id === playerId) ? 'us' : 'them';
+  const lastPair = sm.before[move.fromTable - 1][move.outcome];
+  return {
+    direction: move.direction,
+    fromTable: move.fromTable,
+    toTable: move.toTable,
+    outcome: move.outcome,
+    lastPartner: lastPair.find(p => p.id !== playerId)?.name ?? null,
+    nextPartner: table[mySide].find(p => p.id !== playerId)?.name ?? null,
+    nextOpponents: table[mySide === 'us' ? 'them' : 'us'].map(p => p.name),
+  };
+}
+
+/** Ids seated at a different table or side than expected, or missing from either. */
+export function seatMismatches(actualNext, expectedNext) {
+  const ids = new Set([...Object.keys(actualNext), ...Object.keys(expectedNext)]);
+  return [...ids].filter(id => {
+    const a = actualNext[id], e = expectedNext[id];
+    return !a || !e || a.tableId !== e.tableId || a.side !== e.side;
+  });
+}
+
+/**
  * Merges round results into cumulative standings.
  *
  * @param {{ [id: string]: { wins, losses, buncos, totalPoints } }} currentStandings
