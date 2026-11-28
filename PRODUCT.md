@@ -35,7 +35,7 @@ The app facilitates a live session between people who trust each other; it does 
 ## Capabilities and Constraints
 
 - Full Game lifecycle: Setup, Round In Progress, Round Complete (derived), Ended. Vocabulary is defined in `CONTEXT.md`; use those terms (Round Called, Us / Them, Round Result, Host, Bunco, Standings).
-- Seat rotation is a named, swappable rule. Only Losers Move is implemented. Partnerships do not persist across rounds.
+- Seat rotation is a named, swappable rule. Only Head Table is implemented (the house rule). Partnerships do not persist across rounds.
 - Standings are a derived view over Round Results, not stored state (ADR-0002).
 - Host is a UI convention tied to the creating device, not enforced by permissions (ADR-0003). There is no host transfer.
 - Ghost players fill empty seats and can be claimed by a real player.

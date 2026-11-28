@@ -35,11 +35,11 @@ export function assignRandomSeats(playerIds, numTables) {
 }
 
 /**
- * Calculates next-round seating after a round completes.
- * - Losers rotate toward the head table (table 1).
- *   Losers from table 1 go to the last table.
- * - Winners stay but split: one goes to 'us' seat 1, one to 'them' seat 1.
- * - Incoming losers also split: one to 'us' seat 2, one to 'them' seat 2.
+ * Calculates next-round seating after a round completes (Head Table rule).
+ * - Table 1: winners stay, losers drop to the last table.
+ * - Every other table: winners move up one table toward table 1, losers stay.
+ * - The pair that stays splits: one to 'us' seat 1, one to 'them' seat 1.
+ * - The incoming pair also splits: one to 'us' seat 2, one to 'them' seat 2.
  *
  * @param {{ [id: string]: { tableId, side, seat } }} currentAssignments
  * @param {{ [tableId: number]: { winner: 'us'|'them' } }} roundResults
@@ -48,7 +48,7 @@ export function assignRandomSeats(playerIds, numTables) {
  */
 export function calculateNextRoundSeating(currentAssignments, roundResults, numTables) {
   const incomingByTable = {};
-  const winnersByTable = {};
+  const stayersByTable = {};
 
   for (let tableId = 1; tableId <= numTables; tableId++) {
     const { winner } = roundResults[tableId];
@@ -62,16 +62,16 @@ export function calculateNextRoundSeating(currentAssignments, roundResults, numT
       .filter(([, a]) => a.tableId === tableId && a.side === loser)
       .map(([id]) => id);
 
-    winnersByTable[tableId] = winners;
-
-    // Losers from table 1 go to last table; others go one table down (toward 1)
-    const dest = tableId === 1 ? numTables : tableId - 1;
-    incomingByTable[dest] = losers;
+    // Table 1 keeps its winners and sends losers to the last table;
+    // every other table keeps its losers and sends winners up one.
+    const [stay, move] = tableId === 1 ? [winners, losers] : [losers, winners];
+    stayersByTable[tableId] = stay;
+    incomingByTable[tableId === 1 ? numTables : tableId - 1] = move;
   }
 
   const next = {};
   for (let tableId = 1; tableId <= numTables; tableId++) {
-    const [w1, w2] = winnersByTable[tableId] || [];
+    const [w1, w2] = stayersByTable[tableId] || [];
     const [i1, i2] = incomingByTable[tableId] || [];
 
     if (w1) next[w1] = { tableId, side: 'us',   seat: 1 };

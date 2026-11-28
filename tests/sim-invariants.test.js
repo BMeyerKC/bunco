@@ -31,7 +31,7 @@ test('catches a submit that lost the last tapped point', () => {
   expect(checkGame(game, events)).toContainEqual('round 3 table 1: submitted 20-10 but live score was 21-10');
 });
 
-test('catches seats that break the Losers Move rotation', () => {
+test('catches seats that break the Head Table rotation', () => {
   const { game, events } = validGame();
   const seats = game.rounds[4].assignments;
   const a = Object.keys(seats).find(id => seats[id].tableId === 1);

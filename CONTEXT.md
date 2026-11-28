@@ -17,9 +17,9 @@ _Future idea, not yet designed_: a countdown display when the host starts the ne
 
 How players move between tables after a round is a **named, swappable rule**, not one fixed mechanic. Tables are numbered 1..N. Three variants:
 
-- **Losers Move** _(today's only implemented rule, `calculateNextRoundSeating`)_ — winners always stay at their current table, regardless of position. Losers always move, rotating toward table 1; a losing pair already at table 1 wraps to table N.
+- **Losers Move** _(not implemented; the app used it until 2026-11, see #59)_ — winners always stay at their current table, regardless of position. Losers always move, rotating toward table 1; a losing pair already at table 1 wraps to table N.
 - **Winners Move** _(not yet implemented)_ — losers always stay at their current table, regardless of position. Winners always move, rotating toward table 1; a winning pair already at table 1 wraps to table N. The mirror image of Losers Move.
-- **Head Table** _(not yet implemented)_ — table 1 is the Head Table, a fixed destination worth climbing to. At every table except table 1: winners move up one table, losers stay. At table 1 specifically, the roles flip: winners stay (the reward for reaching it), losers drop all the way to table N.
+- **Head Table** _(the house rule and the only implemented rule, `calculateNextRoundSeating`)_ — table 1 is the Head Table, a fixed destination worth climbing to. At every table except table 1: winners move up one table, losers stay. At table 1 specifically, the roles flip: winners stay (the reward for reaching it), losers drop all the way to table N.
 
 All three share one underlying principle: **partnerships don't persist across rounds.** A pair that moves together (or stays together) as of the table assignment still gets reshuffled into new partnerships once seated — e.g. two players who won together and both land at the same next table can end up as opponents there, not partners. "The team moves" describes *which table two individuals land at together*, not a persistent partnership.
 
